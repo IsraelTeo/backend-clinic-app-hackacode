@@ -12,7 +12,7 @@ type ServiceLogic interface {
 	GetServiceByID(ID uint) (*model.Service, error)
 	GetAllServices() ([]model.Service, error)
 	CreateService(service *model.Service) error
-	UpdateService(ID uint, service *model.Service) (*model.Service, error)
+	UpdateService(ID uint, service *model.Service) error
 	DeleteService(ID uint) error
 }
 
@@ -57,24 +57,23 @@ func (l *serviceLogic) CreateService(service *model.Service) error {
 	return nil
 }
 
-func (l *serviceLogic) UpdateService(ID uint, service *model.Service) (*model.Service, error) {
+func (l *serviceLogic) UpdateService(ID uint, service *model.Service) error {
 	serviceUpdate, err := l.GetServiceByID(ID)
 	if err != nil {
 		log.Printf("service: Error fetching customer with ID %d: %v to update", ID, err)
-		return nil, fmt.Errorf("failed to fetch medical service with ID %d: %w to update", ID, err)
+		return fmt.Errorf("failed to fetch medical service with ID %d: %w to update", ID, err)
 	}
 
 	serviceUpdate.Name = service.Name
 	serviceUpdate.Description = service.Description
 	serviceUpdate.Price = service.Price
 
-	medicalServiceUpdated, err := l.repository.Update(serviceUpdate)
-	if err != nil {
+	if err = l.repository.Update(serviceUpdate); err != nil {
 		log.Printf("service: Error updating medical service with ID %d: %v", ID, err)
-		return nil, fmt.Errorf("failed to update medical service with ID %d: %w", ID, err)
+		return fmt.Errorf("failed to update medical service with ID %d: %w", ID, err)
 	}
 
-	return medicalServiceUpdated, nil
+	return nil
 }
 
 func (l *serviceLogic) DeleteService(ID uint) error {

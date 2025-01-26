@@ -8,7 +8,7 @@ type Repository[T any] interface {
 	GetByID(ID uint) (*T, error)
 	GetAll() ([]T, error)
 	Create(entity *T) error
-	Update(entity *T) (*T, error)
+	Update(entity *T) error
 	Delete(ID uint) error
 }
 
@@ -43,11 +43,11 @@ func (r *repository[T]) Create(entity *T) error {
 	return nil
 }
 
-func (r *repository[T]) Update(entity *T) (*T, error) {
+func (r *repository[T]) Update(entity *T) error {
 	if err := r.db.Save(entity).Error; err != nil {
-		return nil, err
+		return err
 	}
-	return entity, nil
+	return nil
 }
 
 func (r *repository[T]) Delete(ID uint) error {
