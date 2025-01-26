@@ -1,63 +1,58 @@
 package repository
 
 import (
-	"gihub.com/IsraelTeo/clinic-backend-hackacode-app/model"
 	"gorm.io/gorm"
 )
 
-type ServiceRepository interface {
-	GetByID(ID uint) (*model.Service, error)
-	GetAll() ([]model.Service, error)
-	Create(service *model.Service) error
-	Update(service *model.Service) (*model.Service, error)
+type Repository[T any] interface {
+	GetByID(ID uint) (*T, error)
+	GetAll() ([]T, error)
+	Create(entity *T) error
+	Update(entity *T) (*T, error)
 	Delete(ID uint) error
 }
 
-type serviceRepository struct {
+type repository[T any] struct {
 	db *gorm.DB
 }
 
-func NewServiceRepository(db *gorm.DB) ServiceRepository {
-	return &serviceRepository{db: db}
+func NewRepository[T any](db *gorm.DB) Repository[T] {
+	return &repository[T]{db: db}
 }
 
-func (r *serviceRepository) GetByID(ID uint) (*model.Service, error) {
-	service := model.Service{}
-	if err := r.db.First(&service, ID).Error; err != nil {
+func (r *repository[T]) GetByID(ID uint) (*T, error) {
+	entity := new(T)
+	if err := r.db.First(entity, ID).Error; err != nil {
 		return nil, err
 	}
-
-	return &service, nil
+	return entity, nil
 }
 
-func (r *serviceRepository) GetAll() ([]model.Service, error) {
-	var services []model.Service
-	if err := r.db.Find(&services).Error; err != nil {
+func (r *repository[T]) GetAll() ([]T, error) {
+	var entities []T
+	if err := r.db.Find(&entities).Error; err != nil {
 		return nil, err
 	}
-
-	return services, nil
+	return entities, nil
 }
 
-func (r *serviceRepository) Create(service *model.Service) error {
-	if err := r.db.Create(service).Error; err != nil {
+func (r *repository[T]) Create(entity *T) error {
+	if err := r.db.Create(entity).Error; err != nil {
 		return err
 	}
-
 	return nil
 }
 
-func (r *serviceRepository) Update(service *model.Service) (*model.Service, error) {
-	if err := r.db.Save(service).Error; err != nil {
+func (r *repository[T]) Update(entity *T) (*T, error) {
+	if err := r.db.Save(entity).Error; err != nil {
 		return nil, err
 	}
-
-	return service, nil
+	return entity, nil
 }
-func (r *serviceRepository) Delete(ID uint) error {
-	if err := r.db.Delete(&model.Service{}, ID).Error; err != nil {
+
+func (r *repository[T]) Delete(ID uint) error {
+	if err := r.db.Delete(new(T), ID).Error; err != nil {
 		return err
 	}
-
 	return nil
 }
