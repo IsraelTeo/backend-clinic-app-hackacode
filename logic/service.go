@@ -27,7 +27,7 @@ func NewServiceLogic(repository repository.Repository[model.Service]) ServiceLog
 func (l *serviceLogic) GetServiceByID(ID uint) (*model.Service, error) {
 	service, err := l.repository.GetByID(ID)
 	if err != nil {
-		log.Printf("service: Error fetching customer with ID %d: %v", ID, err)
+		log.Printf("service: Error fetching service with ID %d: %v", ID, err)
 		return nil, fmt.Errorf("failed to fetch medical service with ID %d: %w", ID, err)
 	}
 
