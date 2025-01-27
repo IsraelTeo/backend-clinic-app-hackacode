@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"gihub.com/IsraelTeo/clinic-backend-hackacode-app/logic"
+	"gihub.com/IsraelTeo/clinic-backend-hackacode-app/mapper"
 	"gihub.com/IsraelTeo/clinic-backend-hackacode-app/model"
 	"gihub.com/IsraelTeo/clinic-backend-hackacode-app/response"
 	"github.com/labstack/echo/v4"
@@ -58,4 +59,23 @@ func (h *ServiceHandler) CreateService(c echo.Context) error {
 	}
 
 	return response.WriteSuccess(c, response.SuccessServiceCreated, http.StatusCreated, nil)
+}
+
+func (h *ServiceHandler) UpdateService(c echo.Context) error {
+	ID, err := mapper.ParseID(c)
+	if err != nil {
+		return response.WriteError(c, err.Error(), http.StatusBadRequest)
+	}
+
+	service := model.Service{}
+	if err := c.Bind(&service); err != nil {
+		return response.WriteError(c, err.Error(), http.StatusBadRequest)
+	}
+
+	if err := h.logic.UpdateService(uint(ID), &service); err != nil {
+		return response.WriteError(c, err.Error(), http.StatusInternalServerError)
+	}
+
+	return response.WriteSuccess(c, response.SuccessServiceUpdated, http.StatusOK, nil)
+
 }
