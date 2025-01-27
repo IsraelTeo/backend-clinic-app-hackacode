@@ -1,30 +1,33 @@
 package response
 
-import "github.com/labstack/echo/v4"
+import (
+	"errors"
+
+	"github.com/labstack/echo/v4"
+)
 
 // Definir el tipo personalizado para Servicios Médicos
 
-type MedicalServiceSuccess string
-
 const (
 	// Mensajes de éxito para servicios médicos
-	SuccessServiceFound   MedicalServiceSuccess = "¡Servicio médico encontrado exitosamente!"
-	SuccessServiceUpdated MedicalServiceSuccess = "¡Servicio médico actualizado exitosamente!"
-	SuccessServicesFound  MedicalServiceSuccess = "¡Servicios médicos encontrados exitosamente!"
-	SuccessServiceCreated MedicalServiceSuccess = "¡Servicio médico creado exitosamente!"
-	SuccessServiceDeleted MedicalServiceSuccess = "¡Servicio médico eliminado exitosamente!"
+	SuccessServiceFound   = "¡Servicio médico encontrado exitosamente!"
+	SuccessServiceUpdated = "¡Servicio médico actualizado exitosamente!"
+	SuccessServicesFound  = "¡Servicios médicos encontrados exitosamente!"
+	SuccessServiceCreated = "¡Servicio médico creado exitosamente!"
+	SuccessServiceDeleted = "¡Servicio médico eliminado exitosamente!"
 )
 
-type MedicalServiceError string
-
-const (
+var (
 	// Mensajes de error para servicios médicos
-	ErrorInvalidId         MedicalServiceError = "El ID debe ser un número positivo."
-	ErrorServiceNotFound   MedicalServiceError = "El servicio médico no fue encontrado."
-	ErrorServicesNotFound  MedicalServiceError = "No fueron encontrados servicios médicos."
-	ErrorListServicesEmpty MedicalServiceError = "No fueron encontrados servicios médicos."
-	ErrorBadRequest        MedicalServiceError = "El cuerpo de la solicitud no es válido para el servicio médico."
-	ErrorToCreated         MedicalServiceError = "No se pudo crear el servicio médico."
+
+	ErrorInvalidId         = errors.New("el ID debe ser un número positivo")
+	ErrorServiceNotFound   = errors.New("el servicio médico no fue encontrado")
+	ErrorServicesNotFound  = errors.New("no fueron encontrados servicios médicos")
+	ErrorListServicesEmpty = errors.New("no fueron encontrados servicios médicos")
+	ErrorBadRequest        = errors.New("el cuerpo de la solicitud no es válido para el servicio médico")
+	ErrorToCreated         = errors.New("no se pudo crear el servicio médico")
+	ErrorToUpdated         = errors.New("no se pudo actualizar el servicio médico")
+	ErrorToDeleted         = errors.New("no se pudo eliminar el servicio médico")
 )
 
 func WriteSuccess(c echo.Context, message string, status int, data interface{}) error {
