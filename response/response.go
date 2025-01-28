@@ -17,17 +17,40 @@ const (
 	SuccessServiceDeleted = "¡Servicio médico eliminado exitosamente!"
 )
 
+const (
+	// Mensajes de éxito para paquetes
+	SuccessPackageFound   = "¡Paquete encontrado exitosamente!"
+	SuccessPackageUpdated = "¡Paquete actualizado exitosamente!"
+	SuccessPackagesFound  = "¡Paquetes encontrados exitosamente!"
+	SuccessPackageCreated = "¡Paquete creado exitosamente!"
+	SuccessPackageDeleted = "¡Paquete eliminado exitosamente!"
+)
+
+var (
+	//Mensaje de error generales
+	ErrorInvalidID = errors.New("el ID debe ser un número positivo")
+)
 var (
 	// Mensajes de error para servicios médicos
-
-	ErrorInvalidId         = errors.New("el ID debe ser un número positivo")
 	ErrorServiceNotFound   = errors.New("el servicio médico no fue encontrado")
 	ErrorServicesNotFound  = errors.New("no fueron encontrados servicios médicos")
 	ErrorListServicesEmpty = errors.New("no fueron encontrados servicios médicos")
-	ErrorBadRequest        = errors.New("el cuerpo de la solicitud no es válido para el servicio médico")
-	ErrorToCreated         = errors.New("no se pudo crear el servicio médico")
-	ErrorToUpdated         = errors.New("no se pudo actualizar el servicio médico")
-	ErrorToDeleted         = errors.New("no se pudo eliminar el servicio médico")
+	ErrorBadRequestService = errors.New("el cuerpo de la solicitud no es válido para el servicio médico")
+	ErrorToCreatedService  = errors.New("no se pudo crear el servicio médico")
+	ErrorToUpdatedService  = errors.New("no se pudo actualizar el servicio médico")
+	ErrorToDeletedService  = errors.New("no se pudo eliminar el servicio médico")
+)
+
+var (
+	// Mensajes de error para paquetes
+
+	ErrorPackageNotFound   = errors.New("el paquete no fue encontrado")
+	ErrorPackagesNotFound  = errors.New("no fueron encontrados paquetes")
+	ErrorListPackagesEmpty = errors.New("no fueron encontrados paquetes")
+	ErrorBadRequestPackage = errors.New("el cuerpo de la solicitud no es válido para el paquete")
+	ErrorToCreatedPackage  = errors.New("no se pudo crear el paquete")
+	ErrorToUpdatedPackage  = errors.New("no se pudo actualizar el paquete")
+	ErrorToDeletedPackage  = errors.New("no se pudo eliminar el paquete")
 )
 
 func WriteSuccess(c echo.Context, message string, status int, data interface{}) error {

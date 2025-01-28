@@ -3,12 +3,11 @@ package handler
 import (
 	"log"
 	"net/http"
-	"strconv"
 
 	"gihub.com/IsraelTeo/clinic-backend-hackacode-app/logic"
-	"gihub.com/IsraelTeo/clinic-backend-hackacode-app/mapper"
 	"gihub.com/IsraelTeo/clinic-backend-hackacode-app/model"
 	"gihub.com/IsraelTeo/clinic-backend-hackacode-app/response"
+	"gihub.com/IsraelTeo/clinic-backend-hackacode-app/validate"
 	"github.com/labstack/echo/v4"
 )
 
@@ -21,8 +20,8 @@ func NewServiceHandler(logic logic.ServiceLogic) *ServiceHandler {
 }
 
 func (h *ServiceHandler) GetServiceByID(c echo.Context) error {
-	ID, err := strconv.Atoi(c.Param("id"))
-	if err != nil || ID <= 0 {
+	ID, err := validate.ParseID(c)
+	if err != nil {
 		return response.WriteError(c, err.Error(), http.StatusBadRequest)
 	}
 
@@ -62,10 +61,12 @@ func (h *ServiceHandler) CreateService(c echo.Context) error {
 }
 
 func (h *ServiceHandler) UpdateService(c echo.Context) error {
-	ID, err := mapper.ParseID(c)
+	ID, err := validate.ParseID(c)
 	if err != nil {
 		return response.WriteError(c, err.Error(), http.StatusBadRequest)
 	}
+
+	log.Println("handler: request received in UpdateService")
 
 	service := model.Service{}
 	if err := c.Bind(&service); err != nil {
@@ -77,5 +78,19 @@ func (h *ServiceHandler) UpdateService(c echo.Context) error {
 	}
 
 	return response.WriteSuccess(c, response.SuccessServiceUpdated, http.StatusOK, nil)
+}
 
+func (h *ServiceHandler) DeleteService(c echo.Context) error {
+	ID, err := validate.ParseID(c)
+	if err != nil {
+		return response.WriteError(c, err.Error(), http.StatusBadRequest)
+	}
+
+	log.Println("handler: request received in DeleteService")
+
+	if err := h.logic.DeleteService(ID); err != nil {
+		return response.WriteError(c, err.Error(), http.StatusInternalServerError)
+	}
+
+	return response.WriteSuccess(c, response.SuccessServiceDeleted, http.StatusOK, nil)
 }

@@ -50,7 +50,7 @@ func (l *serviceLogic) GetAllServices() ([]model.Service, error) {
 func (l *serviceLogic) CreateService(service *model.Service) error {
 	if err := l.repository.Create(service); err != nil {
 		log.Printf("service: Error saving medical service: %v", err)
-		return response.ErrorToCreated
+		return response.ErrorToCreatedService
 	}
 
 	return nil
@@ -69,7 +69,7 @@ func (l *serviceLogic) UpdateService(ID uint, service *model.Service) error {
 
 	if err = l.repository.Update(serviceUpdate); err != nil {
 		log.Printf("service: Error updating medical service with ID %d: %v", ID, err)
-		return response.ErrorToUpdated
+		return response.ErrorToUpdatedService
 	}
 
 	return nil
@@ -78,7 +78,7 @@ func (l *serviceLogic) UpdateService(ID uint, service *model.Service) error {
 func (l *serviceLogic) DeleteService(ID uint) error {
 	if err := l.repository.Delete(ID); err != nil {
 		log.Printf("Error deleting customer with ID %d: %v", ID, err)
-		return response.ErrorToDeleted
+		return response.ErrorToDeletedService
 	}
 
 	return nil

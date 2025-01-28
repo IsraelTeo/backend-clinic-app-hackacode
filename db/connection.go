@@ -9,7 +9,7 @@ import (
 	"gorm.io/gorm"
 )
 
-//var GDB *gorm.DB
+var GDB *gorm.DB
 
 func Connection(cfg *config.Config) (*gorm.DB, error) {
 	DSN := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
@@ -29,7 +29,10 @@ func Connection(cfg *config.Config) (*gorm.DB, error) {
 }
 
 func MigrateDB(GDB *gorm.DB) error {
-	err := GDB.AutoMigrate(&model.Service{})
+	err := GDB.AutoMigrate(
+		&model.Service{},
+		&model.Package{},
+	)
 	if err != nil {
 		return err
 	}
