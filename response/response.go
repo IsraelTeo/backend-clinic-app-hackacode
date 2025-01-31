@@ -6,10 +6,26 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-// Definir el tipo personalizado para Servicios Médicos
+// Mensaje de error generales
+var (
+	ErrorInvalidID = errors.New("el ID debe ser un número positivo")
+)
 
+// Mensajes de exito para autenticación
 const (
-	// Mensajes de éxito para servicios médicos
+	SuccessLogin = "¡Inicio de sesión exitoso!"
+)
+
+// Mensajes de error para autenticación
+var (
+	ErrorBadRequestUser  = errors.New("el cuerpo de la solicitud no es válido para el usuario")
+	ErrorBadCretendials  = errors.New("credenciales inválidas")
+	ErrorInvalidEmail    = errors.New("el email no es válido o no está registrado")
+	ErrorGeneratingToken = errors.New("no se pudo generar el token de autenticación")
+)
+
+// Mensajes de éxito para servicios médicos
+const (
 	SuccessServiceFound   = "¡Servicio médico encontrado exitosamente!"
 	SuccessServiceUpdated = "¡Servicio médico actualizado exitosamente!"
 	SuccessServicesFound  = "¡Servicios médicos encontrados exitosamente!"
@@ -17,8 +33,8 @@ const (
 	SuccessServiceDeleted = "¡Servicio médico eliminado exitosamente!"
 )
 
+// Mensajes de éxito para paquetes
 const (
-	// Mensajes de éxito para paquetes
 	SuccessPackageFound   = "¡Paquete encontrado exitosamente!"
 	SuccessPackageUpdated = "¡Paquete actualizado exitosamente!"
 	SuccessPackagesFound  = "¡Paquetes encontrados exitosamente!"
@@ -26,12 +42,8 @@ const (
 	SuccessPackageDeleted = "¡Paquete eliminado exitosamente!"
 )
 
+// Mensajes de error para servicios médicos
 var (
-	//Mensaje de error generales
-	ErrorInvalidID = errors.New("el ID debe ser un número positivo")
-)
-var (
-	// Mensajes de error para servicios médicos
 	ErrorServiceNotFound   = errors.New("el servicio médico no fue encontrado")
 	ErrorServicesNotFound  = errors.New("no fueron encontrados servicios médicos")
 	ErrorListServicesEmpty = errors.New("no fueron encontrados servicios médicos")
@@ -41,9 +53,8 @@ var (
 	ErrorToDeletedService  = errors.New("no se pudo eliminar el servicio médico")
 )
 
+// Mensajes de error para paquetes
 var (
-	// Mensajes de error para paquetes
-
 	ErrorPackageNotFound   = errors.New("el paquete no fue encontrado")
 	ErrorPackagesNotFound  = errors.New("no fueron encontrados paquetes")
 	ErrorListPackagesEmpty = errors.New("no fueron encontrados paquetes")
