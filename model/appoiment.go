@@ -1,5 +1,6 @@
 package model
 
+//Cita médica
 type Appoiment struct {
 	ID          uint    `gorm:"primaryKey;autoIncrement" json:"-"`
 	PatientID   uint    `json:"patient_id" validate:"required"`
@@ -13,11 +14,13 @@ type Appoiment struct {
 	TotalAmount float64 `json:"total_amount"`
 }
 
+//Pago
 type Payment struct {
 	AppoimentID uint        `json:"appoiment_id" validate:"required"`
 	PaymentType PaymentType `json:"payment_type" validate:"required"`
 }
 
+//Método de pago
 type PaymentType string
 
 const (

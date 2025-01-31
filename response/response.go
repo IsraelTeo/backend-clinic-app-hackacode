@@ -64,6 +64,44 @@ var (
 	ErrorToDeletedPackage  = errors.New("no se pudo eliminar el paquete")
 )
 
+// Mensajes de exito de doctores
+
+const (
+	SuccessDoctorFound   = "¡Doctor encontrado exitosamente!"
+	SuccessDoctorUpdated = "¡Doctor actualizado exitosamente!"
+	SuccessDoctorsFound  = "¡Doctores encontrados exitosamente!"
+	SuccessDoctorCreated = "¡Doctor creado exitosamente!"
+	SuccessDoctorDeleted = "¡Doctor eliminado exitosamente!"
+)
+
+// Mensajes de error para doctores
+var (
+	ErrorDoctorNotFound   = errors.New("el doctor no fue encontrado")
+	ErrorListDoctorsEmpty = errors.New("no fueron encontrados doctores")
+	ErrorToCreatedDoctor  = errors.New("no se pudo crear el doctor")
+	ErrorToUpdatedDoctor  = errors.New("no se pudo actualizar el doctor")
+	ErrorToDeletedDoctor  = errors.New("no se pudo eliminar el doctor")
+)
+
+// Mensajes de exito de pacientes
+
+const (
+	SuccessPatientFound   = "¡Paciente encontrado exitosamente!"
+	SuccessPatientUpdated = "¡Paciente actualizado exitosamente!"
+	SuccessPatientsFound  = "¡Paciente encontrados exitosamente!"
+	SuccessPatientCreated = "¡Paciente creado exitosamente!"
+	SuccessPatientDeleted = "¡Pacienteeliminado exitosamente!"
+)
+
+// Mensajes de error para pacientes
+var (
+	ErrorPatientNotFound   = errors.New("el paciente no fue encontrado")
+	ErrorListPatientsEmpty = errors.New("no fueron encontrados pacientes")
+	ErrorToCreatedPatient  = errors.New("no se pudo crear el paciente")
+	ErrorToUpdatedPatient  = errors.New("no se pudo actualizar el paciente")
+	ErrorToDeletedPatient  = errors.New("no se pudo eliminar el paciente")
+)
+
 func WriteSuccess(c echo.Context, message string, status int, data interface{}) error {
 	return c.JSON(status, map[string]interface{}{
 		"status":  status,
