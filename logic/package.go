@@ -11,21 +11,22 @@ import (
 type PackageLogic interface {
 	GetPackageByID(ID uint) (*model.Package, error)
 	GetAllPackages() ([]model.Package, error)
-	CreatePackage(packageServices *model.Package) error
+	CreatePackage(packageServices *model.CreatePackageRequest) error
 	UpdatePackage(ID uint, packageServices *model.Package) error
 	DeletePackage(ID uint) error
 }
 
 type packageLogic struct {
-	repository repository.Repository[model.Package]
+	repositoryPkg  repository.Repository[model.Package]
+	repositoryServ repository.Repository[model.Service]
 }
 
-func NewPackageLogic(repository repository.Repository[model.Package]) PackageLogic {
-	return &packageLogic{repository: repository}
+func NewPackageLogic(repositoryPkg repository.Repository[model.Package], repositoryServ repository.Repository[model.Service]) PackageLogic {
+	return &packageLogic{repositoryPkg: repositoryPkg, repositoryServ: repositoryServ}
 }
 
 func (l *packageLogic) GetPackageByID(ID uint) (*model.Package, error) {
-	packageService, err := l.repository.GetByID(ID)
+	packageService, err := l.repositoryPkg.GetByID(ID)
 	if err != nil {
 		log.Printf("package: Error fetching package with ID %d: %v", ID, err)
 		return nil, response.ErrorPackageNotFound
@@ -34,7 +35,7 @@ func (l *packageLogic) GetPackageByID(ID uint) (*model.Package, error) {
 }
 
 func (l *packageLogic) GetAllPackages() ([]model.Package, error) {
-	packageServices, err := l.repository.GetAll()
+	packageServices, err := l.repositoryPkg.GetAll()
 	if err != nil {
 		log.Printf("package: Error fetching packages: %v", err)
 		return nil, response.ErrorPackageNotFound
@@ -47,8 +48,50 @@ func (l *packageLogic) GetAllPackages() ([]model.Package, error) {
 	return packageServices, nil
 }
 
-func (l *packageLogic) CreatePackage(packageServices *model.Package) error {
-	if err := l.repository.Create(packageServices); err != nil {
+func (l *packageLogic) CreatePackage(pkg *model.CreatePackageRequest) error {
+
+	//Necesito buscar a todos los servicios que tenga los ID
+	//Necesito recorrer la lista de IDs
+	//Crear una lista de servicios
+	//Obtener el servicio de cada ID
+	//Añadir els ervicios a la lista de servicios
+	//Setear la lista de servicios al paquete
+	//Calcular el precio total del paquete y setearlo
+	//Guardar el paquete en la base de datos
+
+	services, err := l.repositoryServ.GetAll()
+	if err != nil {
+		log.Printf("package: Error fetching services: %v", err)
+		return response.ErrorFetchingServices
+	}
+
+	if len(services) == 0 {
+		log.Println("package: No services found")
+		return response.ErrorListServicesEmpty
+	}
+
+	for _, service := range services {
+		serviceFound, err := l.repositoryServ.GetByID(service.ID)
+		if err != nil {
+			log.Printf("package: Error fetching service with ID %d: %v", service.ID, err)
+			return response.ErrorServiceNotFound
+		}
+		services = append(services, *serviceFound)
+	}
+
+	var totalAmount float64
+	for _, service := range services {
+		totalAmount += service.Price
+	}
+
+	pgkCreated := model.Package{
+		Name:     pkg.Name,
+		Services: services,
+		Price:    totalAmount,
+	}
+
+	// Guardar el paquete en la base de datos
+	if err := l.repositoryPkg.Create(&pgkCreated); err != nil {
 		log.Printf("package: Error saving package: %v", err)
 		return response.ErrorToCreatedPackage
 	}
@@ -67,7 +110,7 @@ func (l *packageLogic) UpdatePackage(ID uint, packageServices *model.Package) er
 	existingPackage.Price = packageServices.Price
 	existingPackage.Services = packageServices.Services
 
-	if err = l.repository.Update(existingPackage); err != nil {
+	if err = l.repositoryPkg.Update(existingPackage); err != nil {
 		log.Printf("package: Error updating package with ID %d: %v", ID, err)
 		return response.ErrorToUpdatedPackage
 	}
@@ -76,7 +119,7 @@ func (l *packageLogic) UpdatePackage(ID uint, packageServices *model.Package) er
 }
 
 func (l *packageLogic) DeletePackage(ID uint) error {
-	if err := l.repository.Delete(ID); err != nil {
+	if err := l.repositoryPkg.Delete(ID); err != nil {
 		log.Printf("package: Error deleting package with ID %d: %v", ID, err)
 		return response.ErrorToDeletedPackage
 	}

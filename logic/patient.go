@@ -20,7 +20,7 @@ type patientLogic struct {
 	repository repository.Repository[model.Patient]
 }
 
-func NewPatientServiceLogic(repository repository.Repository[model.Patient]) PatientLogic {
+func NewPatientLogic(repository repository.Repository[model.Patient]) PatientLogic {
 	return &patientLogic{repository: repository}
 }
 

@@ -11,7 +11,8 @@ import (
 
 var GDB *gorm.DB
 
-func Connection(cfg *config.Config) (*gorm.DB, error) {
+func Connection(cfg *config.Config) error {
+
 	DSN := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
 		cfg.DBUser,
 		cfg.DBPassword,
@@ -19,19 +20,24 @@ func Connection(cfg *config.Config) (*gorm.DB, error) {
 		cfg.DBPort,
 		cfg.DBName)
 
-	GDB, err := gorm.Open(mysql.Open(DSN), &gorm.Config{})
+	fmt.Printf("Connecting to DB with DSN: %s\n", DSN)
 
-	if err != nil {
-		return nil, err
+	var err error
+	if GDB, err = gorm.Open(mysql.Open(DSN), &gorm.Config{}); err != nil {
+		return err
 	}
 
-	return GDB, nil
+	return nil
 }
 
-func MigrateDB(GDB *gorm.DB) error {
+func MigrateDB() error {
 	err := GDB.AutoMigrate(
 		&model.Service{},
 		&model.Package{},
+		&model.Patient{},
+		&model.User{},
+		&model.Appointment{},
+		&model.Payment{},
 	)
 	if err != nil {
 		return err

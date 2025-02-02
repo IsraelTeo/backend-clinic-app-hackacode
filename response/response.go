@@ -55,13 +55,15 @@ var (
 
 // Mensajes de error para paquetes
 var (
-	ErrorPackageNotFound   = errors.New("el paquete no fue encontrado")
-	ErrorPackagesNotFound  = errors.New("no fueron encontrados paquetes")
-	ErrorListPackagesEmpty = errors.New("no fueron encontrados paquetes")
-	ErrorBadRequestPackage = errors.New("el cuerpo de la solicitud no es válido para el paquete")
-	ErrorToCreatedPackage  = errors.New("no se pudo crear el paquete")
-	ErrorToUpdatedPackage  = errors.New("no se pudo actualizar el paquete")
-	ErrorToDeletedPackage  = errors.New("no se pudo eliminar el paquete")
+	ErrorPackageNotFound    = errors.New("el paquete no fue encontrado")
+	ErrorPackagesNotFound   = errors.New("no fueron encontrados paquetes")
+	ErrorListPackagesEmpty  = errors.New("no fueron encontrados paquetes")
+	ErrorBadRequestPackage  = errors.New("el cuerpo de la solicitud no es válido para el paquete")
+	ErrorToCreatedPackage   = errors.New("no se pudo crear el paquete")
+	ErrorToUpdatedPackage   = errors.New("no se pudo actualizar el paquete")
+	ErrorToDeletedPackage   = errors.New("no se pudo eliminar el paquete")
+	ErrorNoServicesProvided = errors.New("no se proporcionaron servicios para el paquete")
+	ErrorFetchingServices   = errors.New("no se pudieron obtener los servicios para el paquete")
 )
 
 // Mensajes de exito de doctores

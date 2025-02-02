@@ -1,7 +1,7 @@
 package model
 
 //Cita médica
-type Appoiment struct {
+type Appointment struct {
 	ID          uint    `gorm:"primaryKey;autoIncrement" json:"-"`
 	PatientID   uint    `json:"patient_id" validate:"required"`
 	Patient     Patient `json:"patient"`

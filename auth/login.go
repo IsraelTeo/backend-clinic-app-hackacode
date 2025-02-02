@@ -24,7 +24,7 @@ type userLogin struct {
 
 func NewLoginService(repository repository.UserRepository) LoginService {
 	return &loginService{repository: repository}
-}
+}	
 
 func (s *loginService) Login(c echo.Context) error {
 	log.Println("login-service: Request received in Login")
@@ -56,3 +56,5 @@ func (s *loginService) Login(c echo.Context) error {
 	log.Printf("login-service: Login successful for user: %s", user.Email)
 	return response.WriteSuccess(c, response.SuccessLogin, http.StatusOK, token)
 }
+
+

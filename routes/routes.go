@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"gihub.com/IsraelTeo/clinic-backend-hackacode-app/auth"
 	"gihub.com/IsraelTeo/clinic-backend-hackacode-app/db"
 	"gihub.com/IsraelTeo/clinic-backend-hackacode-app/handler"
 	"gihub.com/IsraelTeo/clinic-backend-hackacode-app/logic"
@@ -10,14 +11,27 @@ import (
 )
 
 const (
-	idPath   = "/:id"
-	voidPath = ""
+	idPath    = "/:id"
+	voidPath  = ""
+	loginPath = "/login"
 )
 
 func InitEnpoints(e *echo.Echo) {
 	api := e.Group("/api/v1")
 	setUpService(api)
 	setUpPackage(api)
+	setUpDoctor(api)
+	setUpPatient(api)
+	setUpAuth(api)
+}
+
+func setUpAuth(api *echo.Group) {
+	authRepository := repository.NewUserRepository(db.GDB)
+	authLogic := auth.NewLoginService(authRepository)
+
+	auth := api.Group("/auth")
+
+	auth.POST(loginPath, authLogic.Login)
 }
 
 func setUpService(api *echo.Group) {
@@ -25,7 +39,7 @@ func setUpService(api *echo.Group) {
 	serviceLogic := logic.NewServiceLogic(serviceRepository)
 	serviceHandler := handler.NewServiceHandler(serviceLogic)
 
-	service := api.Group("/service")
+	service := api.Group("/services")
 
 	service.GET(idPath, serviceHandler.GetServiceByID)
 	service.GET(voidPath, serviceHandler.GetAllServices)
@@ -36,14 +50,44 @@ func setUpService(api *echo.Group) {
 
 func setUpPackage(api *echo.Group) {
 	packageRepository := repository.NewRepository[model.Package](db.GDB)
-	packageLogic := logic.NewPackageLogic(packageRepository)
-	packageHandler := handler.NewPackageHandler(packageLogic)
+	packageRepository3 := repository.NewRepository[model.Service](db.GDB)
+	packageLogic := logic.NewPackageLogic(packageRepository, packageRepository3)
+	serviceLogic := logic.NewServiceLogic(packageRepository3)
+	packageHandler := handler.NewPackageHandler(packageLogic, serviceLogic)
 
-	packageServices := api.Group("/package")
+	packageServices := api.Group("/packages")
 
 	packageServices.GET(idPath, packageHandler.GetPackageByID)
 	packageServices.GET(voidPath, packageHandler.GetAllPackages)
 	packageServices.POST(voidPath, packageHandler.CreatePackage)
 	packageServices.PUT(idPath, packageHandler.UpdatePackage)
 	packageServices.DELETE(idPath, packageHandler.DeletePackage)
+}
+
+func setUpDoctor(api *echo.Group) {
+	doctorRepository := repository.NewRepository[model.Doctor](db.GDB)
+	doctorLogic := logic.NewDoctorLogic(doctorRepository)
+	doctorHandler := handler.NewDoctorHandler(doctorLogic)
+
+	doctor := api.Group("/doctors")
+
+	doctor.GET(idPath, doctorHandler.GetDoctorByID)
+	doctor.GET(voidPath, doctorHandler.GetAllDoctors)
+	doctor.POST(voidPath, doctorHandler.CreateDoctor)
+	doctor.PUT(idPath, doctorHandler.UpdateDoctor)
+	doctor.DELETE(idPath, doctorHandler.DeleteDoctor)
+}
+
+func setUpPatient(api *echo.Group) {
+	patientRepository := repository.NewRepository[model.Patient](db.GDB)
+	patientLogic := logic.NewPatientLogic(patientRepository)
+	patientHandler := handler.NewPatientHandler(patientLogic)
+
+	patient := api.Group("/patients")
+
+	patient.GET(idPath, patientHandler.GetPatientByID)
+	patient.GET(voidPath, patientHandler.GetAllPatients)
+	patient.POST(voidPath, patientHandler.CreatePatient)
+	patient.PUT(idPath, patientHandler.UpdatePatient)
+	patient.DELETE(idPath, patientHandler.DeletePatient)
 }

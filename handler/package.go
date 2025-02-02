@@ -12,11 +12,12 @@ import (
 )
 
 type PackageHandler struct {
-	logic logic.PackageLogic
+	logicPkg  logic.PackageLogic
+	logicServ logic.ServiceLogic
 }
 
-func NewPackageHandler(logic logic.PackageLogic) *PackageHandler {
-	return &PackageHandler{logic: logic}
+func NewPackageHandler(logicPkg logic.PackageLogic, logicServ logic.ServiceLogic) *PackageHandler {
+	return &PackageHandler{logicPkg: logicPkg, logicServ: logicServ}
 }
 
 func (h *PackageHandler) GetPackageByID(c echo.Context) error {
@@ -27,7 +28,7 @@ func (h *PackageHandler) GetPackageByID(c echo.Context) error {
 
 	log.Printf("handler: package fetching with ID: %d", ID)
 
-	packageService, err := h.logic.GetPackageByID(uint(ID))
+	packageService, err := h.logicPkg.GetPackageByID(uint(ID))
 	if err != nil {
 		return response.WriteError(c, err.Error(), http.StatusNotFound)
 	}
@@ -37,7 +38,7 @@ func (h *PackageHandler) GetPackageByID(c echo.Context) error {
 func (h *PackageHandler) GetAllPackages(c echo.Context) error {
 	log.Println("handler: request received in GetAllPackages")
 
-	packageServices, err := h.logic.GetAllPackages()
+	packageServices, err := h.logicPkg.GetAllPackages()
 	if err != nil {
 		return response.WriteError(c, err.Error(), http.StatusNotFound)
 	}
@@ -48,12 +49,18 @@ func (h *PackageHandler) GetAllPackages(c echo.Context) error {
 func (h *PackageHandler) CreatePackage(c echo.Context) error {
 	log.Println("handler: request received in CreatePackage")
 
-	packageServices := model.Package{}
-	if err := c.Bind(&packageServices); err != nil {
-		return response.WriteError(c, err.Error(), http.StatusBadRequest)
+	var pkgRequest model.CreatePackageRequest
+	if err := c.Bind(&pkgRequest); err != nil {
+		return response.WriteError(c, "Invalid request format", http.StatusBadRequest)
 	}
 
-	if err := h.logic.CreatePackage(&packageServices); err != nil {
+	// Validar la entrada
+	if len(pkgRequest.ServiceIDs) == 0 {
+		return response.WriteError(c, "No service IDs provided", http.StatusBadRequest)
+	}
+
+	// Pasar el objeto al servicio de lógica
+	if err := h.logicPkg.CreatePackage(&pkgRequest); err != nil {
 		return response.WriteError(c, err.Error(), http.StatusInternalServerError)
 	}
 
@@ -73,7 +80,7 @@ func (h *PackageHandler) UpdatePackage(c echo.Context) error {
 		return response.WriteError(c, err.Error(), http.StatusBadRequest)
 	}
 
-	if err := h.logic.UpdatePackage(uint(ID), &packageServices); err != nil {
+	if err := h.logicPkg.UpdatePackage(uint(ID), &packageServices); err != nil {
 		return response.WriteError(c, err.Error(), http.StatusInternalServerError)
 	}
 
@@ -88,7 +95,7 @@ func (h *PackageHandler) DeletePackage(c echo.Context) error {
 
 	log.Printf("handler: request received in DeletePackage with ID: %d", ID)
 
-	if err := h.logic.DeletePackage(uint(ID)); err != nil {
+	if err := h.logicPkg.DeletePackage(uint(ID)); err != nil {
 		return response.WriteError(c, err.Error(), http.StatusInternalServerError)
 	}
 

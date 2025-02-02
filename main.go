@@ -23,14 +23,14 @@ func main() {
 	cfg := config.InitConfig()
 
 	// Conectar a la base de datos utilizando la configuración cargada
-	gdb, err := db.Connection(cfg)
+	err := db.Connection(cfg)
 	if err != nil {
 		log.Fatalf("Error connecting to database: %v", err)
 	}
 	fmt.Println("Database connection established successfully!")
 
 	// Migración de entidades
-	if err := db.MigrateDB(gdb); err != nil {
+	if err := db.MigrateDB(); err != nil {
 		log.Fatalf("Error migrating database: %v", err)
 	}
 	fmt.Println("Database migration successful")
