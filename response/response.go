@@ -78,11 +78,12 @@ const (
 
 // Mensajes de error para doctores
 var (
-	ErrorDoctorNotFound   = errors.New("el doctor no fue encontrado")
-	ErrorListDoctorsEmpty = errors.New("no fueron encontrados doctores")
-	ErrorToCreatedDoctor  = errors.New("no se pudo crear el doctor")
-	ErrorToUpdatedDoctor  = errors.New("no se pudo actualizar el doctor")
-	ErrorToDeletedDoctor  = errors.New("no se pudo eliminar el doctor")
+	ErrorDoctorNotFound   = errors.New("el médico no fue encontrado")
+	ErrorDoctorsNotFound  = errors.New("no fueron encontrados médicos")
+	ErrorListDoctorsEmpty = errors.New("no fueron encontrados médicos")
+	ErrorToCreatedDoctor  = errors.New("no se pudo crear el médico")
+	ErrorToUpdatedDoctor  = errors.New("no se pudo actualizar el médico")
+	ErrorToDeletedDoctor  = errors.New("no se pudo eliminar el médico")
 )
 
 // Mensajes de exito de pacientes
@@ -98,10 +99,31 @@ const (
 // Mensajes de error para pacientes
 var (
 	ErrorPatientNotFound   = errors.New("el paciente no fue encontrado")
+	ErrorPatientsNotFound  = errors.New("no fueron encontrados pacientes")
 	ErrorListPatientsEmpty = errors.New("no fueron encontrados pacientes")
 	ErrorToCreatedPatient  = errors.New("no se pudo crear el paciente")
 	ErrorToUpdatedPatient  = errors.New("no se pudo actualizar el paciente")
 	ErrorToDeletedPatient  = errors.New("no se pudo eliminar el paciente")
+)
+
+// Mensajes de exito de citas
+
+const (
+	SuccessAppointmentFound   = "¡Cita encontrada exitosamente!"
+	SuccessAppointmentUpdated = "¡Cita actualizado exitosamente!"
+	SuccessAppointmentsFound  = "¡Citas encontradas exitosamente!"
+	SuccessAppointmentCreated = "¡Cita registrada exitosamente!"
+	SuccessAppointmentDeleted = "¡Cita eliminado exitosamente!"
+)
+
+// Mensajes de error para citas
+var (
+	ErrorAppointmentNotFound   = errors.New("la cita no fue encontrada")
+	ErrorAppointmetsNotFound   = errors.New("no fueron encontradas citas")
+	ErrorListAppointmentsEmpty = errors.New("no se encontró ninguna cita")
+	ErrorToCreatedAppointment  = errors.New("no se pudo registrar la cita")
+	ErrorToUpdatedAppointment  = errors.New("no se pudo actualizar la cita")
+	ErrorToDeletedAppointment  = errors.New("no se pudo eliminar la cita")
 )
 
 func WriteSuccess(c echo.Context, message string, status int, data interface{}) error {

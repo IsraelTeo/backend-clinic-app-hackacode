@@ -49,27 +49,73 @@ func (l *packageLogic) GetAllPackages() ([]model.Package, error) {
 }
 
 func (l *packageLogic) CreatePackage(pkg *model.CreatePackageRequest) error {
-
-	//Necesito buscar a todos los servicios que tenga los ID
-	//Necesito recorrer la lista de IDs
-	//Crear una lista de servicios
-	//Obtener el servicio de cada ID
-	//Añadir els ervicios a la lista de servicios
-	//Setear la lista de servicios al paquete
-	//Calcular el precio total del paquete y setearlo
-	//Guardar el paquete en la base de datos
-
+	//Obtiene todos los servicios
 	services, err := l.repositoryServ.GetAll()
 	if err != nil {
 		log.Printf("package: Error fetching services: %v", err)
 		return response.ErrorFetchingServices
 	}
 
+	//Verifica que existan servicios
 	if len(services) == 0 {
 		log.Println("package: No services found")
 		return response.ErrorListServicesEmpty
 	}
 
+	//Obtiene los servicios por ID y los asigna una nueva lista
+	for _, service := range services {
+		serviceFound, err := l.repositoryServ.GetByID(service.ID)
+		if err != nil {
+			log.Printf("package: Error fetching service with ID %d: %v", service.ID, err)
+			return response.ErrorServiceNotFound
+		}
+		services = append(services, *serviceFound)
+	}
+
+	//Calcula el total de los servicios
+	var totalAmount float64
+	for _, service := range services {
+		totalAmount += service.Price
+	}
+
+	//Crea el paquete los servicios encontrados y el monto total
+	pgkCreated := model.Package{
+		Name:     pkg.Name,
+		Services: services,
+		Price:    totalAmount,
+	}
+
+	//Se guarda el paquete
+	if err := l.repositoryPkg.Create(&pgkCreated); err != nil {
+		log.Printf("package: Error saving package: %v", err)
+		return response.ErrorToCreatedPackage
+	}
+
+	return nil
+}
+
+func (l *packageLogic) UpdatePackage(ID uint, packageServices *model.Package) error {
+	//Encuentra el paquete para actualizar
+	existingPackage, err := l.GetPackageByID(ID)
+	if err != nil {
+		log.Printf("package: Error fetching package with ID %d: %v to update", ID, err)
+		return response.ErrorPackageNotFound
+	}
+
+	//Encuentra los servicios
+	services, err := l.repositoryServ.GetAll()
+	if err != nil {
+		log.Printf("package: Error fetching services: %v", err)
+		return response.ErrorFetchingServices
+	}
+
+	//Verifica que existan servicios
+	if len(services) == 0 {
+		log.Println("package: No services found")
+		return response.ErrorListServicesEmpty
+	}
+
+	//Obtiene los servicios por ID y los asigna una nueva lista
 	for _, service := range services {
 		serviceFound, err := l.repositoryServ.GetByID(service.ID)
 		if err != nil {
@@ -84,31 +130,9 @@ func (l *packageLogic) CreatePackage(pkg *model.CreatePackageRequest) error {
 		totalAmount += service.Price
 	}
 
-	pgkCreated := model.Package{
-		Name:     pkg.Name,
-		Services: services,
-		Price:    totalAmount,
-	}
-
-	// Guardar el paquete en la base de datos
-	if err := l.repositoryPkg.Create(&pgkCreated); err != nil {
-		log.Printf("package: Error saving package: %v", err)
-		return response.ErrorToCreatedPackage
-	}
-
-	return nil
-}
-
-func (l *packageLogic) UpdatePackage(ID uint, packageServices *model.Package) error {
-	existingPackage, err := l.GetPackageByID(ID)
-	if err != nil {
-		log.Printf("package: Error fetching package with ID %d: %v to update", ID, err)
-		return response.ErrorPackageNotFound
-	}
-
 	existingPackage.Name = packageServices.Name
-	existingPackage.Price = packageServices.Price
-	existingPackage.Services = packageServices.Services
+	existingPackage.Price = totalAmount
+	existingPackage.Services = services
 
 	if err = l.repositoryPkg.Update(existingPackage); err != nil {
 		log.Printf("package: Error updating package with ID %d: %v", ID, err)

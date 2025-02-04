@@ -38,6 +38,7 @@ func MigrateDB() error {
 		&model.User{},
 		&model.Appointment{},
 		&model.Payment{},
+		&model.Doctor{},
 	)
 	if err != nil {
 		return err
