@@ -1,13 +1,16 @@
 package validate
 
 import (
-	"fmt"
 	"strconv"
+	"strings"
 	"time"
+	"unicode"
 
+	"gihub.com/IsraelTeo/clinic-backend-hackacode-app/model"
 	"gihub.com/IsraelTeo/clinic-backend-hackacode-app/response"
 	"github.com/go-playground/validator"
 	"github.com/labstack/echo/v4"
+	"golang.org/x/text/unicode/norm"
 )
 
 func ParseID(c echo.Context) (uint, error) {
@@ -34,53 +37,115 @@ func Init() *CustomValidator {
 	}
 }
 
-// recibe un tiempo inicial y un tiempo final en formato de texto
-func Times(startTime, endTime string) error {
-	now := time.Now()             //tiempo actual
-	currentHour := now.Hour()     //Hora actual
-	currentMinute := now.Minute() //Minuto actual
-
-	// Transforma el tiempo inicial en un formato texto a un formato de tiempo
-	start, err := time.Parse("15:04", startTime)
+func ParseTime(timeStr string) (time.Time, error) {
+	parsedTime, err := time.Parse("15:04", timeStr)
 	if err != nil {
-		return fmt.Errorf("start_time tiene un formato inválido")
+		return time.Time{}, err
 	}
 
-	// Transforma el tiempo final en un formato texto a un formato de tiempo
-	end, err := time.Parse("15:04", endTime)
+	return parsedTime, nil
+}
+
+func ParseDate(dateStr string) (time.Time, error) {
+	parsedDate, err := time.Parse("2006-01-02", dateStr)
 	if err != nil {
-		return fmt.Errorf("end_time tiene un formato inválido")
+		return time.Time{}, err
 	}
 
-	// Verificar si start_time está en el pasado
-	if start.Hour() < currentHour {
-		// Si la hora de inicio es menor que la hora actual
-		return fmt.Errorf("start_time debe ser una hora futura")
-	}
+	return parsedDate, nil
+}
 
-	if start.Hour() == currentHour {
-		// Si está en la misma hora, verificar los minutos
-		if start.Minute() <= currentMinute {
-			return fmt.Errorf("start_time debe ser una hora futura")
+func IsDateInPast(date time.Time) bool {
+	now := time.Now()
+	return date.Before(now)
+}
+
+func IsStartBeforeEnd(start, end time.Time) bool {
+	return start.Before(end)
+}
+
+func IsWithinTimeRange(startTime, endTime, rangeStart, rangeEnd time.Time) bool {
+	return !(startTime.Before(rangeStart) || endTime.After(rangeEnd))
+}
+
+func HasTimeConflict(existingAppointments []model.Appointment, newStartTime, newEndTime time.Time) bool {
+
+	for _, appointment := range existingAppointments {
+		parsedEndTime, _ := ParseTime(appointment.EndTime)
+		parsedStartTime, _ := ParseTime(appointment.StartTime)
+		// Verificar si el horario de la nueva cita tiene conflicto con una cita existente
+		if newStartTime.Before(parsedEndTime) && newEndTime.After(parsedStartTime) {
+			return true // Hay un conflicto
 		}
 	}
+	return false // No hay conflicto
+}
 
-	// Verificar si end_time está en el pasado
-	if end.Hour() < currentHour {
-		// Si la hora de finalización es menor que la hora actual
-		return fmt.Errorf("end_time debe ser una hora futura")
+// Función para traducir días en español a inglés
+var dayTranslations = map[string]string{
+	"Lunes":     "Monday",
+	"Martes":    "Tuesday",
+	"Miércoles": "Wednesday",
+	"Jueves":    "Thursday",
+	"Viernes":   "Friday",
+	"Sábado":    "Saturday",
+	"Domingo":   "Sunday",
+}
+
+// Función para traducir días en inglés a español
+func TranslateDayToSpanish(englishDay string) string {
+	daysTranslation := map[string]string{
+		"Sunday":    "domingo",
+		"Monday":    "lunes",
+		"Tuesday":   "martes",
+		"Wednesday": "miércoles",
+		"Thursday":  "jueves",
+		"Friday":    "viernes",
+		"Saturday":  "sábado",
 	}
+	return daysTranslation[englishDay]
+}
 
-	if end.Hour() == currentHour {
-		// Si está en la misma hora, verificar los minutos
-		if end.Minute() <= currentMinute {
-			return fmt.Errorf("end_time debe ser una hora futura")
+// Función para traducir días en español a inglés
+func TranslateDay(day string) string {
+	if translated, exists := dayTranslations[day]; exists {
+		return translated
+	}
+	return day // Si no está en el mapa, devolver tal cual
+}
+
+func IsDayAvailable(appointmentDay string, validDays []string) bool {
+	// Convertimos el día de la cita a minúsculas y lo normalizamos
+	appointmentDay = normalizeDay(appointmentDay)
+
+	// Verificamos si el día de la cita está en la lista de días disponibles
+	for _, validDay := range validDays {
+		if validDay == appointmentDay {
+			return true
 		}
 	}
-	// Validar que EndTime sea después de StartTime
-	if end.Before(start) {
-		return fmt.Errorf("end_time debe ser después de start_time")
-	}
+	return false
+}
 
-	return nil
+// Normaliza las cadenas eliminando tildes (acentos) y pasando a minúsculas.
+func normalizeDay(day string) string {
+	// Convertir a minúsculas
+	day = strings.ToLower(day)
+	// Eliminar acentos/tildes
+	return removeAccents(day)
+}
+
+// Elimina los acentos/tildes de una cadena
+func removeAccents(input string) string {
+	// Normalizar a forma NFD (Descompuesta), y luego eliminar caracteres diacríticos
+	output := norm.NFD.String(input)
+	result := []rune{}
+	for _, r := range output {
+		if unicode.Is(unicode.Mn, r) {
+			// Eliminar los caracteres que son marcas de acento
+			continue
+		}
+		result = append(result, r)
+	}
+	return string(result)
 }

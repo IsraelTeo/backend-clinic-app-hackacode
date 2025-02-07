@@ -15,8 +15,8 @@ type Doctor struct {
 	Person
 	Especialty string  `json:"especialty" validate:"required,max=50"`
 	Days       string  `json:"days" validate:"required"`
-	StartTime  string  `json:"start_time" validate:"required,regex=^[0-9]{2}:[0-9]{2}$"` // Solo hora como string
-	EndTime    string  `json:"end_time" validate:"required,regex=^[0-9]{2}:[0-9]{2}$"`   // Solo hora como string
+	StartTime  string  `json:"start_time" validate:"required,regex=^[0-9]{2}:[0-9]{2}$"`
+	EndTime    string  `json:"end_time" validate:"required,regex=^[0-9]{2}:[0-9]{2}$"`
 	Salary     float64 `json:"salary" validate:"required,numeric"`
 }
 

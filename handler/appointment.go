@@ -32,7 +32,7 @@ func (h *AppointmentHandler) GetAppointmentByID(c echo.Context) error {
 		return response.WriteError(c, err.Error(), http.StatusNotFound)
 	}
 
-	return response.WriteSuccess(c, response.SuccessAppointmentFound, http.StatusOK, appointment)
+	return response.WriteSuccess(c, response.SuccessAppointmentsFound, http.StatusOK, appointment)
 }
 
 func (h *AppointmentHandler) GetAllAppointments(c echo.Context) error {
@@ -45,21 +45,34 @@ func (h *AppointmentHandler) GetAllAppointments(c echo.Context) error {
 
 	return response.WriteSuccess(c, response.SuccessAppointmentFound, http.StatusOK, appointments)
 }
-
 func (h *AppointmentHandler) CreateAppointment(c echo.Context) error {
 	log.Println("handler: request received in CreateAppointment")
 
+	// Vincular los datos de la solicitud a la estructura del modelo
 	appointment := model.Appointment{}
 	if err := c.Bind(&appointment); err != nil {
+		log.Printf("handler: error binding request: %v", err)
+		return response.WriteError(c, "Invalid request payload", http.StatusBadRequest)
+	}
+
+	// Llamar a la lógica para crear la cita
+	originalPrice, packageDiscount, finalPrice, insuranceDiscount, err := h.logic.CreateAppointment(&appointment)
+	if err != nil {
+		log.Printf("handler: error in business logic: %v", err)
 		return response.WriteError(c, err.Error(), http.StatusBadRequest)
 	}
 
-	// Crear la cita
-	if err := h.logic.CreateAppointment(&appointment); err != nil {
-		return response.WriteError(c, err.Error(), http.StatusInternalServerError)
-	}
-
-	return response.WriteSuccess(c, response.SuccessAppointmentCreated, http.StatusCreated, nil)
+	// Respuesta con los valores calculados correctamente
+	return response.WriteSuccessAppointmentDesc(
+		c,
+		response.SuccessAppointmentCreated,
+		http.StatusCreated,
+		originalPrice,
+		packageDiscount,
+		insuranceDiscount,
+		finalPrice,
+		appointment.Patient.Insurance,
+	)
 }
 
 func (h *AppointmentHandler) UpdateAppointment(c echo.Context) error {

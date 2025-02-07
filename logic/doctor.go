@@ -9,6 +9,7 @@ import (
 	"gihub.com/IsraelTeo/clinic-backend-hackacode-app/model"
 	"gihub.com/IsraelTeo/clinic-backend-hackacode-app/repository"
 	"gihub.com/IsraelTeo/clinic-backend-hackacode-app/response"
+	"gihub.com/IsraelTeo/clinic-backend-hackacode-app/validate"
 )
 
 type DoctorLogic interface {
@@ -54,24 +55,36 @@ func (l *doctorLogic) CreateDoctor(doctor *model.Doctor) error {
 	// Normalizar los días ingresados
 	normalizedDays, err := normalizeDays(doctor.Days)
 	if err != nil {
-		return err // Retornar el error si los días no son válidos
+		return err //falta averiguar de que es este error
 	}
+
 	doctor.Days = normalizedDays
 
 	// Convertir las horas y la fecha de nacimiento
-	startTime, endTime, birthDate, err := parseTimeAndDate(doctor.StartTime, doctor.EndTime, doctor.BirthDate)
+
+	startTime, err := validate.ParseTime(doctor.StartTime)
 	if err != nil {
-		return err // Retornar el error si el formato de hora o fecha no es válido
+		return err
+	}
+
+	endTime, err := validate.ParseTime(doctor.EndTime)
+	if err != nil {
+		return err
+	}
+
+	birthDate, err := validate.ParseDate(doctor.BirthDate)
+	if err != nil {
+		return err
 	}
 
 	// Combinando la fecha y la hora de inicio
-	now := time.Now()
-	startTimeMain := combineDateAndTime(startTime, now)
+	startTimeMain := combineDateAndTime(startTime, time.Now())
 
 	// Combinando la fecha y la hora de fin
-	endTimeMain := combineDateAndTime(endTime, now)
+	endTimeMain := combineDateAndTime(endTime, time.Now())
 
-	if endTimeMain.Before(startTimeMain) {
+	//validar que la hora inicial no sea en futuro de la hora final
+	if validate.IsStartBeforeEnd(startTime, endTimeMain) {
 		return fmt.Errorf("end time must be after start time")
 	}
 
@@ -116,20 +129,29 @@ func (l *doctorLogic) UpdateDoctor(ID uint, doctor *model.Doctor) error {
 	doctor.Days = normalizedDays
 
 	// Convertir las horas y la fecha de nacimiento
-	startTime, endTime, birthDate, err := parseTimeAndDate(doctor.StartTime, doctor.EndTime, doctor.BirthDate)
+	startTime, err := validate.ParseTime(doctor.StartTime)
 	if err != nil {
-		return err // Retornar el error si el formato de hora o fecha no es válido
+		return err
+	}
+
+	endTime, err := validate.ParseTime(doctor.EndTime)
+	if err != nil {
+		return err
+	}
+
+	birthDate, err := validate.ParseDate(doctor.BirthDate)
+	if err != nil {
+		return err
 	}
 
 	// Combinando la fecha y la hora de inicio
-	now := time.Now()
-	startTimeMain := combineDateAndTime(startTime, now)
+	startTimeMain := combineDateAndTime(startTime, time.Now())
 
 	// Combinando la fecha y la hora de fin
-	endTimeMain := combineDateAndTime(endTime, now)
+	endTimeMain := combineDateAndTime(endTime, time.Now())
 
-	// Validar que la hora de fin no sea antes de la hora de inicio
-	if endTimeMain.Before(startTimeMain) {
+	//validar que la hora inicial no sea en futuro de la hora final
+	if validate.IsStartBeforeEnd(startTime, endTimeMain) {
 		return fmt.Errorf("end time must be after start time")
 	}
 
@@ -163,6 +185,7 @@ func (l *doctorLogic) DeleteDoctor(ID uint) error {
 }
 
 func normalizeDays(days string) (string, error) {
+	//Días válidos
 	validDays := map[string]string{
 		"lunes":     string(model.Moonday),
 		"martes":    string(model.Tuesday),
@@ -172,47 +195,41 @@ func normalizeDays(days string) (string, error) {
 		"viernes":   string(model.Friday),
 	}
 
-	// Dividir los días en una lista
+	// Dividir los días en una lista, es una lista de string
 	daysArray := strings.Split(days, ",")
+
+	///declarar una lista de dias normalizados
 	normalizedDays := []string{}
 
+	//Recorremos los días de lunes a viernes
 	for _, day := range daysArray {
-		normalizedDay, exists := validDays[strings.ToLower(strings.TrimSpace(day))]
+
+		// Normalizar el día: convertirlo a minúsculas y eliminar espacios adicionales
+		normalizedDay := strings.ToLower(strings.TrimSpace(day))
+
+		// Verificar si el día normalizado está en el mapa de días válidos
+		validDay, exists := validDays[normalizedDay]
 		if !exists {
 			return "", fmt.Errorf("invalid day: %s, only Monday to Friday are allowed", day)
 		}
-		normalizedDays = append(normalizedDays, normalizedDay)
+
+		// Agregar el día válido a la lista de días normalizados
+		normalizedDays = append(normalizedDays, validDay)
 	}
 
 	// Serializar los días a una cadena separada por comas
 	return strings.Join(normalizedDays, ","), nil
 }
 
-// Función para convertir las horas y la fecha
-func parseTimeAndDate(startTimeStr, endTimeStr, birthDateStr string) (time.Time, time.Time, time.Time, error) {
-	// Convertir las horas a time.Time (puedes usar una fecha arbitraria, como 1970-01-01)
-	startTime, err := time.Parse("15:04", startTimeStr)
-	if err != nil {
-		return time.Time{}, time.Time{}, time.Time{}, fmt.Errorf("invalid start time format: %v", err)
-	}
-
-	endTime, err := time.Parse("15:04", endTimeStr)
-	if err != nil {
-		return time.Time{}, time.Time{}, time.Time{}, fmt.Errorf("invalid end time format: %v", err)
-	}
-
-	birthDate, err := time.Parse("2006-01-02", birthDateStr)
-	if err != nil {
-		return time.Time{}, time.Time{}, time.Time{}, fmt.Errorf("invalid birth date format: %v", err)
-	}
-
-	return startTime, endTime, birthDate, nil
-}
-
-// Función para combinar la fecha y la hora
 func combineDateAndTime(timeObj time.Time, referenceDate time.Time) time.Time {
 	return time.Date(
-		referenceDate.Year(), referenceDate.Month(), referenceDate.Day(),
-		timeObj.Hour(), timeObj.Minute(), 0, 0, referenceDate.Location(),
+		referenceDate.Year(),
+		referenceDate.Month(),
+		referenceDate.Day(),
+		timeObj.Hour(),
+		timeObj.Minute(),
+		0,
+		0,
+		referenceDate.Location(),
 	)
 }

@@ -2,6 +2,7 @@ package response
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/labstack/echo/v4"
 )
@@ -78,12 +79,13 @@ const (
 
 // Mensajes de error para doctores
 var (
-	ErrorDoctorNotFound   = errors.New("el médico no fue encontrado")
-	ErrorDoctorsNotFound  = errors.New("no fueron encontrados médicos")
-	ErrorListDoctorsEmpty = errors.New("no fueron encontrados médicos")
-	ErrorToCreatedDoctor  = errors.New("no se pudo crear el médico")
-	ErrorToUpdatedDoctor  = errors.New("no se pudo actualizar el médico")
-	ErrorToDeletedDoctor  = errors.New("no se pudo eliminar el médico")
+	ErrorDoctorNotFound    = errors.New("el médico no fue encontrado")
+	ErrorDoctorsNotFound   = errors.New("no fueron encontrados médicos")
+	ErrorListDoctorsEmpty  = errors.New("no fueron encontrados médicos")
+	ErrorToCreatedDoctor   = errors.New("no se pudo crear el médico")
+	ErrorToUpdatedDoctor   = errors.New("no se pudo actualizar el médico")
+	ErrorToDeletedDoctor   = errors.New("no se pudo eliminar el médico")
+	ErrorInvalidDoctorTime = errors.New("fecha inválida")
 )
 
 // Mensajes de exito de pacientes
@@ -98,32 +100,80 @@ const (
 
 // Mensajes de error para pacientes
 var (
-	ErrorPatientNotFound   = errors.New("el paciente no fue encontrado")
-	ErrorPatientsNotFound  = errors.New("no fueron encontrados pacientes")
-	ErrorListPatientsEmpty = errors.New("no fueron encontrados pacientes")
-	ErrorToCreatedPatient  = errors.New("no se pudo crear el paciente")
-	ErrorToUpdatedPatient  = errors.New("no se pudo actualizar el paciente")
-	ErrorToDeletedPatient  = errors.New("no se pudo eliminar el paciente")
+	ErrorPatientNotFound          = errors.New("el paciente no fue encontrado")
+	ErrorPatientsNotFound         = errors.New("no fueron encontrados pacientes")
+	ErrorListPatientsEmpty        = errors.New("no fueron encontrados pacientes")
+	ErrorToCreatedPatient         = errors.New("no se pudo crear el paciente")
+	ErrorToUpdatedPatient         = errors.New("no se pudo actualizar el paciente")
+	ErrorToDeletedPatient         = errors.New("no se pudo eliminar el paciente")
+	ErrorPatientInvalidDateFormat = errors.New("ingrese el formato adecuado para la fecha de nacimiento del paciente")
 )
 
 // Mensajes de exito de citas
 
 const (
 	SuccessAppointmentFound   = "¡Cita encontrada exitosamente!"
-	SuccessAppointmentUpdated = "¡Cita actualizado exitosamente!"
+	SuccessAppointmentUpdated = "¡Cita actualizada exitosamente!"
 	SuccessAppointmentsFound  = "¡Citas encontradas exitosamente!"
-	SuccessAppointmentCreated = "¡Cita registrada exitosamente!"
-	SuccessAppointmentDeleted = "¡Cita eliminado exitosamente!"
+	SuccessAppointmentCreated = "¡Cita registrada exitosamente, proceda a realizar el pago!"
+	SuccessAppointmentDeleted = "¡Cita eliminada exitosamente!"
 )
 
 // Mensajes de error para citas
 var (
-	ErrorAppointmentNotFound   = errors.New("la cita no fue encontrada")
-	ErrorAppointmetsNotFound   = errors.New("no fueron encontradas citas")
-	ErrorListAppointmentsEmpty = errors.New("no se encontró ninguna cita")
-	ErrorToCreatedAppointment  = errors.New("no se pudo registrar la cita")
-	ErrorToUpdatedAppointment  = errors.New("no se pudo actualizar la cita")
-	ErrorToDeletedAppointment  = errors.New("no se pudo eliminar la cita")
+	ErrorAppointmentNotFound = errors.New(
+		"no se encontró la cita especificada en el sistema",
+	)
+	ErrorAppointmetsNotFound = errors.New(
+		"no se encontraron citas registradas",
+	)
+	ErrorListAppointmentsEmpty = errors.New(
+		"no se encontró ninguna cita disponible",
+	)
+	ErrorToCreatedAppointment = errors.New(
+		"hubo un error al intentar registrar la cita; por favor, verifique los datos ingresados",
+	)
+	ErrorToUpdatedAppointment = errors.New(
+		"no se pudo actualizar la información de la cita; intente nuevamente",
+	)
+	ErrorToDeletedAppointment = errors.New(
+		"hubo un error al intentar eliminar la cita; intente nuevamente",
+	)
+	ErrorAppointmentDateInPast = errors.New(
+		"la fecha de la cita no puede ser en el pasado; por favor, elija una fecha futura",
+	)
+	ErrorAppointmentInvalidDateFormat = errors.New(
+		"el formato de la fecha ingresada no es válido; use el formato AAAA-MM-DD",
+	)
+	ErrorAppointmentDayNotAvailable = errors.New(
+		"el médico no tiene disponibilidad para el día seleccionado",
+	)
+	ErrorInvalidAppointmentTime = errors.New(
+		"el horario de la cita no coincide con el horario laboral del médico",
+	)
+	ErrorAppointmentTimeConflict = errors.New(
+		"el horario de la cita tiene conflictos con otra cita programada para el mismo médico",
+	)
+	ErrorInvalidAppointmentTimeRange = errors.New(
+		"el rango de tiempo especificado para la cita no es válido; asegúrese de que la hora de inicio sea anterior a la de finalización",
+	)
+	ErrorAppointmentTimeFormat = errors.New(
+		"el formato de hora ingresado no es válido; use el formato HH:MM",
+	)
+
+	ErrorPatientExists = errors.New(
+		"el paciente ya fue registrado anteriormente, solo ingresa su id",
+	)
+
+	ErrorPatientDataRequired = errors.New(
+		"se requieren datos del paciente",
+	)
+
+	ErrorInvalidAppointment = errors.New(
+		"debe seleccionar al menos un paquete o servicio para la cita",
+	)
+
+	ErrorPackageAndServiceEmpty = errors.New("ni paquete ni servicio especificado")
 )
 
 func WriteSuccess(c echo.Context, message string, status int, data interface{}) error {
@@ -138,5 +188,25 @@ func WriteError(c echo.Context, message string, status int) error {
 	return c.JSON(status, map[string]interface{}{
 		"error":  message,
 		"status": status,
+	})
+}
+
+func WriteSuccessAppointmentDesc(c echo.Context, message string, status int, originalPrice, packageDiscount, insuranceDiscount, finalPrice float64, hasInsurance bool) error {
+	return c.JSON(status, map[string]interface{}{
+		"El descuento por paquete es de: $/.": fmt.Sprintf("%.2f", packageDiscount),
+		"El descuento por seguro es de: $/.":  fmt.Sprintf("%.2f", insuranceDiscount),
+		"El precio de la cita es: $/.":        fmt.Sprintf("%.2f", originalPrice),
+		"El precio final de la cita es: $/.":  fmt.Sprintf("%.2f", finalPrice),
+		"tiene seguro":                        hasInsurance,
+		"message":                             message,
+		"status":                              status,
+	})
+}
+
+func WriteSuccessAppointment(c echo.Context, message string, status int, originalPrice float64) error {
+	return c.JSON(status, map[string]interface{}{
+		"status":                       status,
+		"message":                      message,
+		"El precio de la cita es: $/.": originalPrice,
 	})
 }

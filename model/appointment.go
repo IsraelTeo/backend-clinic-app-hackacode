@@ -1,23 +1,19 @@
 package model
 
-import "time"
-
 //Cita médica
 type Appointment struct {
-	ID          uint      `gorm:"primaryKey;autoIncrement" json:"-"`
-	PatientID   uint      `json:"patient_id"`
-	Patient     Patient   `json:"patient" validate:"required"`
-	DoctorID    uint      `json:"doctor_id" validate:"required"`
-	ServiceID   uint      `json:"service_id" validate:"required"`
-	PackageID   uint      `json:"package_id" validate:"required"`
-	Date        time.Time `json:"date" validate:"required"`
-	StartTime   time.Time `json:"start_time" validate:"required"`
-	EndTime     time.Time `json:"end_time" validate:"required"`
-	Paid        bool      `json:"paid" default:"false"`
-	TotalAmount float64   `json:"total_amount"`
+	ID          uint    `gorm:"primaryKey;autoIncrement" json:"id"`
+	PatientID   uint    `json:"patient_id" gorm:"not null;constraint:OnDelete:CASCADE"`
+	Patient     Patient `json:"patient" gorm:"foreignKey:PatientID"`
+	DoctorID    uint    `json:"doctor_id" validate:"required"`
+	ServiceID   uint    `json:"service_id"`
+	PackageID   uint    `json:"package_id"`
+	Date        string  `json:"date" validate:"required"`
+	StartTime   string  `json:"start_time" validate:"required"`
+	EndTime     string  `json:"end_time" validate:"required"`
+	Paid        bool    `json:"paid" default:"false"`
+	TotalAmount float64 `json:"total_amount"`
 }
-
-//al registrar  se da de respuesta
 
 //Pago
 type Payment struct {
@@ -36,4 +32,4 @@ const (
 )
 
 //responder el QR
-//factura PDF
+//comprobante de pago PDF

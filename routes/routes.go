@@ -23,6 +23,7 @@ func InitEnpoints(e *echo.Echo) {
 	setUpDoctor(api)
 	setUpPatient(api)
 	setUpAuth(api)
+	setUpAppointment(api)
 }
 
 func setUpAuth(api *echo.Group) {
@@ -50,9 +51,9 @@ func setUpService(api *echo.Group) {
 
 func setUpPackage(api *echo.Group) {
 	packageRepository := repository.NewRepository[model.Package](db.GDB)
-	packageRepository3 := repository.NewRepository[model.Service](db.GDB)
-	packageLogic := logic.NewPackageLogic(packageRepository, packageRepository3)
-	serviceLogic := logic.NewServiceLogic(packageRepository3)
+	packageRepositoryMain := repository.NewRepository[model.Service](db.GDB)
+	packageLogic := logic.NewPackageLogic(packageRepository, packageRepositoryMain)
+	serviceLogic := logic.NewServiceLogic(packageRepositoryMain)
 	packageHandler := handler.NewPackageHandler(packageLogic, serviceLogic)
 
 	packageServices := api.Group("/packages")
@@ -90,4 +91,36 @@ func setUpPatient(api *echo.Group) {
 	patient.POST(voidPath, patientHandler.CreatePatient)
 	patient.PUT(idPath, patientHandler.UpdatePatient)
 	patient.DELETE(idPath, patientHandler.DeletePatient)
+}
+
+func setUpAppointment(api *echo.Group) {
+	appointmentRepository := repository.NewRepository[model.Appointment](db.GDB)
+	appointmentRepositoryMain := repository.NewAppointmentRepository(db.GDB)
+	doctorRepository := repository.NewRepository[model.Doctor](db.GDB)
+	patientRepository := repository.NewRepository[model.Patient](db.GDB)
+	patientLogic := logic.NewPatientLogic(patientRepository)
+	packageRepository := repository.NewRepository[model.Package](db.GDB)
+	serviceRepository := repository.NewRepository[model.Service](db.GDB)
+	patientRepositoryMain := repository.NewPatientRepository(db.GDB)
+	packageRepositoryMain := repository.NewPackageRepository(db.GDB)
+	appointmentLogic := logic.NewAppointmentLogic(
+		appointmentRepository,
+		doctorRepository,
+		patientRepository,
+		appointmentRepositoryMain,
+		packageRepository,
+		serviceRepository,
+		patientLogic,
+		patientRepositoryMain,
+		packageRepositoryMain,
+	)
+	appointmentHandler := handler.NewAppointmentHandler(appointmentLogic)
+
+	appointment := api.Group("/appointments")
+
+	appointment.GET(idPath, appointmentHandler.GetAppointmentByID)
+	appointment.GET(voidPath, appointmentHandler.GetAllAppointments)
+	appointment.POST(voidPath, appointmentHandler.CreateAppointment)
+	appointment.PUT(idPath, appointmentHandler.UpdateAppointment)
+	appointment.DELETE(idPath, appointmentHandler.DeleteAppointment)
 }

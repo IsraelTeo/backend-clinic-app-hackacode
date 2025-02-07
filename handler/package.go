@@ -75,7 +75,7 @@ func (h *PackageHandler) UpdatePackage(c echo.Context) error {
 
 	log.Printf("handler: request received in UpdatePackage with ID: %d", ID)
 
-	packageServices := model.Package{}
+	packageServices := model.CreatePackageRequest{}
 	if err := c.Bind(&packageServices); err != nil {
 		return response.WriteError(c, err.Error(), http.StatusBadRequest)
 	}
