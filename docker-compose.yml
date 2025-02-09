@@ -1,0 +1,20 @@
+version: "3.9"
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: clinic-db
+    ports:
+      - "${DB_PORT}:3306"  
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - db_data:/var/lib/mysql  
+    env_file:
+      - .env  
+
+volumes:
+  db_data:    
