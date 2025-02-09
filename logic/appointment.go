@@ -89,13 +89,15 @@ func (l *appointmentLogic) CreateAppointment(appointment *model.Appointment) (fl
 	}
 
 	// Verificar si el ID del paciente está presente en el request
-	if appointment.PatientID != 0 { // Si el patient_id es proporcionado
-		// Buscar paciente por ID y asignar a la cita
+	if appointment.PatientID != 0 {
+		log.Println("the request brought an ID")
+
 		existingPatient, err := l.repositoryPatient.GetByID(appointment.PatientID)
 		if err != nil {
 			log.Printf("appointment: Error fetching patient by ID: %v", err)
 			return 0, 0, 0, 0, response.ErrorPatientNotFound
 		}
+
 		appointment.Patient = *existingPatient // Asignamos el paciente encontrado a la cita
 	} else if appointment.Patient != (model.Patient{}) { // Si no hay patient_id, pero el objeto de paciente está presente
 		// Crear un nuevo paciente con los datos proporcionados
@@ -327,4 +329,30 @@ func parseStartAndEndTime(startTimeStr, endTimeStr string) (time.Time, time.Time
 
 	// Retornar la fecha de la cita y los horarios de inicio y fin
 	return startTime, endTime, nil
+}
+
+// Función para validar el doctor
+func (l *appointmentLogic) validateDoctor(doctorID uint) error {
+	doctor, err := l.repositoryDoctor.GetByID(doctorID)
+	if err != nil || doctor == nil {
+		log.Printf("appointment: Error fetching doctor with ID %d: %v", doctorID, err)
+		return response.ErrorDoctorNotFound
+	}
+	return nil
+}
+
+func (l *appointmentLogic) handlePatientByID(appointment *model.Appointment) error {
+	if appointment.PatientID == 0 {
+		return nil
+	}
+
+	log.Println("the request brought an ID")
+	existingPatient, err := l.repositoryPatient.GetByID(appointment.PatientID)
+	if err != nil {
+		log.Printf("appointment: Error fetching patient by ID: %v", err)
+		return response.ErrorPatientNotFound
+	}
+
+	appointment.Patient = *existingPatient // Asignamos el paciente encontrado a la cita
+	return nil
 }

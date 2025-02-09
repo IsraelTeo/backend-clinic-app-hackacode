@@ -24,6 +24,7 @@ func InitEnpoints(e *echo.Echo) {
 	setUpPatient(api)
 	setUpAuth(api)
 	setUpAppointment(api)
+	setUpPayment(api)
 }
 
 func setUpAuth(api *echo.Group) {
@@ -123,4 +124,14 @@ func setUpAppointment(api *echo.Group) {
 	appointment.POST(voidPath, appointmentHandler.CreateAppointment)
 	appointment.PUT(idPath, appointmentHandler.UpdateAppointment)
 	appointment.DELETE(idPath, appointmentHandler.DeleteAppointment)
+}
+
+func setUpPayment(api *echo.Group) {
+	paymentRepositoryMain := repository.NewAppointmentRepository(db.GDB)
+	paymentLogic := logic.NewPaymentLogic(paymentRepositoryMain)
+	paymentHandler := handler.NewPaymentHandler(paymentLogic)
+
+	payment := api.Group("/payment/register")
+
+	payment.POST(voidPath, paymentHandler.PaymentRegister)
 }

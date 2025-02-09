@@ -17,8 +17,9 @@ type Appointment struct {
 
 //Pago
 type Payment struct {
-	AppoimentID uint        `json:"appoiment_id" validate:"required"`
-	Paid        bool        //bool FALSE -> ELIMINO LA CITA LA BD Y SI ME LLEGA TRUE EL VALOR DE CITA PAID TRUE
+	AppoimentID uint `json:"appoiment_id" validate:"required"`
+	Paid        bool
+	TotalAmount float64     `json:"total_amount"`
 	PaymentType PaymentType `json:"payment_type" validate:"required"`
 }
 
@@ -27,9 +28,12 @@ type PaymentType string
 
 const (
 	Cash        PaymentType = "efectivo"
-	Card        PaymentType = "card"
+	Card        PaymentType = "tarjeta"
 	Application PaymentType = "applicativo"
 )
 
-//responder el QR
-//comprobante de pago PDF
+//Respuesta al realizar el pago
+type PaymentResponse struct {
+	QRCode     string `json:"qr_code"`
+	PDFReceipt string `json:"pdf_receipt"`
+}

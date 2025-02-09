@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 
+	"gihub.com/IsraelTeo/clinic-backend-hackacode-app/model"
 	"github.com/labstack/echo/v4"
 )
 
@@ -94,7 +95,7 @@ const (
 	SuccessPatientFound   = "¡Paciente encontrado exitosamente!"
 	SuccessPatientUpdated = "¡Paciente actualizado exitosamente!"
 	SuccessPatientsFound  = "¡Paciente encontrados exitosamente!"
-	SuccessPatientCreated = "¡Paciente creado exitosamente!"
+	SuccessPatientCreated = "¡Paciente registrado exitosamente!"
 	SuccessPatientDeleted = "¡Pacienteeliminado exitosamente!"
 )
 
@@ -176,6 +177,22 @@ var (
 	ErrorPackageAndServiceEmpty = errors.New("ni paquete ni servicio especificado")
 )
 
+// Mensajes de éxito de pago realizado
+const (
+	SuccessPaymentRegister = "Pago registrado exitosamente"
+)
+
+// Mensajes de error del pago
+var (
+	ErrorPaidNotTrue           = errors.New("el pago debe ser confirmado")
+	ErrorTotalAmountEmpty      = errors.New("por favor ingresar la cantidad de dinero")
+	ErrorTotalAmountBadRequest = errors.New("por favor ingresar la cantidad de dinero adecuada")
+	ErrorToUpdatePaid          = errors.New("error al actualizar el estado del pago")
+	ErrorGeneratingQRCode      = errors.New("error al generar el código QR")
+	ErrorGeneratingPDF         = errors.New("error al generar la boleta en formato pdf")
+	ErrorInvalidPaymentType    = errors.New("el tipo de pago es inválido, ingrese: efectivo, pago por aplicación o pago con tarjeta")
+)
+
 func WriteSuccess(c echo.Context, message string, status int, data interface{}) error {
 	return c.JSON(status, map[string]interface{}{
 		"status":  status,
@@ -208,5 +225,13 @@ func WriteSuccessAppointment(c echo.Context, message string, status int, origina
 		"status":                       status,
 		"message":                      message,
 		"El precio de la cita es: $/.": originalPrice,
+	})
+}
+
+func WriteSuccessPayment(c echo.Context, message string, status int, paymentResponse model.PaymentResponse) error {
+	return c.JSON(status, map[string]interface{}{
+		"status":  status,
+		"message": message,
+		"data":    paymentResponse,
 	})
 }

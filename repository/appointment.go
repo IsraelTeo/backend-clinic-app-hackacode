@@ -13,6 +13,7 @@ type AppointmentRepository interface {
 	GetAll() ([]model.Appointment, error)
 	GetAppointmentsByDoctor(doctorID uint) ([]model.Appointment, error)
 	GetAppointmentsByDoctorAndDate(doctorID uint, date string) ([]model.Appointment, error)
+	UpdatePaid(appointmentID uint) error
 }
 type appointmentRepository struct {
 	db *gorm.DB
@@ -69,6 +70,21 @@ func (r *appointmentRepository) GetAppointmentsByDoctorAndDate(doctorID uint, da
 		return nil, err
 	}
 	return appointments, nil
+}
+
+func (r *appointmentRepository) UpdatePaid(appointmentID uint) error {
+	appointment := model.Appointment{}
+	if err := r.db.First(&appointment, appointmentID).Error; err != nil {
+		return err
+	}
+
+	appointment.Paid = true
+
+	if err := r.db.Save(&appointment).Error; err != nil {
+		return err
+	}
+
+	return nil
 }
 
 /*
