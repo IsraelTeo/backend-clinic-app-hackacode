@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"gihub.com/IsraelTeo/clinic-backend-hackacode-app/model"
+	"gihub.com/IsraelTeo/clinic-backend-hackacode-app/response"
 	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"
 )
@@ -20,7 +21,7 @@ func generateToken() (string, error) {
 	secret := os.Getenv("API_SECRET")
 
 	if !verifyEnvVariablesToGenerateToken(expStr, secret) {
-		return "", fmt.Errorf("environment variables JWT_EXP and API_SECRET are null or invalid")
+		return "", response.ErrorEnvVariablesInvalid
 	}
 
 	exp, err := strconv.ParseInt(expStr, 10, 64)

@@ -43,11 +43,11 @@ func setUpService(api *echo.Group) {
 
 	service := api.Group("/services")
 
-	service.GET(idPath, serviceHandler.GetServiceByID)
-	service.GET(voidPath, serviceHandler.GetAllServices)
-	service.POST(voidPath, serviceHandler.CreateService)
-	service.PUT(idPath, serviceHandler.UpdateService)
-	service.DELETE(idPath, serviceHandler.DeleteService)
+	service.GET(idPath, auth.ValidateJWT(serviceHandler.GetServiceByID))
+	service.GET(voidPath, auth.ValidateJWT(serviceHandler.GetAllServices))
+	service.POST(voidPath, auth.ValidateJWT(serviceHandler.CreateService))
+	service.PUT(idPath, auth.ValidateJWT(serviceHandler.UpdateService))
+	service.DELETE(idPath, auth.ValidateJWT(serviceHandler.DeleteService))
 }
 
 func setUpPackage(api *echo.Group) {
@@ -59,11 +59,11 @@ func setUpPackage(api *echo.Group) {
 
 	packageServices := api.Group("/packages")
 
-	packageServices.GET(idPath, packageHandler.GetPackageByID)
-	packageServices.GET(voidPath, packageHandler.GetAllPackages)
-	packageServices.POST(voidPath, packageHandler.CreatePackage)
-	packageServices.PUT(idPath, packageHandler.UpdatePackage)
-	packageServices.DELETE(idPath, packageHandler.DeletePackage)
+	packageServices.GET(idPath, auth.ValidateJWT(packageHandler.GetPackageByID))
+	packageServices.GET(voidPath, auth.ValidateJWT(packageHandler.GetAllPackages))
+	packageServices.POST(voidPath, auth.ValidateJWT(packageHandler.CreatePackage))
+	packageServices.PUT(idPath, auth.ValidateJWT(packageHandler.UpdatePackage))
+	packageServices.DELETE(idPath, auth.ValidateJWT(packageHandler.DeletePackage))
 }
 
 func setUpDoctor(api *echo.Group) {
@@ -73,11 +73,11 @@ func setUpDoctor(api *echo.Group) {
 
 	doctor := api.Group("/doctors")
 
-	doctor.GET(idPath, doctorHandler.GetDoctorByID)
-	doctor.GET(voidPath, doctorHandler.GetAllDoctors)
-	doctor.POST(voidPath, doctorHandler.CreateDoctor)
-	doctor.PUT(idPath, doctorHandler.UpdateDoctor)
-	doctor.DELETE(idPath, doctorHandler.DeleteDoctor)
+	doctor.GET(idPath, auth.ValidateJWT(doctorHandler.GetDoctorByID))
+	doctor.GET(voidPath, auth.ValidateJWT(doctorHandler.GetAllDoctors))
+	doctor.POST(voidPath, auth.ValidateJWT(doctorHandler.CreateDoctor))
+	doctor.PUT(idPath, auth.ValidateJWT(doctorHandler.UpdateDoctor))
+	doctor.DELETE(idPath, auth.ValidateJWT(doctorHandler.DeleteDoctor))
 }
 
 func setUpPatient(api *echo.Group) {
@@ -87,11 +87,11 @@ func setUpPatient(api *echo.Group) {
 
 	patient := api.Group("/patients")
 
-	patient.GET(idPath, patientHandler.GetPatientByID)
-	patient.GET(voidPath, patientHandler.GetAllPatients)
-	patient.POST(voidPath, patientHandler.CreatePatient)
-	patient.PUT(idPath, patientHandler.UpdatePatient)
-	patient.DELETE(idPath, patientHandler.DeletePatient)
+	patient.GET(idPath, auth.ValidateJWT(patientHandler.GetPatientByID))
+	patient.GET(voidPath, auth.ValidateJWT(patientHandler.GetAllPatients))
+	patient.POST(voidPath, auth.ValidateJWT(patientHandler.CreatePatient))
+	patient.PUT(idPath, auth.ValidateJWT(patientHandler.UpdatePatient))
+	patient.DELETE(idPath, auth.ValidateJWT(patientHandler.DeletePatient))
 }
 
 func setUpAppointment(api *echo.Group) {
@@ -119,11 +119,11 @@ func setUpAppointment(api *echo.Group) {
 
 	appointment := api.Group("/appointments")
 
-	appointment.GET(idPath, appointmentHandler.GetAppointmentByID)
-	appointment.GET(voidPath, appointmentHandler.GetAllAppointments)
-	appointment.POST(voidPath, appointmentHandler.CreateAppointment)
-	appointment.PUT(idPath, appointmentHandler.UpdateAppointment)
-	appointment.DELETE(idPath, appointmentHandler.DeleteAppointment)
+	appointment.GET(idPath, auth.ValidateJWT(appointmentHandler.GetAppointmentByID))
+	appointment.GET(voidPath, auth.ValidateJWT(appointmentHandler.GetAllAppointments))
+	appointment.POST(voidPath, auth.ValidateJWT(appointmentHandler.CreateAppointment))
+	appointment.PUT(idPath, auth.ValidateJWT(appointmentHandler.UpdateAppointment))
+	appointment.DELETE(idPath, auth.ValidateJWT(appointmentHandler.DeleteAppointment))
 }
 
 func setUpPayment(api *echo.Group) {
@@ -133,5 +133,5 @@ func setUpPayment(api *echo.Group) {
 
 	payment := api.Group("/payment/register")
 
-	payment.POST(voidPath, paymentHandler.PaymentRegister)
+	payment.POST(voidPath, auth.ValidateJWT(paymentHandler.PaymentRegister))
 }

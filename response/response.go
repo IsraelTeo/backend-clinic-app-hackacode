@@ -26,6 +26,20 @@ var (
 	ErrorGeneratingToken = errors.New("no se pudo generar el token de autenticación")
 )
 
+// Mensajes de error para generación y validación de tokens
+var (
+	ErrorEnvVariablesInvalid    = errors.New("las variables de entorno JWT_EXP y API_SECRET son nulas o inválidas")
+	ErrorJWTExpInvalid          = errors.New("el valor de JWT_EXP es inválido, se utilizará el valor predeterminado de 1 hora (3600 segundos)")
+	ErrorSigningToken           = errors.New("error al firmar el token")
+	ErrorAuthorizationHeader    = errors.New("encabezado de autorización no encontrado")
+	ErrorAuthorizationHeaderFmt = errors.New("formato del encabezado de autorización inválido")
+	ErrorTokenInvalid           = errors.New("el token no es válido")
+	ErrorTokenClaimsInvalid     = errors.New("no se pudo recuperar la información del payload o el token es inválido")
+	ErrorTokenEmailInvalid      = errors.New("el campo 'email' está ausente o no es válido en los claims del token")
+	ErrorSigningMethodInvalid   = errors.New("el método de firma del token no es válido")
+	ErrorTokenMissingInRequest  = errors.New("no se encontró un token en la solicitud")
+)
+
 // Mensajes de éxito para servicios médicos
 const (
 	SuccessServiceFound   = "¡Servicio médico encontrado exitosamente!"
@@ -122,59 +136,23 @@ const (
 
 // Mensajes de error para citas
 var (
-	ErrorAppointmentNotFound = errors.New(
-		"no se encontró la cita especificada en el sistema",
-	)
-	ErrorAppointmetsNotFound = errors.New(
-		"no se encontraron citas registradas",
-	)
-	ErrorListAppointmentsEmpty = errors.New(
-		"no se encontró ninguna cita disponible",
-	)
-	ErrorToCreatedAppointment = errors.New(
-		"hubo un error al intentar registrar la cita; por favor, verifique los datos ingresados",
-	)
-	ErrorToUpdatedAppointment = errors.New(
-		"no se pudo actualizar la información de la cita; intente nuevamente",
-	)
-	ErrorToDeletedAppointment = errors.New(
-		"hubo un error al intentar eliminar la cita; intente nuevamente",
-	)
-	ErrorAppointmentDateInPast = errors.New(
-		"la fecha de la cita no puede ser en el pasado; por favor, elija una fecha futura",
-	)
-	ErrorAppointmentInvalidDateFormat = errors.New(
-		"el formato de la fecha ingresada no es válido; use el formato AAAA-MM-DD",
-	)
-	ErrorAppointmentDayNotAvailable = errors.New(
-		"el médico no tiene disponibilidad para el día seleccionado",
-	)
-	ErrorInvalidAppointmentTime = errors.New(
-		"el horario de la cita no coincide con el horario laboral del médico",
-	)
-	ErrorAppointmentTimeConflict = errors.New(
-		"el horario de la cita tiene conflictos con otra cita programada para el mismo médico",
-	)
-	ErrorInvalidAppointmentTimeRange = errors.New(
-		"el rango de tiempo especificado para la cita no es válido; asegúrese de que la hora de inicio sea anterior a la de finalización",
-	)
-	ErrorAppointmentTimeFormat = errors.New(
-		"el formato de hora ingresado no es válido; use el formato HH:MM",
-	)
-
-	ErrorPatientExists = errors.New(
-		"el paciente ya fue registrado anteriormente, solo ingresa su id",
-	)
-
-	ErrorPatientDataRequired = errors.New(
-		"se requieren datos del paciente",
-	)
-
-	ErrorInvalidAppointment = errors.New(
-		"debe seleccionar al menos un paquete o servicio para la cita",
-	)
-
-	ErrorPackageAndServiceEmpty = errors.New("ni paquete ni servicio especificado")
+	ErrorAppointmentNotFound          = errors.New("no se encontró la cita especificada en el sistema")
+	ErrorAppointmetsNotFound          = errors.New("no se encontraron citas registradas")
+	ErrorListAppointmentsEmpty        = errors.New("no se encontró ninguna cita disponible")
+	ErrorToCreatedAppointment         = errors.New("hubo un error al intentar registrar la cita; por favor, verifique los datos ingresados")
+	ErrorToUpdatedAppointment         = errors.New("no se pudo actualizar la información de la cita; intente nuevamente")
+	ErrorToDeletedAppointment         = errors.New("hubo un error al intentar eliminar la cita; intente nuevamente")
+	ErrorAppointmentDateInPast        = errors.New("la fecha de la cita no puede ser en el pasado; por favor, elija una fecha futura")
+	ErrorAppointmentInvalidDateFormat = errors.New("el formato de la fecha ingresada no es válido; use el formato AAAA-MM-DD")
+	ErrorAppointmentDayNotAvailable   = errors.New("el médico no tiene disponibilidad para el día seleccionado")
+	ErrorInvalidAppointmentTime       = errors.New("el horario de la cita no coincide con el horario laboral del médico")
+	ErrorAppointmentTimeConflict      = errors.New("el horario de la cita tiene conflictos con otra cita programada para el mismo médico")
+	ErrorInvalidAppointmentTimeRange  = errors.New("el rango de tiempo especificado para la cita no es válido; asegúrese de que la hora de inicio sea anterior a la de finalización")
+	ErrorAppointmentTimeFormat        = errors.New("el formato de hora ingresado no es válido; use el formato HH:MM")
+	ErrorPatientExists                = errors.New("el paciente ya fue registrado anteriormente, solo ingresa su id")
+	ErrorPatientDataRequired          = errors.New("se requieren datos del paciente")
+	ErrorInvalidAppointment           = errors.New("debe seleccionar al menos un paquete o servicio para la cita")
+	ErrorPackageAndServiceEmpty       = errors.New("ni paquete ni servicio especificado")
 )
 
 // Mensajes de éxito de pago realizado
