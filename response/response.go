@@ -116,12 +116,14 @@ const (
 // Mensajes de error para pacientes
 var (
 	ErrorPatientNotFound          = errors.New("el paciente no fue encontrado")
+	ErrorPatientExistsDNI         = errors.New("ya existe un paciente con el DNI ingresado")
 	ErrorPatientsNotFound         = errors.New("no fueron encontrados pacientes")
 	ErrorListPatientsEmpty        = errors.New("no fueron encontrados pacientes")
 	ErrorToCreatedPatient         = errors.New("no se pudo crear el paciente")
 	ErrorToUpdatedPatient         = errors.New("no se pudo actualizar el paciente")
 	ErrorToDeletedPatient         = errors.New("no se pudo eliminar el paciente")
 	ErrorPatientInvalidDateFormat = errors.New("ingrese el formato adecuado para la fecha de nacimiento del paciente")
+	ErrorUnlinkingAppointments    = errors.New("no se pudo desvincular las citas del paciente")
 )
 
 // Mensajes de exito de citas

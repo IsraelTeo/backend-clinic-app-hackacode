@@ -6,6 +6,7 @@ import (
 	"time"
 	"unicode"
 
+	"gihub.com/IsraelTeo/clinic-backend-hackacode-app/db"
 	"gihub.com/IsraelTeo/clinic-backend-hackacode-app/model"
 	"gihub.com/IsraelTeo/clinic-backend-hackacode-app/response"
 	"github.com/go-playground/validator"
@@ -148,4 +149,21 @@ func removeAccents(input string) string {
 		result = append(result, r)
 	}
 	return string(result)
+}
+
+func CheckEmailExists(email string) bool {
+	var user model.User
+	if err := db.GDB.Where("email = ?", email).First(&user).Error; err != nil {
+		return false
+	}
+	return true
+}
+
+func CheckDNIExists(DNI string) bool {
+	var patient model.Patient
+	if err := db.GDB.Where("DNI = ?", DNI).First(&patient).Error; err != nil {
+		return false
+	}
+
+	return true
 }

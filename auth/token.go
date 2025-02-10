@@ -10,18 +10,23 @@ import (
 	"time"
 
 	"gihub.com/IsraelTeo/clinic-backend-hackacode-app/model"
-	"gihub.com/IsraelTeo/clinic-backend-hackacode-app/response"
 	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"
 )
 
-func generateToken() (string, error) {
+type Claims struct {
+	Email string `json:"email"`
+	jwt.StandardClaims
+}
+
+func generateToken(user *model.User) (string, error) {
 	expStr := os.Getenv("JWT_EXP")
 	iat := time.Now().Unix()
 	secret := os.Getenv("API_SECRET")
 
 	if !verifyEnvVariablesToGenerateToken(expStr, secret) {
-		return "", response.ErrorEnvVariablesInvalid
+		log.Println("Environment variables JWT_EXP and API_SECRET are null or invalid")
+		return "", fmt.Errorf("environment variables JWT_EXP and API_SECRET are null or invalid")
 	}
 
 	exp, err := strconv.ParseInt(expStr, 10, 64)
@@ -30,9 +35,12 @@ func generateToken() (string, error) {
 		return "", fmt.Errorf("invalid JWT_EXP value: %v", err)
 	}
 
-	claims := jwt.StandardClaims{
-		IssuedAt:  iat,
-		ExpiresAt: time.Now().Add(time.Second * time.Duration(exp)).Unix(),
+	claims := Claims{
+		Email: user.Email,
+		StandardClaims: jwt.StandardClaims{
+			IssuedAt:  iat,
+			ExpiresAt: time.Now().Add(time.Second * time.Duration(exp)).Unix(),
+		},
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)

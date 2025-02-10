@@ -3,7 +3,7 @@ package model
 //Cita médica
 type Appointment struct {
 	ID          uint    `gorm:"primaryKey;autoIncrement" json:"id"`
-	PatientID   uint    `json:"patient_id" gorm:"not null;constraint:OnDelete:CASCADE"`
+	PatientID   uint    `json:"patient_id" gorm:"constraint:OnDelete:CASCADE"`
 	Patient     Patient `json:"patient" gorm:"foreignKey:PatientID"`
 	DoctorID    uint    `json:"doctor_id" validate:"required"`
 	ServiceID   uint    `json:"service_id"`

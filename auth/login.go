@@ -24,7 +24,7 @@ type userLogin struct {
 
 func NewLoginService(repository repository.UserRepository) LoginService {
 	return &loginService{repository: repository}
-}	
+}
 
 func (s *loginService) Login(c echo.Context) error {
 	log.Println("login-service: Request received in Login")
@@ -35,19 +35,22 @@ func (s *loginService) Login(c echo.Context) error {
 		return response.WriteError(c, response.ErrorBadRequestUser.Error(), http.StatusBadRequest)
 	}
 
-	userData, err := s.repository.GetUserByEmail(user.Email)
+	// Buscar el usuario por email
+	userFound, err := s.repository.GetUserByEmail(user.Email)
 	if err != nil {
 		log.Printf("login-service: User not found with email: %s, error: %v", user.Email, err)
 		return response.WriteError(c, response.ErrorInvalidEmail.Error(), http.StatusUnauthorized)
 	}
 
-	if !comparePassword(user.Password, userData.Password) {
+	// Verificar la contraseña
+	if !comparePassword(user.Password, userFound.Password) {
 		log.Printf("login-service: Password mismatch for user: %s", user.Email)
 		return response.WriteError(c, response.ErrorBadCretendials.Error(), http.StatusUnauthorized)
 	}
 
+	// Generar el token para el usuario
 	log.Printf("[INFO] LoginService: Generating token for user: %s", user.Email)
-	token, err := generateToken()
+	token, err := generateToken(userFound)
 	if err != nil {
 		log.Printf("login-service: Error generating token: %v", err)
 		return response.WriteError(c, response.ErrorGeneratingToken.Error(), http.StatusInternalServerError)
@@ -56,5 +59,3 @@ func (s *loginService) Login(c echo.Context) error {
 	log.Printf("login-service: Login successful for user: %s", user.Email)
 	return response.WriteSuccess(c, response.SuccessLogin, http.StatusOK, token)
 }
-
-
