@@ -31,7 +31,7 @@ func setUpAuth(api *echo.Group) {
 	authRepository := repository.NewUserRepository(db.GDB)
 	authLogic := auth.NewLoginService(authRepository)
 
-	auth := api.Group("/auth")
+	auth := api.Group("/login")
 
 	auth.POST(loginPath, authLogic.Login)
 }
@@ -104,6 +104,7 @@ func setUpAppointment(api *echo.Group) {
 	serviceRepository := repository.NewRepository[model.Service](db.GDB)
 	patientRepositoryMain := repository.NewPatientRepository(db.GDB)
 	packageRepositoryMain := repository.NewPackageRepository(db.GDB)
+
 	appointmentLogic := logic.NewAppointmentLogic(
 		appointmentRepository,
 		doctorRepository,
@@ -115,6 +116,7 @@ func setUpAppointment(api *echo.Group) {
 		patientRepositoryMain,
 		packageRepositoryMain,
 	)
+
 	appointmentHandler := handler.NewAppointmentHandler(appointmentLogic)
 
 	appointment := api.Group("/appointments")
