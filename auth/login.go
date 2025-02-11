@@ -35,20 +35,17 @@ func (s *loginService) Login(c echo.Context) error {
 		return response.WriteError(c, response.ErrorBadRequestUser.Error(), http.StatusBadRequest)
 	}
 
-	// Buscar el usuario por email
 	userFound, err := s.repository.GetUserByEmail(user.Email)
 	if err != nil {
 		log.Printf("login-service: User not found with email: %s, error: %v", user.Email, err)
 		return response.WriteError(c, response.ErrorInvalidEmail.Error(), http.StatusUnauthorized)
 	}
 
-	// Verificar la contraseña
 	if !comparePassword(user.Password, userFound.Password) {
 		log.Printf("login-service: Password mismatch for user: %s", user.Email)
 		return response.WriteError(c, response.ErrorBadCretendials.Error(), http.StatusUnauthorized)
 	}
 
-	// Generar el token para el usuario
 	log.Printf("[INFO] LoginService: Generating token for user: %s", user.Email)
 	token, err := generateToken(userFound)
 	if err != nil {

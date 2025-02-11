@@ -39,8 +39,9 @@ func (l *patientLogic) GetPatientByID(ID uint) (*model.Patient, error) {
 	patient, err := l.repositoryPatient.GetByID(ID)
 	if err != nil {
 		log.Printf("patient: Error fetching patient with ID %d: %v", ID, err)
-		return nil, response.ErrorPatientNotFound
+		return nil, response.ErrorPatientNotFoundID
 	}
+
 	return patient, nil
 }
 
@@ -48,7 +49,7 @@ func (l *patientLogic) GetPatientByDNI(DNI string) (*model.Patient, error) {
 	patient, err := l.repositoryPatientMain.GetPatientByDNI(DNI)
 	if err != nil {
 		log.Printf("patient: Error fetching patient with DNI %s: %v", DNI, err)
-		return nil, response.ErrorPatientNotFound
+		return nil, response.ErrorPatientNotFoundDNI
 	}
 
 	return patient, nil
@@ -58,7 +59,7 @@ func (l *patientLogic) GetAllPatients() ([]model.Patient, error) {
 	patients, err := l.repositoryPatient.GetAll()
 	if err != nil {
 		log.Printf("patient: Error fetching patients: %v", err)
-		return nil, response.ErrorPatientNotFound
+		return nil, response.ErrorPatientsNotFound
 	}
 
 	if len(patients) == 0 {
@@ -108,7 +109,7 @@ func (l *patientLogic) UpdatePatient(ID uint, patient *model.Patient) error {
 	patientUpdate, err := l.repositoryPatient.GetByID(ID)
 	if err != nil {
 		log.Printf("patient: Error fetching patient with ID %d: %v to update", ID, err)
-		return response.ErrorPatientNotFound
+		return response.ErrorPatientNotFoundID
 	}
 
 	if validate.CheckDNIExists[model.Patient](patient.DNI, patient) {
@@ -157,7 +158,7 @@ func (l *patientLogic) UpdatePatient(ID uint, patient *model.Patient) error {
 func (l *patientLogic) DeletePatient(ID uint) error {
 	if _, err := l.repositoryPatient.GetByID(ID); err != nil {
 		log.Printf("patient: Error fetching patient with ID %d: %v to deleting", ID, err)
-		return response.ErrorPatientNotFound
+		return response.ErrorPatientNotFoundID
 	}
 
 	if err := l.repositoryAppointmentMain.UnlinkPatientAppointments(ID); err != nil {

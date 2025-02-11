@@ -86,7 +86,6 @@ func HasTimeConflict(existingAppointments []model.Appointment, newStartTime, new
 	return false
 }
 
-// Función para traducir días en español a inglés
 var dayTranslations = map[string]string{
 	"Lunes":     "Monday",
 	"Martes":    "Tuesday",
@@ -97,7 +96,6 @@ var dayTranslations = map[string]string{
 	"Domingo":   "Sunday",
 }
 
-// Función para traducir días en inglés a español
 func TranslateDayToSpanish(englishDay string) string {
 	daysTranslation := map[string]string{
 		"Sunday":    "domingo",
@@ -108,50 +106,44 @@ func TranslateDayToSpanish(englishDay string) string {
 		"Friday":    "viernes",
 		"Saturday":  "sábado",
 	}
+
 	return daysTranslation[englishDay]
 }
 
-// Función para traducir días en español a inglés
 func TranslateDay(day string) string {
 	if translated, exists := dayTranslations[day]; exists {
 		return translated
 	}
-	return day // Si no está en el mapa, devolver tal cual
+
+	return day
 }
 
 func IsDayAvailable(appointmentDay string, validDays []string) bool {
-	// Convertimos el día de la cita a minúsculas y lo normalizamos
 	appointmentDay = normalizeDay(appointmentDay)
-
-	// Verificamos si el día de la cita está en la lista de días disponibles
 	for _, validDay := range validDays {
 		if validDay == appointmentDay {
 			return true
 		}
 	}
+
 	return false
 }
 
-// Normaliza las cadenas eliminando tildes (acentos) y pasando a minúsculas.
 func normalizeDay(day string) string {
-	// Convertir a minúsculas
 	day = strings.ToLower(day)
-	// Eliminar acentos/tildes
 	return removeAccents(day)
 }
 
-// Elimina los acentos/tildes de una cadena
 func removeAccents(input string) string {
-	// Normalizar a forma NFD (Descompuesta), y luego eliminar caracteres diacríticos
 	output := norm.NFD.String(input)
 	result := []rune{}
 	for _, r := range output {
 		if unicode.Is(unicode.Mn, r) {
-			// Eliminar los caracteres que son marcas de acento
 			continue
 		}
 		result = append(result, r)
 	}
+
 	return string(result)
 }
 
@@ -159,6 +151,7 @@ func CheckEmailExists[T any](email string, entity *T) bool {
 	if err := db.GDB.Where("email = ?", email).First(&entity).Error; err != nil {
 		return false
 	}
+
 	return true
 }
 

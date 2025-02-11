@@ -34,7 +34,7 @@ func (l *doctorLogic) GetDoctorByID(ID uint) (*model.Doctor, error) {
 	doctor, err := l.repositoryDoctor.GetByID(ID)
 	if err != nil {
 		log.Printf("doctor: Error fetching doctor with ID %d: %v", ID, err)
-		return nil, response.ErrorDoctorNotFound
+		return nil, response.ErrorDoctorNotFoundID
 	}
 	return doctor, nil
 }
@@ -43,7 +43,7 @@ func (l *doctorLogic) GetDoctorByDNI(DNI string) (*model.Doctor, error) {
 	patient, err := l.repositoryDoctorMain.GetDoctorByDNI(DNI)
 	if err != nil {
 		log.Printf("patient: Error fetching patient with DNI %s: %v", DNI, err)
-		return nil, response.ErrorPatientNotFound
+		return nil, response.ErrorDoctorNotFoundDNI
 	}
 
 	return patient, nil
@@ -53,7 +53,7 @@ func (l *doctorLogic) GetAllDoctors() ([]model.Doctor, error) {
 	doctors, err := l.repositoryDoctor.GetAll()
 	if err != nil {
 		log.Printf("doctor: Error fetching doctors: %v", err)
-		return nil, response.ErrorDoctorNotFound
+		return nil, response.ErrorDoctorsNotFound
 	}
 
 	if len(doctors) == 0 {
@@ -148,14 +148,12 @@ func (l *doctorLogic) CreateDoctor(doctor *model.Doctor) error {
 }
 
 func (l *doctorLogic) UpdateDoctor(ID uint, doctor *model.Doctor) error {
-	// Obtener el doctor por ID
 	doctorUpdate, err := l.GetDoctorByID(ID)
 	if err != nil {
 		log.Printf("doctor: Error fetching doctor with ID %d: %v to update", ID, err)
-		return response.ErrorDoctorNotFound
+		return response.ErrorDoctorNotFoundID
 	}
 
-	// Normalizar los días ingresados
 	normalizedDays, err := normalizeDays(doctor.Days)
 	if err != nil {
 		return err // Retornar el error si los días no son válidos
@@ -220,7 +218,6 @@ func (l *doctorLogic) DeleteDoctor(ID uint) error {
 }
 
 func normalizeDays(days string) (string, error) {
-	//Días válidos
 	validDays := map[string]string{
 		"lunes":     string(model.Moonday),
 		"martes":    string(model.Tuesday),
@@ -230,29 +227,20 @@ func normalizeDays(days string) (string, error) {
 		"viernes":   string(model.Friday),
 	}
 
-	// Dividir los días en una lista, es una lista de string
 	daysArray := strings.Split(days, ",")
 
-	///declarar una lista de dias normalizados
 	normalizedDays := []string{}
 
-	//Recorremos los días de lunes a viernes
 	for _, day := range daysArray {
-
-		// Normalizar el día: convertirlo a minúsculas y eliminar espacios adicionales
 		normalizedDay := strings.ToLower(strings.TrimSpace(day))
-
-		// Verificar si el día normalizado está en el mapa de días válidos
 		validDay, exists := validDays[normalizedDay]
 		if !exists {
 			return "", fmt.Errorf("invalid day: %s, only Monday to Friday are allowed", day)
 		}
 
-		// Agregar el día válido a la lista de días normalizados
 		normalizedDays = append(normalizedDays, validDay)
 	}
 
-	// Serializar los días a una cadena separada por comas
 	return strings.Join(normalizedDays, ","), nil
 }
 

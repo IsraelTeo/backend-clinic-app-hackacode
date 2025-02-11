@@ -15,6 +15,7 @@ func ValidateJWT(next echo.HandlerFunc) echo.HandlerFunc {
 			log.Printf("Invalid token: %v", err)
 			return response.WriteError(c, err.Error(), http.StatusUnauthorized)
 		}
+
 		return next(c)
 	}
 }

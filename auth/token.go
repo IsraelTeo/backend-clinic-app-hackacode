@@ -69,6 +69,7 @@ func getToken(c echo.Context) (string, error) {
 	}
 
 	token := parts[1]
+
 	return token, nil
 }
 
@@ -79,28 +80,24 @@ func validateToken(c echo.Context) (model.User, error) {
 		return model.User{}, fmt.Errorf("no token found in request: %w", err)
 	}
 
-	// Analiza el token usando jwt.Parse
 	jwtToken, err := jwt.Parse(token, validateMethodAndGetSecret)
 	if err != nil {
 		log.Printf("Token not valid: %v\n", err)
 		return model.User{}, fmt.Errorf("invalid token: %w", err)
 	}
 
-	// Obtén los claims del token
 	userData, ok := jwtToken.Claims.(jwt.MapClaims)
 	if !ok || !jwtToken.Valid {
 		log.Println("Unable to retrieve payload information or token is invalid")
 		return model.User{}, fmt.Errorf("invalid token claims")
 	}
 
-	// Verifica que el campo "email" sea un string
 	_, ok = userData["email"].(string)
 	if !ok {
 		log.Println("Email field missing or not a string in token claims")
 		return model.User{}, fmt.Errorf("email field is missing or invalid in token claims")
 	}
 
-	// Crea el usuario con los datos extraídos del token
 	response := model.User{
 		Email: userData["email"].(string),
 	}
@@ -114,6 +111,5 @@ func validateMethodAndGetSecret(token *jwt.Token) (any, error) {
 		return nil, fmt.Errorf("method not valid")
 	}
 
-	// Devuelve el secreto de la variable de entorno
 	return []byte(os.Getenv("API_SECRET")), nil
 }

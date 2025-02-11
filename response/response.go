@@ -95,7 +95,8 @@ const (
 
 // Mensajes de error para doctores
 var (
-	ErrorDoctorNotFound          = errors.New("el médico no fue encontrado")
+	ErrorDoctorNotFoundID        = errors.New("el médico no fue encontrado con el ID proporcionado")
+	ErrorDoctorNotFoundDNI       = errors.New("el médico no fue encontrado con el DNI proporcionado")
 	ErrorDoctorsNotFound         = errors.New("no fueron encontrados médicos")
 	ErrorListDoctorsEmpty        = errors.New("no fueron encontrados médicos")
 	ErrorToCreatedDoctor         = errors.New("no se pudo crear el médico")
@@ -121,7 +122,8 @@ const (
 
 // Mensajes de error para pacientes
 var (
-	ErrorPatientNotFound          = errors.New("el paciente no fue encontrado")
+	ErrorPatientNotFoundID        = errors.New("el paciente no fue encontrado con el ID proporcionado")
+	ErrorPatientNotFoundDNI       = errors.New("el paciente no fue encontrado con el DNI proporcionado")
 	ErrorPatientExistsDNI         = errors.New("ya existe un paciente con el DNI ingresado")
 	ErrorPatientExistsPhoneNumber = errors.New("el número telefónico ingresado ya existe")
 	ErrorPatientExistsEmail       = errors.New("el email ingresado ya existe")

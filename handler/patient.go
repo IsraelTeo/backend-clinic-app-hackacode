@@ -90,7 +90,7 @@ func (h *PatientHandler) UpdatePatient(c echo.Context) error {
 
 	patient := model.Patient{}
 	if err := c.Bind(&patient); err != nil {
-		return response.WriteError(c, err.Error(), http.StatusBadRequest)
+		return response.WriteError(c, response.ErrorBadRequest.Error(), http.StatusBadRequest)
 	}
 
 	if err := c.Validate(&patient); err != nil {
