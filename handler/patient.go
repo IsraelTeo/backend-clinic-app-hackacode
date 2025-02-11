@@ -47,7 +47,7 @@ func (h *PatientHandler) GetPatientByDNI(c echo.Context) error {
 		return response.WriteError(c, err.Error(), http.StatusNotFound)
 	}
 
-	return response.WriteSuccess(c, response.SuccessPatientFound, http.StatusOK, patient)
+	return response.WriteSuccess(c, response.SuccessDoctorFound, http.StatusOK, patient)
 }
 
 func (h *PatientHandler) GetAllPatients(c echo.Context) error {

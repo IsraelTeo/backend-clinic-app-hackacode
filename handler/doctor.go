@@ -35,6 +35,22 @@ func (h *DoctorHandler) GetDoctorByID(c echo.Context) error {
 	return response.WriteSuccess(c, response.SuccessDoctorFound, http.StatusOK, doctor)
 }
 
+func (h *DoctorHandler) GetDoctorByDNI(c echo.Context) error {
+	DNI := c.QueryParam("dni")
+	if DNI == "" {
+		return response.WriteError(c, response.ErrorPatientDNIRequired.Error(), http.StatusBadRequest)
+	}
+
+	log.Printf("handler: request received to fetch patient with DNI: %s", DNI)
+
+	patient, err := h.logic.GetDoctorByDNI(DNI)
+	if err != nil {
+		return response.WriteError(c, err.Error(), http.StatusNotFound)
+	}
+
+	return response.WriteSuccess(c, response.SuccessPatientFound, http.StatusOK, patient)
+}
+
 func (h *DoctorHandler) GetAllDoctors(c echo.Context) error {
 	log.Println("handler: request received in GetAllDoctors")
 

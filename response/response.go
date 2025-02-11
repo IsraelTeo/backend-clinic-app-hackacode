@@ -86,16 +86,17 @@ var (
 // Mensajes de exito de doctores
 
 const (
-	SuccessDoctorFound   = "¡Doctor encontrado exitosamente!"
-	SuccessDoctorUpdated = "¡Doctor actualizado exitosamente!"
-	SuccessDoctorsFound  = "¡Doctores encontrados exitosamente!"
-	SuccessDoctorCreated = "¡Doctor creado exitosamente!"
-	SuccessDoctorDeleted = "¡Doctor eliminado exitosamente!"
+	SuccessDoctorFound   = "¡Médico encontrado exitosamente!"
+	SuccessDoctorUpdated = "¡Médico actualizado exitosamente!"
+	SuccessDoctorsFound  = "¡Médicos encontrados exitosamente!"
+	SuccessDoctorCreated = "¡Médico creado exitosamente!"
+	SuccessDoctorDeleted = "¡Médico eliminado exitosamente!"
 )
 
 // Mensajes de error para doctores
 var (
 	ErrorDoctorNotFoundID        = errors.New("el médico no fue encontrado con el ID proporcionado")
+	ErrorDoctorDNIRequired       = errors.New("el médico no fue encontrado con el DNI proporcionado")
 	ErrorDoctorNotFoundDNI       = errors.New("el médico no fue encontrado con el DNI proporcionado")
 	ErrorDoctorsNotFound         = errors.New("no fueron encontrados médicos")
 	ErrorListDoctorsEmpty        = errors.New("no fueron encontrados médicos")
@@ -115,7 +116,7 @@ var (
 const (
 	SuccessPatientFound   = "¡Paciente encontrado exitosamente!"
 	SuccessPatientUpdated = "¡Paciente actualizado exitosamente!"
-	SuccessPatientsFound  = "¡Paciente encontrados exitosamente!"
+	SuccessPatientsFound  = "¡Pacientes encontrados exitosamente!"
 	SuccessPatientCreated = "¡Paciente registrado exitosamente!"
 	SuccessPatientDeleted = "¡Paciente eliminado exitosamente!"
 )

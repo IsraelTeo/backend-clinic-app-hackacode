@@ -2,6 +2,7 @@ package repository
 
 import (
 	"gihub.com/IsraelTeo/clinic-backend-hackacode-app/model"
+	"gihub.com/IsraelTeo/clinic-backend-hackacode-app/response"
 	"gorm.io/gorm"
 )
 
@@ -21,6 +22,10 @@ func NewDoctorRepository(db *gorm.DB) DoctorRepository {
 func (r *doctorRepository) GetDoctorByDNI(DNI string) (*model.Doctor, error) {
 	var doctor model.Doctor
 	if err := r.db.Where("dni = ?", DNI).First(&doctor).Error; err != nil {
+		if err.Error() == "record not found" {
+			return nil, response.ErrorDoctorNotFoundDNI
+		}
+
 		return nil, err
 	}
 

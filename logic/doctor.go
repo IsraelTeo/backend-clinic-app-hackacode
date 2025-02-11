@@ -36,13 +36,14 @@ func (l *doctorLogic) GetDoctorByID(ID uint) (*model.Doctor, error) {
 		log.Printf("doctor: Error fetching doctor with ID %d: %v", ID, err)
 		return nil, response.ErrorDoctorNotFoundID
 	}
+
 	return doctor, nil
 }
 
 func (l *doctorLogic) GetDoctorByDNI(DNI string) (*model.Doctor, error) {
 	patient, err := l.repositoryDoctorMain.GetDoctorByDNI(DNI)
 	if err != nil {
-		log.Printf("patient: Error fetching patient with DNI %s: %v", DNI, err)
+		log.Printf("doctor: Error fetching doctor with DNI %s: %v", DNI, err)
 		return nil, response.ErrorDoctorNotFoundDNI
 	}
 

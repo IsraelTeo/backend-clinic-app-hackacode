@@ -13,6 +13,7 @@ import (
 const (
 	idPath    = "/:id"
 	voidPath  = ""
+	dniPath   = "/dni"
 	loginPath = "/login"
 )
 
@@ -76,6 +77,7 @@ func setUpDoctor(api *echo.Group) {
 
 	doctor.GET(idPath, auth.ValidateJWT(doctorHandler.GetDoctorByID))
 	doctor.GET(voidPath, auth.ValidateJWT(doctorHandler.GetAllDoctors))
+	doctor.GET(dniPath, auth.ValidateJWT(doctorHandler.GetDoctorByDNI))
 	doctor.POST(voidPath, auth.ValidateJWT(doctorHandler.CreateDoctor))
 	doctor.PUT(idPath, auth.ValidateJWT(doctorHandler.UpdateDoctor))
 	doctor.DELETE(idPath, auth.ValidateJWT(doctorHandler.DeleteDoctor))
@@ -91,8 +93,8 @@ func setUpPatient(api *echo.Group) {
 	patient := api.Group("/patients")
 
 	patient.GET(idPath, auth.ValidateJWT(patientHandler.GetPatientByID))
-	patient.GET(voidPath, auth.ValidateJWT(patientHandler.GetPatientByDNI))
-	patient.GET("dni", auth.ValidateJWT(patientHandler.GetAllPatients))
+	patient.GET(dniPath, auth.ValidateJWT(patientHandler.GetPatientByDNI))
+	patient.GET(voidPath, auth.ValidateJWT(patientHandler.GetAllPatients))
 	patient.POST(voidPath, auth.ValidateJWT(patientHandler.CreatePatient))
 	patient.PUT(idPath, auth.ValidateJWT(patientHandler.UpdatePatient))
 	patient.DELETE(idPath, auth.ValidateJWT(patientHandler.DeletePatient))
