@@ -54,6 +54,10 @@ func (h *DoctorHandler) CreateDoctor(c echo.Context) error {
 		return response.WriteError(c, err.Error(), http.StatusBadRequest)
 	}
 
+	if err := c.Validate(&doctor); err != nil {
+		return response.WriteError(c, response.ErrorBadRequest.Error(), http.StatusBadRequest)
+	}
+
 	if err := h.logic.CreateDoctor(&doctor); err != nil {
 		return response.WriteError(c, err.Error(), http.StatusInternalServerError)
 	}
@@ -72,6 +76,10 @@ func (h *DoctorHandler) UpdateDoctor(c echo.Context) error {
 	doctor := model.Doctor{}
 	if err := c.Bind(&doctor); err != nil {
 		return response.WriteError(c, err.Error(), http.StatusBadRequest)
+	}
+
+	if err := c.Validate(&doctor); err != nil {
+		return response.WriteError(c, response.ErrorBadRequest.Error(), http.StatusBadRequest)
 	}
 
 	if err := h.logic.UpdateDoctor(ID, &doctor); err != nil {

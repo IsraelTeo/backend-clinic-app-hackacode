@@ -14,6 +14,7 @@ import (
 
 type DoctorLogic interface {
 	GetDoctorByID(ID uint) (*model.Doctor, error)
+	GetDoctorByDNI(DNI string) (*model.Doctor, error)
 	GetAllDoctors() ([]model.Doctor, error)
 	CreateDoctor(doctor *model.Doctor) error
 	UpdateDoctor(ID uint, doctor *model.Doctor) error
@@ -21,15 +22,16 @@ type DoctorLogic interface {
 }
 
 type doctorLogic struct {
-	repository repository.Repository[model.Doctor]
+	repositoryDoctor     repository.Repository[model.Doctor]
+	repositoryDoctorMain repository.DoctorRepository
 }
 
-func NewDoctorLogic(repository repository.Repository[model.Doctor]) DoctorLogic {
-	return &doctorLogic{repository: repository}
+func NewDoctorLogic(repositoryDoctor repository.Repository[model.Doctor], repositoryDoctorMain repository.DoctorRepository) DoctorLogic {
+	return &doctorLogic{repositoryDoctor: repositoryDoctor, repositoryDoctorMain: repositoryDoctorMain}
 }
 
 func (l *doctorLogic) GetDoctorByID(ID uint) (*model.Doctor, error) {
-	doctor, err := l.repository.GetByID(ID)
+	doctor, err := l.repositoryDoctor.GetByID(ID)
 	if err != nil {
 		log.Printf("doctor: Error fetching doctor with ID %d: %v", ID, err)
 		return nil, response.ErrorDoctorNotFound
@@ -37,8 +39,18 @@ func (l *doctorLogic) GetDoctorByID(ID uint) (*model.Doctor, error) {
 	return doctor, nil
 }
 
+func (l *doctorLogic) GetDoctorByDNI(DNI string) (*model.Doctor, error) {
+	patient, err := l.repositoryDoctorMain.GetDoctorByDNI(DNI)
+	if err != nil {
+		log.Printf("patient: Error fetching patient with DNI %s: %v", DNI, err)
+		return nil, response.ErrorPatientNotFound
+	}
+
+	return patient, nil
+}
+
 func (l *doctorLogic) GetAllDoctors() ([]model.Doctor, error) {
-	doctors, err := l.repository.GetAll()
+	doctors, err := l.repositoryDoctor.GetAll()
 	if err != nil {
 		log.Printf("doctor: Error fetching doctors: %v", err)
 		return nil, response.ErrorDoctorNotFound
@@ -48,6 +60,7 @@ func (l *doctorLogic) GetAllDoctors() ([]model.Doctor, error) {
 		log.Println("doctor: No doctors found")
 		return []model.Doctor{}, response.ErrorListDoctorsEmpty
 	}
+
 	return doctors, nil
 }
 
@@ -74,7 +87,28 @@ func (l *doctorLogic) CreateDoctor(doctor *model.Doctor) error {
 
 	birthDate, err := validate.ParseDate(doctor.BirthDate)
 	if err != nil {
-		return err
+		log.Printf("Error parsing birthdate: %v", doctor.BirthDate)
+		return response.ErrorDoctorInvalidDateFormat
+	}
+
+	if validate.CheckDNIExists[model.Doctor](doctor.DNI, doctor) {
+		log.Printf("Error checking if doctorexists by DNI: %s", doctor.DNI)
+		return response.ErrorDoctorExistsDNI
+	}
+
+	if validate.CheckPhoneNumberExists[model.Doctor](doctor.PhoneNumber, doctor) {
+		log.Printf("Error checking if patient exists by phone number: %s", doctor.PhoneNumber)
+		return response.ErrorDoctorExistsPhoneNumber
+	}
+
+	if validate.CheckEmailExists[model.Doctor](doctor.Email, doctor) {
+		log.Printf("Error checking if patient exists by email: %s", doctor.Email)
+		return response.ErrorDoctorExistsEmail
+	}
+
+	if !validate.IsDateInPast(birthDate) {
+		log.Printf("Error birthdate is past: %v", doctor.BirthDate)
+		return response.ErrorDoctorBrithDateIsFuture
 	}
 
 	// Combinando la fecha y la hora de inicio
@@ -106,7 +140,7 @@ func (l *doctorLogic) CreateDoctor(doctor *model.Doctor) error {
 		Salary:     doctor.Salary,
 	}
 
-	if err := l.repository.Create(&newDoctor); err != nil {
+	if err := l.repositoryDoctor.Create(&newDoctor); err != nil {
 		log.Printf("doctor: Error saving doctor: %v", err)
 		return response.ErrorToCreatedDoctor
 	}
@@ -126,6 +160,7 @@ func (l *doctorLogic) UpdateDoctor(ID uint, doctor *model.Doctor) error {
 	if err != nil {
 		return err // Retornar el error si los días no son válidos
 	}
+
 	doctor.Days = normalizedDays
 
 	// Convertir las horas y la fecha de nacimiento
@@ -168,7 +203,7 @@ func (l *doctorLogic) UpdateDoctor(ID uint, doctor *model.Doctor) error {
 	doctorUpdate.Address = doctor.Address
 
 	// Realizar la actualización en el repositorio
-	if err = l.repository.Update(doctorUpdate); err != nil {
+	if err = l.repositoryDoctor.Update(doctorUpdate); err != nil {
 		log.Printf("doctor: Error updating doctor with ID %d: %v", ID, err)
 		return response.ErrorToUpdatedDoctor
 	}
@@ -176,7 +211,7 @@ func (l *doctorLogic) UpdateDoctor(ID uint, doctor *model.Doctor) error {
 }
 
 func (l *doctorLogic) DeleteDoctor(ID uint) error {
-	if err := l.repository.Delete(ID); err != nil {
+	if err := l.repositoryDoctor.Delete(ID); err != nil {
 		log.Printf("doctor: Error deleting doctor with ID %d: %v", ID, err)
 		return response.ErrorToDeletedDoctor
 	}

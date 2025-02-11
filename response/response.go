@@ -10,7 +10,8 @@ import (
 
 // Mensaje de error generales
 var (
-	ErrorInvalidID = errors.New("el ID debe ser un número positivo")
+	ErrorInvalidID  = errors.New("el ID debe ser un número positivo")
+	ErrorBadRequest = errors.New("algún campo está faltando")
 )
 
 // Mensajes de exito para autenticación
@@ -94,13 +95,18 @@ const (
 
 // Mensajes de error para doctores
 var (
-	ErrorDoctorNotFound    = errors.New("el médico no fue encontrado")
-	ErrorDoctorsNotFound   = errors.New("no fueron encontrados médicos")
-	ErrorListDoctorsEmpty  = errors.New("no fueron encontrados médicos")
-	ErrorToCreatedDoctor   = errors.New("no se pudo crear el médico")
-	ErrorToUpdatedDoctor   = errors.New("no se pudo actualizar el médico")
-	ErrorToDeletedDoctor   = errors.New("no se pudo eliminar el médico")
-	ErrorInvalidDoctorTime = errors.New("fecha inválida")
+	ErrorDoctorNotFound          = errors.New("el médico no fue encontrado")
+	ErrorDoctorsNotFound         = errors.New("no fueron encontrados médicos")
+	ErrorListDoctorsEmpty        = errors.New("no fueron encontrados médicos")
+	ErrorToCreatedDoctor         = errors.New("no se pudo crear el médico")
+	ErrorToUpdatedDoctor         = errors.New("no se pudo actualizar el médico")
+	ErrorToDeletedDoctor         = errors.New("no se pudo eliminar el médico")
+	ErrorInvalidDoctorTime       = errors.New("fecha inválida")
+	ErrorDoctorExistsDNI         = errors.New("ya existe un médico con el DNI ingresado")
+	ErrorDoctorExistsPhoneNumber = errors.New("el número telefónico ingresado ya existe")
+	ErrorDoctorExistsEmail       = errors.New("el email ingresado ya existe")
+	ErrorDoctorInvalidDateFormat = errors.New("ingrese el formato adecuado para la fecha de nacimiento del médico")
+	ErrorDoctorBrithDateIsFuture = errors.New("la fecha de cumpleaños debe ser en tiempo pasado")
 )
 
 // Mensajes de exito de pacientes
@@ -110,20 +116,24 @@ const (
 	SuccessPatientUpdated = "¡Paciente actualizado exitosamente!"
 	SuccessPatientsFound  = "¡Paciente encontrados exitosamente!"
 	SuccessPatientCreated = "¡Paciente registrado exitosamente!"
-	SuccessPatientDeleted = "¡Pacienteeliminado exitosamente!"
+	SuccessPatientDeleted = "¡Paciente eliminado exitosamente!"
 )
 
 // Mensajes de error para pacientes
 var (
 	ErrorPatientNotFound          = errors.New("el paciente no fue encontrado")
 	ErrorPatientExistsDNI         = errors.New("ya existe un paciente con el DNI ingresado")
+	ErrorPatientExistsPhoneNumber = errors.New("el número telefónico ingresado ya existe")
+	ErrorPatientExistsEmail       = errors.New("el email ingresado ya existe")
 	ErrorPatientsNotFound         = errors.New("no fueron encontrados pacientes")
 	ErrorListPatientsEmpty        = errors.New("no fueron encontrados pacientes")
 	ErrorToCreatedPatient         = errors.New("no se pudo crear el paciente")
 	ErrorToUpdatedPatient         = errors.New("no se pudo actualizar el paciente")
 	ErrorToDeletedPatient         = errors.New("no se pudo eliminar el paciente")
 	ErrorPatientInvalidDateFormat = errors.New("ingrese el formato adecuado para la fecha de nacimiento del paciente")
+	ErrorPatientBrithDateIsFuture = errors.New("la fecha de cumpleaños debe ser en tiempo pasado")
 	ErrorUnlinkingAppointments    = errors.New("no se pudo desvincular las citas del paciente")
+	ErrorPatientDNIRequired       = errors.New("el DNI es requerido")
 )
 
 // Mensajes de exito de citas

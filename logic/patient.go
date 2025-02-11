@@ -68,10 +68,32 @@ func (l *patientLogic) GetAllPatients() ([]model.Patient, error) {
 
 	return patients, nil
 }
+
 func (l *patientLogic) CreatePatient(patient *model.Patient) error {
-	if validate.CheckDNIExists(patient.DNI) {
+	if validate.CheckDNIExists[model.Patient](patient.DNI, patient) {
 		log.Printf("Error checking if patient exists by DNI: %s", patient.DNI)
 		return response.ErrorPatientExistsDNI
+	}
+
+	if validate.CheckPhoneNumberExists[model.Patient](patient.PhoneNumber, patient) {
+		log.Printf("Error checking if patient exists by phone number: %s", patient.PhoneNumber)
+		return response.ErrorPatientExistsPhoneNumber
+	}
+
+	if validate.CheckEmailExists[model.Patient](patient.Email, patient) {
+		log.Printf("Error checking if patient exists by email: %s", patient.Email)
+		return response.ErrorPatientExistsEmail
+	}
+
+	birthDate, err := validate.ParseDate(patient.BirthDate)
+	if err != nil {
+		log.Printf("Error parsing birthdate: %v", patient.BirthDate)
+		return response.ErrorPatientInvalidDateFormat
+	}
+
+	if !validate.IsDateInPast(birthDate) {
+		log.Printf("Error birthdate is past: %v", patient.BirthDate)
+		return response.ErrorPatientBrithDateIsFuture
 	}
 
 	if err := l.repositoryPatient.Create(patient); err != nil {
@@ -87,6 +109,32 @@ func (l *patientLogic) UpdatePatient(ID uint, patient *model.Patient) error {
 	if err != nil {
 		log.Printf("patient: Error fetching patient with ID %d: %v to update", ID, err)
 		return response.ErrorPatientNotFound
+	}
+
+	if validate.CheckDNIExists[model.Patient](patient.DNI, patient) {
+		log.Printf("Error checking if patient exists by DNI: %s", patient.DNI)
+		return response.ErrorPatientExistsDNI
+	}
+
+	if validate.CheckPhoneNumberExists[model.Patient](patient.PhoneNumber, patient) {
+		log.Printf("Error checking if patient exists by phone number: %s", patient.PhoneNumber)
+		return response.ErrorPatientExistsPhoneNumber
+	}
+
+	birthDate, err := validate.ParseDate(patient.BirthDate)
+	if err != nil {
+		log.Printf("Error parsing birthdate: %v", patient.BirthDate)
+		return response.ErrorPatientInvalidDateFormat
+	}
+
+	if !validate.IsDateInPast(birthDate) {
+		log.Printf("Error birthdate is past: %v", patient.BirthDate)
+		return response.ErrorPatientBrithDateIsFuture
+	}
+
+	if validate.CheckEmailExists[model.Patient](patient.Email, patient) {
+		log.Printf("Error checking if patient exists by email: %s", patient.Email)
+		return response.ErrorPatientExistsEmail
 	}
 
 	patientUpdate.Name = patient.Name

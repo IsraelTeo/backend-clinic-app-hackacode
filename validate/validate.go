@@ -1,6 +1,7 @@
 package validate
 
 import (
+	"log"
 	"strconv"
 	"strings"
 	"time"
@@ -14,28 +15,32 @@ import (
 	"golang.org/x/text/unicode/norm"
 )
 
-func ParseID(c echo.Context) (uint, error) {
-	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil || id <= 0 {
-		return 0, response.ErrorInvalidID
-	}
-	return uint(id), nil
-}
-
-// CustomValidator es una estructura que envuelve el validador.
 type CustomValidator struct {
 	Validator *validator.Validate
-}
-
-// Validate implementa la interfaz de validación de Echo.
-func (cv *CustomValidator) Validate(i interface{}) error {
-	return cv.Validator.Struct(i)
 }
 
 func Init() *CustomValidator {
 	return &CustomValidator{
 		Validator: validator.New(),
 	}
+}
+
+func (c *CustomValidator) Validate(i interface{}) error {
+	err := c.Validator.Struct(i)
+	if err != nil {
+		log.Println("Validation Error:", err)
+	}
+
+	return err
+}
+
+func ParseID(c echo.Context) (uint, error) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil || id <= 0 {
+		return 0, response.ErrorInvalidID
+	}
+
+	return uint(id), nil
 }
 
 func ParseTime(timeStr string) (time.Time, error) {
@@ -70,16 +75,15 @@ func IsWithinTimeRange(startTime, endTime, rangeStart, rangeEnd time.Time) bool 
 }
 
 func HasTimeConflict(existingAppointments []model.Appointment, newStartTime, newEndTime time.Time) bool {
-
 	for _, appointment := range existingAppointments {
 		parsedEndTime, _ := ParseTime(appointment.EndTime)
 		parsedStartTime, _ := ParseTime(appointment.StartTime)
-		// Verificar si el horario de la nueva cita tiene conflicto con una cita existente
 		if newStartTime.Before(parsedEndTime) && newEndTime.After(parsedStartTime) {
-			return true // Hay un conflicto
+			return true
 		}
 	}
-	return false // No hay conflicto
+
+	return false
 }
 
 // Función para traducir días en español a inglés
@@ -151,17 +155,23 @@ func removeAccents(input string) string {
 	return string(result)
 }
 
-func CheckEmailExists(email string) bool {
-	var user model.User
-	if err := db.GDB.Where("email = ?", email).First(&user).Error; err != nil {
+func CheckEmailExists[T any](email string, entity *T) bool {
+	if err := db.GDB.Where("email = ?", email).First(&entity).Error; err != nil {
 		return false
 	}
 	return true
 }
 
-func CheckDNIExists(DNI string) bool {
-	var patient model.Patient
-	if err := db.GDB.Where("DNI = ?", DNI).First(&patient).Error; err != nil {
+func CheckDNIExists[T any](DNI string, entity *T) bool {
+	if err := db.GDB.Where("DNI = ?", DNI).First(&entity).Error; err != nil {
+		return false
+	}
+
+	return true
+}
+
+func CheckPhoneNumberExists[T any](phoneNumber string, entity *T) bool {
+	if err := db.GDB.Where("phone_number = ?", phoneNumber).First(&entity).Error; err != nil {
 		return false
 	}
 

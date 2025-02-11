@@ -34,6 +34,22 @@ func (h *PatientHandler) GetPatientByID(c echo.Context) error {
 	return response.WriteSuccess(c, response.SuccessPatientFound, http.StatusOK, patient)
 }
 
+func (h *PatientHandler) GetPatientByDNI(c echo.Context) error {
+	DNI := c.QueryParam("dni")
+	if DNI == "" {
+		return response.WriteError(c, response.ErrorPatientDNIRequired.Error(), http.StatusBadRequest)
+	}
+
+	log.Printf("handler: request received to fetch patient with DNI: %s", DNI)
+
+	patient, err := h.logic.GetPatientByDNI(DNI)
+	if err != nil {
+		return response.WriteError(c, err.Error(), http.StatusNotFound)
+	}
+
+	return response.WriteSuccess(c, response.SuccessPatientFound, http.StatusOK, patient)
+}
+
 func (h *PatientHandler) GetAllPatients(c echo.Context) error {
 	log.Println("handler: request received in GetAllPatients")
 
@@ -51,6 +67,10 @@ func (h *PatientHandler) CreatePatient(c echo.Context) error {
 	patient := model.Patient{}
 	if err := c.Bind(&patient); err != nil {
 		return response.WriteError(c, err.Error(), http.StatusBadRequest)
+	}
+
+	if err := c.Validate(&patient); err != nil {
+		return response.WriteError(c, response.ErrorBadRequest.Error(), http.StatusBadRequest)
 	}
 
 	if err := h.logic.CreatePatient(&patient); err != nil {
@@ -71,6 +91,10 @@ func (h *PatientHandler) UpdatePatient(c echo.Context) error {
 	patient := model.Patient{}
 	if err := c.Bind(&patient); err != nil {
 		return response.WriteError(c, err.Error(), http.StatusBadRequest)
+	}
+
+	if err := c.Validate(&patient); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
 	if err := h.logic.UpdatePatient(uint(ID), &patient); err != nil {

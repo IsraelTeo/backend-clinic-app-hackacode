@@ -68,7 +68,8 @@ func setUpPackage(api *echo.Group) {
 
 func setUpDoctor(api *echo.Group) {
 	doctorRepository := repository.NewRepository[model.Doctor](db.GDB)
-	doctorLogic := logic.NewDoctorLogic(doctorRepository)
+	doctorRepositoryMain := repository.NewDoctorRepository(db.GDB)
+	doctorLogic := logic.NewDoctorLogic(doctorRepository, doctorRepositoryMain)
 	doctorHandler := handler.NewDoctorHandler(doctorLogic)
 
 	doctor := api.Group("/doctors")
@@ -90,7 +91,8 @@ func setUpPatient(api *echo.Group) {
 	patient := api.Group("/patients")
 
 	patient.GET(idPath, auth.ValidateJWT(patientHandler.GetPatientByID))
-	patient.GET(voidPath, auth.ValidateJWT(patientHandler.GetAllPatients))
+	patient.GET(voidPath, auth.ValidateJWT(patientHandler.GetPatientByDNI))
+	patient.GET("dni", auth.ValidateJWT(patientHandler.GetAllPatients))
 	patient.POST(voidPath, auth.ValidateJWT(patientHandler.CreatePatient))
 	patient.PUT(idPath, auth.ValidateJWT(patientHandler.UpdatePatient))
 	patient.DELETE(idPath, auth.ValidateJWT(patientHandler.DeletePatient))
