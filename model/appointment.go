@@ -11,7 +11,7 @@ type Appointment struct {
 	Date        string  `json:"date" validate:"required"`
 	StartTime   string  `json:"start_time" validate:"required"`
 	EndTime     string  `json:"end_time" validate:"required"`
-	Paid        bool    `json:"paid" default:"false"`
+	Paid        bool    `json:"paid"`
 	TotalAmount float64 `json:"total_amount"`
 }
 

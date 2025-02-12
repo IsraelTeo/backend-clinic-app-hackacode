@@ -9,7 +9,7 @@ type Service struct {
 
 type Package struct {
 	ID       uint      `json:"id" gorm:"primaryKey;autoIncrement"`
-	Name     string    `json:"name" gorm:"size:50;not null" validate:"required,max=50"`
+	Name     string    `json:"name"`
 	Services []Service `json:"services" gorm:"many2many:package_services;"`
 	Price    float64   `json:"price"`
 }

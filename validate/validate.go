@@ -1,7 +1,7 @@
 package validate
 
 import (
-	"log"
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -25,13 +25,57 @@ func Init() *CustomValidator {
 	}
 }
 
+const (
+	MsgName        = "El nombre es obligatorio y no puede exceder 50 caracteres."
+	MsgLastName    = "El apellido es obligatorio y no puede exceder 80 caracteres."
+	MsgDNI         = "El DNI es obligatorio y no puede exceder 20 caracteres."
+	MsgBirthDate   = "La fecha de nacimiento es obligatoria y debe tener un formato válido."
+	MsgEmail       = "El correo electrónico es obligatorio, debe ser válido y no exceder 100 caracteres."
+	MsgPhoneNumber = "El número de teléfono es obligatorio y no puede exceder 20 caracteres."
+	MsgAddress     = "La dirección es obligatoria y no puede exceder 200 caracteres."
+	MsgEspecialty  = "La especialidad es obligatoria y no puede exceder 50 caracteres."
+	MsgDays        = "Los días son obligatorios."
+	MsgStartTime   = "La hora de inicio es obligatoria (formato HH:mm)."
+	MsgEndTime     = "La hora de finalización es obligatoria (formato HH:mm)."
+	MsgSalary      = "El salario es obligatorio y debe ser un número."
+	MsgInsurance   = "El seguro de salud es obligatorio."
+)
+
 func (c *CustomValidator) Validate(i interface{}) error {
 	err := c.Validator.Struct(i)
 	if err != nil {
-		log.Println("Validation Error:", err)
+		var validationErrorMessages []string
+
+		fieldMessages := map[string]string{
+			"Name":        MsgName,
+			"LastName":    MsgLastName,
+			"DNI":         MsgDNI,
+			"BirthDate":   MsgBirthDate,
+			"Email":       MsgEmail,
+			"PhoneNumber": MsgPhoneNumber,
+			"Address":     MsgAddress,
+			"Especialty":  MsgEspecialty,
+			"Days":        MsgDays,
+			"StartTime":   MsgStartTime,
+			"EndTime":     MsgEndTime,
+			"Salary":      MsgSalary,
+			"Insurance":   MsgInsurance,
+		}
+
+		for _, e := range err.(validator.ValidationErrors) {
+			fieldName := e.Field()
+
+			if customMessage, exists := fieldMessages[fieldName]; exists {
+				validationErrorMessages = append(validationErrorMessages, customMessage)
+			} else {
+				validationErrorMessages = append(validationErrorMessages, fmt.Sprintf("El campo '%s' es inválido.", fieldName))
+			}
+		}
+
+		return fmt.Errorf("%s", strings.Join(validationErrorMessages, " "))
 	}
 
-	return err
+	return nil
 }
 
 func ParseID(c echo.Context) (uint, error) {

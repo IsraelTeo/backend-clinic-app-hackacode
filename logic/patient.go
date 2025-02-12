@@ -38,7 +38,6 @@ func NewPatientLogic(repositoryPatient repository.Repository[model.Patient],
 func (l *patientLogic) GetPatientByID(ID uint) (*model.Patient, error) {
 	patient, err := l.repositoryPatient.GetByID(ID)
 	if err != nil {
-		log.Printf("patient: Error fetching patient with ID %d: %v", ID, err)
 		return nil, response.ErrorPatientNotFoundID
 	}
 
@@ -48,7 +47,7 @@ func (l *patientLogic) GetPatientByID(ID uint) (*model.Patient, error) {
 func (l *patientLogic) GetPatientByDNI(DNI string) (*model.Patient, error) {
 	patient, err := l.repositoryPatientMain.GetPatientByDNI(DNI)
 	if err != nil {
-		log.Printf("patient: Error fetching patient with DNI %s: %v", DNI, err)
+		log.Printf("patient-logic: Error fetching patient with DNI %s: %v", DNI, err)
 		return nil, response.ErrorPatientNotFoundDNI
 	}
 
@@ -58,47 +57,25 @@ func (l *patientLogic) GetPatientByDNI(DNI string) (*model.Patient, error) {
 func (l *patientLogic) GetAllPatients() ([]model.Patient, error) {
 	patients, err := l.repositoryPatient.GetAll()
 	if err != nil {
-		log.Printf("patient: Error fetching patients: %v", err)
+		log.Printf("patient-logic: Error fetching patients: %v", err)
 		return nil, response.ErrorPatientsNotFound
 	}
 
 	if len(patients) == 0 {
-		log.Println("patient: No patients found")
-		return []model.Patient{}, response.ErrorListPatientsEmpty
+		log.Println("patient-logic: No patients found")
+		return []model.Patient{}, nil
 	}
 
 	return patients, nil
 }
 
 func (l *patientLogic) CreatePatient(patient *model.Patient) error {
-	if validate.CheckDNIExists[model.Patient](patient.DNI, patient) {
-		log.Printf("Error checking if patient exists by DNI: %s", patient.DNI)
-		return response.ErrorPatientExistsDNI
-	}
-
-	if validate.CheckPhoneNumberExists[model.Patient](patient.PhoneNumber, patient) {
-		log.Printf("Error checking if patient exists by phone number: %s", patient.PhoneNumber)
-		return response.ErrorPatientExistsPhoneNumber
-	}
-
-	if validate.CheckEmailExists[model.Patient](patient.Email, patient) {
-		log.Printf("Error checking if patient exists by email: %s", patient.Email)
-		return response.ErrorPatientExistsEmail
-	}
-
-	birthDate, err := validate.ParseDate(patient.BirthDate)
-	if err != nil {
-		log.Printf("Error parsing birthdate: %v", patient.BirthDate)
-		return response.ErrorPatientInvalidDateFormat
-	}
-
-	if !validate.IsDateInPast(birthDate) {
-		log.Printf("Error birthdate is past: %v", patient.BirthDate)
-		return response.ErrorPatientBrithDateIsFuture
+	if err := l.validatePatient(patient); err != nil {
+		return err
 	}
 
 	if err := l.repositoryPatient.Create(patient); err != nil {
-		log.Printf("patient: Error saving patient: %v", err)
+		log.Printf("patient-logic: Error saving patient: %v", err)
 		return response.ErrorToCreatedPatient
 	}
 
@@ -108,34 +85,12 @@ func (l *patientLogic) CreatePatient(patient *model.Patient) error {
 func (l *patientLogic) UpdatePatient(ID uint, patient *model.Patient) error {
 	patientUpdate, err := l.repositoryPatient.GetByID(ID)
 	if err != nil {
-		log.Printf("patient: Error fetching patient with ID %d: %v to update", ID, err)
+		log.Printf("patient-logic: Error fetching patient with ID %d: %v", ID, err)
 		return response.ErrorPatientNotFoundID
 	}
 
-	if validate.CheckDNIExists[model.Patient](patient.DNI, patient) {
-		log.Printf("Error checking if patient exists by DNI: %s", patient.DNI)
-		return response.ErrorPatientExistsDNI
-	}
-
-	if validate.CheckPhoneNumberExists[model.Patient](patient.PhoneNumber, patient) {
-		log.Printf("Error checking if patient exists by phone number: %s", patient.PhoneNumber)
-		return response.ErrorPatientExistsPhoneNumber
-	}
-
-	birthDate, err := validate.ParseDate(patient.BirthDate)
-	if err != nil {
-		log.Printf("Error parsing birthdate: %v", patient.BirthDate)
-		return response.ErrorPatientInvalidDateFormat
-	}
-
-	if !validate.IsDateInPast(birthDate) {
-		log.Printf("Error birthdate is past: %v", patient.BirthDate)
-		return response.ErrorPatientBrithDateIsFuture
-	}
-
-	if validate.CheckEmailExists[model.Patient](patient.Email, patient) {
-		log.Printf("Error checking if patient exists by email: %s", patient.Email)
-		return response.ErrorPatientExistsEmail
+	if err := l.validateUpdatedPatientFields(patient, patientUpdate); err != nil {
+		return err
 	}
 
 	patientUpdate.Name = patient.Name
@@ -148,7 +103,7 @@ func (l *patientLogic) UpdatePatient(ID uint, patient *model.Patient) error {
 	patientUpdate.Insurance = patient.Insurance
 
 	if err = l.repositoryPatient.Update(patientUpdate); err != nil {
-		log.Printf("patient: Error updating patient with ID %d: %v", ID, err)
+		log.Printf("patient-logic: Error updating patient with ID %d: %v", ID, err)
 		return response.ErrorToUpdatedPatient
 	}
 
@@ -157,18 +112,60 @@ func (l *patientLogic) UpdatePatient(ID uint, patient *model.Patient) error {
 
 func (l *patientLogic) DeletePatient(ID uint) error {
 	if _, err := l.repositoryPatient.GetByID(ID); err != nil {
-		log.Printf("patient: Error fetching patient with ID %d: %v to deleting", ID, err)
+		log.Printf("patient-logic: Error fetching patient with ID %d: %v to deleting", ID, err)
 		return response.ErrorPatientNotFoundID
 	}
 
 	if err := l.repositoryAppointmentMain.UnlinkPatientAppointments(ID); err != nil {
-		log.Printf("patient: Error unlinking appointments for patient with ID %d: %v", ID, err)
+		log.Printf("patient-logic: Error unlinking appointments for patient with ID %d: %v", ID, err)
 		return response.ErrorUnlinkingAppointments
 	}
 
 	if err := l.repositoryPatient.Delete(ID); err != nil {
-		log.Printf("patient: Error deleting patient with ID %d: %v", ID, err)
+		log.Printf("patient-logic: Error deleting patient with ID %d: %v", ID, err)
 		return response.ErrorToDeletedPatient
+	}
+
+	return nil
+}
+
+func (l *patientLogic) validatePatient(patient *model.Patient) error {
+	if err := validate.ValidateDNI(patient); err != nil {
+		return err
+	}
+
+	if err := validate.ValidatePhoneNumber(patient); err != nil {
+		return err
+	}
+
+	if err := validate.ValidateEmail(patient); err != nil {
+		return err
+	}
+
+	if err := validate.ValidateBirthDate(patient.BirthDate); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (l *patientLogic) validateUpdatedPatientFields(patient *model.Patient, patientUpdate *model.Patient) error {
+	if patient.DNI != patientUpdate.DNI {
+		if err := validate.ValidateDNI(patient); err != nil {
+			return err
+		}
+	}
+
+	if patient.PhoneNumber != patientUpdate.PhoneNumber {
+		if err := validate.ValidatePhoneNumber(patient); err != nil {
+			return err
+		}
+	}
+
+	if patient.Email != patientUpdate.Email {
+		if err := validate.ValidateEmail(patient); err != nil {
+			return err
+		}
 	}
 
 	return nil

@@ -14,6 +14,12 @@ var (
 	ErrorBadRequest = errors.New("algún campo está faltando")
 )
 
+// Mensajes de error para problemas con la solicitud (bind o formato)
+var (
+	ErrorInvalidJSONFormat    = errors.New("el formato de los datos es inválido, asegúrese de que el JSON sea correcto")
+	ErrorInvalidRequestFormat = errors.New("el formato de la solicitud no es válido")
+)
+
 // Mensajes de exito para autenticación
 const (
 	SuccessLogin = "¡Inicio de sesión exitoso!"
@@ -43,20 +49,12 @@ var (
 
 // Mensajes de éxito para servicios médicos
 const (
-	SuccessServiceFound   = "¡Servicio médico encontrado exitosamente!"
-	SuccessServiceUpdated = "¡Servicio médico actualizado exitosamente!"
-	SuccessServicesFound  = "¡Servicios médicos encontrados exitosamente!"
-	SuccessServiceCreated = "¡Servicio médico creado exitosamente!"
-	SuccessServiceDeleted = "¡Servicio médico eliminado exitosamente!"
-)
-
-// Mensajes de éxito para paquetes
-const (
-	SuccessPackageFound   = "¡Paquete encontrado exitosamente!"
-	SuccessPackageUpdated = "¡Paquete actualizado exitosamente!"
-	SuccessPackagesFound  = "¡Paquetes encontrados exitosamente!"
-	SuccessPackageCreated = "¡Paquete creado exitosamente!"
-	SuccessPackageDeleted = "¡Paquete eliminado exitosamente!"
+	SuccessServiceFound      = "¡Servicio médico encontrado exitosamente!"
+	SuccessServiceUpdated    = "¡Servicio médico actualizado exitosamente!"
+	SuccessServicesFound     = "¡Servicios médicos encontrados exitosamente!"
+	SuccessServicesListEmpty = "No se encontraron servicios"
+	SuccessServiceCreated    = "¡Servicio médico creado exitosamente!"
+	SuccessServiceDeleted    = "¡Servicio médico eliminado exitosamente!"
 )
 
 // Mensajes de error para servicios médicos
@@ -68,6 +66,16 @@ var (
 	ErrorToCreatedService  = errors.New("no se pudo crear el servicio médico")
 	ErrorToUpdatedService  = errors.New("no se pudo actualizar el servicio médico")
 	ErrorToDeletedService  = errors.New("no se pudo eliminar el servicio médico")
+)
+
+// Mensajes de éxito para paquetes
+const (
+	SuccessPackageFound      = "¡Paquete encontrado exitosamente!"
+	SuccessPackageUpdated    = "¡Paquete actualizado exitosamente!"
+	SuccessPackagesFound     = "¡Paquetes encontrados exitosamente!"
+	SuccessPackagesListEmpty = "No se encontraron paquetes"
+	SuccessPackageCreated    = "¡Paquete creado exitosamente!"
+	SuccessPackageDeleted    = "¡Paquete eliminado exitosamente!"
 )
 
 // Mensajes de error para paquetes
@@ -86,11 +94,12 @@ var (
 // Mensajes de exito de doctores
 
 const (
-	SuccessDoctorFound   = "¡Médico encontrado exitosamente!"
-	SuccessDoctorUpdated = "¡Médico actualizado exitosamente!"
-	SuccessDoctorsFound  = "¡Médicos encontrados exitosamente!"
-	SuccessDoctorCreated = "¡Médico creado exitosamente!"
-	SuccessDoctorDeleted = "¡Médico eliminado exitosamente!"
+	SuccessDoctorFound      = "¡Médico encontrado exitosamente!"
+	SuccessDoctorUpdated    = "¡Médico actualizado exitosamente!"
+	SuccessDoctorsFound     = "¡Médicos encontrados exitosamente!"
+	SuccessDoctorsListEmpty = "No se encontraron doctores"
+	SuccessDoctorCreated    = "¡Médico creado exitosamente!"
+	SuccessDoctorDeleted    = "¡Médico eliminado exitosamente!"
 )
 
 // Mensajes de error para doctores
@@ -114,11 +123,12 @@ var (
 // Mensajes de exito de pacientes
 
 const (
-	SuccessPatientFound   = "¡Paciente encontrado exitosamente!"
-	SuccessPatientUpdated = "¡Paciente actualizado exitosamente!"
-	SuccessPatientsFound  = "¡Pacientes encontrados exitosamente!"
-	SuccessPatientCreated = "¡Paciente registrado exitosamente!"
-	SuccessPatientDeleted = "¡Paciente eliminado exitosamente!"
+	SuccessPatientFound     = "¡Paciente encontrado exitosamente!"
+	SuccessPatientUpdated   = "¡Paciente actualizado exitosamente!"
+	SuccessPatientsFound    = "¡Pacientes encontrados exitosamente!"
+	SuccessPatiensListEmpty = "No se encontraron patients"
+	SuccessPatientCreated   = "¡Paciente registrado exitosamente!"
+	SuccessPatientDeleted   = "¡Paciente eliminado exitosamente!"
 )
 
 // Mensajes de error para pacientes
@@ -145,6 +155,7 @@ const (
 	SuccessAppointmentFound   = "¡Cita encontrada exitosamente!"
 	SuccessAppointmentUpdated = "¡Cita actualizada exitosamente!"
 	SuccessAppointmentsFound  = "¡Citas encontradas exitosamente!"
+	SuccessAppointmentsEmpty  = "No se encontraron patients"
 	SuccessAppointmentCreated = "¡Cita registrada exitosamente, proceda a realizar el pago!"
 	SuccessAppointmentDeleted = "¡Cita eliminada exitosamente!"
 )

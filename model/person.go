@@ -22,7 +22,7 @@ type Doctor struct {
 
 type Patient struct {
 	Person
-	Insurance bool `json:"health_insurance" validate:"required"`
+	Insurance bool `json:"health_insurance"`
 }
 
 type Day string
