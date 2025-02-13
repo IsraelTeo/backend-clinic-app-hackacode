@@ -165,7 +165,7 @@ func (l *appointmentLogic) CreateAppointment(appointment *model.Appointment) (fl
 	doctorStartTime, doctorEndTime, err := parseStartAndEndTime(doctor.StartTime, doctor.EndTime)
 	if err != nil {
 		log.Printf("appointment: Invalid doctor end time format: %v", err)
-		return 0, 0, 0, 0, response.ErrorInvalidDoctorTime
+		return 0, 0, 0, 0, err
 	}
 
 	if !validate.IsWithinTimeRange(startTime, endTime, doctorStartTime, doctorEndTime) {

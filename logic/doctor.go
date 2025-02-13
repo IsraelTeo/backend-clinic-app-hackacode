@@ -33,7 +33,7 @@ func NewDoctorLogic(repositoryDoctor repository.Repository[model.Doctor], reposi
 func (l *doctorLogic) GetDoctorByID(ID uint) (*model.Doctor, error) {
 	doctor, err := l.repositoryDoctor.GetByID(ID)
 	if err != nil {
-		log.Printf("doctor: Error fetching doctor with ID %d: %v", ID, err)
+		log.Printf("doctor-logic: Error fetching doctor with ID %d: %v", ID, err)
 		return nil, response.ErrorDoctorNotFoundID
 	}
 
@@ -43,7 +43,7 @@ func (l *doctorLogic) GetDoctorByID(ID uint) (*model.Doctor, error) {
 func (l *doctorLogic) GetDoctorByDNI(DNI string) (*model.Doctor, error) {
 	patient, err := l.repositoryDoctorMain.GetDoctorByDNI(DNI)
 	if err != nil {
-		log.Printf("doctor: Error fetching doctor with DNI %s: %v", DNI, err)
+		log.Printf("doctor-logic: Error fetching doctor with DNI %s: %v", DNI, err)
 		return nil, response.ErrorDoctorNotFoundDNI
 	}
 
@@ -53,12 +53,12 @@ func (l *doctorLogic) GetDoctorByDNI(DNI string) (*model.Doctor, error) {
 func (l *doctorLogic) GetAllDoctors() ([]model.Doctor, error) {
 	doctors, err := l.repositoryDoctor.GetAll()
 	if err != nil {
-		log.Printf("doctor: Error fetching doctors: %v", err)
+		log.Printf("doctor-logic: Error fetching doctors: %v", err)
 		return nil, response.ErrorDoctorsNotFound
 	}
 
 	if len(doctors) == 0 {
-		log.Println("doctor: No doctors found")
+		log.Println("doctor-logic: No doctors found")
 		return []model.Doctor{}, response.ErrorListDoctorsEmpty
 	}
 
@@ -66,64 +66,36 @@ func (l *doctorLogic) GetAllDoctors() ([]model.Doctor, error) {
 }
 
 func (l *doctorLogic) CreateDoctor(doctor *model.Doctor) error {
-	// Normalizar los días ingresados
+	//Valimos el DNI, DNI, número telefónico no sean duplicads y que la fecha de nacimiento que no sea en pasadodel doctor
+	birthDate, err := l.validateDoctor(doctor)
+	if err != nil {
+		return err
+	}
+
+	//Normalizamos días, es decir: Obtenemos los días que trabaja el doctor
 	normalizedDays, err := normalizeDays(doctor.Days)
 	if err != nil {
-		return err //falta averiguar de que es este error
+		return err
 	}
 
 	doctor.Days = normalizedDays
 
-	// Convertir las horas y la fecha de nacimiento
-
-	startTime, err := validate.ParseTime(doctor.StartTime)
+	//Parseamos el horario inicial y final del torno, es decir: Su turno
+	startTime, endTime, err := parseShiftDoctor(doctor)
 	if err != nil {
 		return err
 	}
 
-	endTime, err := validate.ParseTime(doctor.EndTime)
-	if err != nil {
-		return err
-	}
-
-	birthDate, err := validate.ParseDate(doctor.BirthDate)
-	if err != nil {
-		log.Printf("Error parsing birthdate: %v", doctor.BirthDate)
-		return response.ErrorDoctorInvalidDateFormat
-	}
-
-	if validate.CheckDNIExists[model.Doctor](doctor.DNI, doctor) {
-		log.Printf("Error checking if doctorexists by DNI: %s", doctor.DNI)
-		return response.ErrorDoctorExistsDNI
-	}
-
-	if validate.CheckPhoneNumberExists[model.Doctor](doctor.PhoneNumber, doctor) {
-		log.Printf("Error checking if patient exists by phone number: %s", doctor.PhoneNumber)
-		return response.ErrorDoctorExistsPhoneNumber
-	}
-
-	if validate.CheckEmailExists[model.Doctor](doctor.Email, doctor) {
-		log.Printf("Error checking if patient exists by email: %s", doctor.Email)
-		return response.ErrorDoctorExistsEmail
-	}
-
-	if !validate.IsDateInPast(birthDate) {
-		log.Printf("Error birthdate is past: %v", doctor.BirthDate)
-		return response.ErrorDoctorBrithDateIsFuture
-	}
-
-	// Combinando la fecha y la hora de inicio
+	//Obtener la fecha y horario del horario inicial y horario final
 	startTimeMain := combineDateAndTime(startTime, time.Now())
-
-	// Combinando la fecha y la hora de fin
 	endTimeMain := combineDateAndTime(endTime, time.Now())
 
-	//validar que la hora inicial no sea en futuro de la hora final
-	if validate.IsStartBeforeEnd(startTime, endTimeMain) {
-		return fmt.Errorf("end time must be after start time")
+	//verificamos que el tiempo final fuera en futuro del tiempo inicial
+	if !validate.IsStartBeforeEnd(*startTime, endTimeMain) {
+		return response.ErrorInvalidEndTimeInPastDoctor
 	}
 
-	// Construir un nuevo struct Doctor con los valores procesados
+	//construye el doctor
 	newDoctor := model.Doctor{
 		Person: model.Person{
 			Name:        doctor.Name,
@@ -142,54 +114,49 @@ func (l *doctorLogic) CreateDoctor(doctor *model.Doctor) error {
 	}
 
 	if err := l.repositoryDoctor.Create(&newDoctor); err != nil {
-		log.Printf("doctor: Error saving doctor: %v", err)
+		log.Printf("doctor-logic: Error saving doctor: %v", err)
 		return response.ErrorToCreatedDoctor
 	}
+
 	return nil
 }
 
 func (l *doctorLogic) UpdateDoctor(ID uint, doctor *model.Doctor) error {
 	doctorUpdate, err := l.GetDoctorByID(ID)
 	if err != nil {
-		log.Printf("doctor: Error fetching doctor with ID %d: %v to update", ID, err)
+		log.Printf("doctor-logic: Error fetching doctor with ID %d: %v to update", ID, err)
 		return response.ErrorDoctorNotFoundID
 	}
 
+	//Valimos el DNI, DNI, número telefónico no sean duplicads y que la fecha de nacimiento que no sea en pasadodel doctor
+	birthDate, err := l.validateUpdatedDoctorFields(doctor, doctorUpdate)
+	if err != nil {
+		return err
+	}
+
+	//Normalizamos días, es decir: Obtenemos los días que trabaja el doctor
 	normalizedDays, err := normalizeDays(doctor.Days)
 	if err != nil {
-		return err // Retornar el error si los días no son válidos
+		return err
 	}
 
 	doctor.Days = normalizedDays
 
-	// Convertir las horas y la fecha de nacimiento
-	startTime, err := validate.ParseTime(doctor.StartTime)
+	//Parseamos el horario inicial y final del torno, es decir: Su turno
+	startTime, endTime, err := parseShiftDoctor(doctor)
 	if err != nil {
 		return err
 	}
 
-	endTime, err := validate.ParseTime(doctor.EndTime)
-	if err != nil {
-		return err
-	}
-
-	birthDate, err := validate.ParseDate(doctor.BirthDate)
-	if err != nil {
-		return err
-	}
-
-	// Combinando la fecha y la hora de inicio
+	//Obtener la fecha y horario del horario inicial y horario final
 	startTimeMain := combineDateAndTime(startTime, time.Now())
-
-	// Combinando la fecha y la hora de fin
 	endTimeMain := combineDateAndTime(endTime, time.Now())
 
-	//validar que la hora inicial no sea en futuro de la hora final
-	if validate.IsStartBeforeEnd(startTime, endTimeMain) {
-		return fmt.Errorf("end time must be after start time")
+	//verificamos que el tiempo final fuera en futuro del tiempo inicial
+	if !validate.IsStartBeforeEnd(startTimeMain, endTimeMain) {
+		return response.ErrorInvalidEndTimeInPastDoctor
 	}
 
-	// Actualizar los campos de doctorUpdate con los valores nuevos
 	doctorUpdate.Name = doctor.Name
 	doctorUpdate.LastName = doctor.LastName
 	doctorUpdate.Especialty = doctor.Especialty
@@ -201,17 +168,23 @@ func (l *doctorLogic) UpdateDoctor(ID uint, doctor *model.Doctor) error {
 	doctorUpdate.Email = doctor.Email
 	doctorUpdate.Address = doctor.Address
 
-	// Realizar la actualización en el repositorio
 	if err = l.repositoryDoctor.Update(doctorUpdate); err != nil {
-		log.Printf("doctor: Error updating doctor with ID %d: %v", ID, err)
+		log.Printf("doctor-logic:: Error updating doctor with ID %d: %v", ID, err)
 		return response.ErrorToUpdatedDoctor
 	}
+
 	return nil
 }
 
 func (l *doctorLogic) DeleteDoctor(ID uint) error {
+	_, err := l.GetDoctorByID(ID)
+	if err != nil {
+		log.Printf("doctor-logic: Error fetching doctor with ID %d: %v to update", ID, err)
+		return response.ErrorDoctorNotFoundID
+	}
+
 	if err := l.repositoryDoctor.Delete(ID); err != nil {
-		log.Printf("doctor: Error deleting doctor with ID %d: %v", ID, err)
+		log.Printf("doctor-logic: Error deleting doctor with ID %d: %v", ID, err)
 		return response.ErrorToDeletedDoctor
 	}
 
@@ -236,7 +209,7 @@ func normalizeDays(days string) (string, error) {
 		normalizedDay := strings.ToLower(strings.TrimSpace(day))
 		validDay, exists := validDays[normalizedDay]
 		if !exists {
-			return "", fmt.Errorf("invalid day: %s, only Monday to Friday are allowed", day)
+			return "", fmt.Errorf("día inválido: %s, solo Lunes a Domingos son días permitidos", day)
 		}
 
 		normalizedDays = append(normalizedDays, validDay)
@@ -245,7 +218,21 @@ func normalizeDays(days string) (string, error) {
 	return strings.Join(normalizedDays, ","), nil
 }
 
-func combineDateAndTime(timeObj time.Time, referenceDate time.Time) time.Time {
+func parseShiftDoctor(doctor *model.Doctor) (*time.Time, *time.Time, error) {
+	startTime, err := validate.ParseTime(doctor.StartTime)
+	if err != nil {
+		return nil, nil, response.ErrorInvalidStartTimeDoctor
+	}
+
+	endTime, err := validate.ParseTime(doctor.EndTime)
+	if err != nil {
+		return nil, nil, response.ErrorInvalidEndTimeDoctor
+	}
+
+	return &startTime, &endTime, nil
+}
+
+func combineDateAndTime(timeObj *time.Time, referenceDate time.Time) time.Time {
 	return time.Date(
 		referenceDate.Year(),
 		referenceDate.Month(),
@@ -256,4 +243,52 @@ func combineDateAndTime(timeObj time.Time, referenceDate time.Time) time.Time {
 		0,
 		referenceDate.Location(),
 	)
+}
+
+func (l *doctorLogic) validateDoctor(doctor *model.Doctor) (*time.Time, error) {
+	if err := validate.DNIDoctor(doctor); err != nil {
+		return nil, err
+	}
+
+	if err := validate.PhoneNumberDoctor(doctor); err != nil {
+		return nil, err
+	}
+
+	if err := validate.EmailDoctor(doctor); err != nil {
+		return nil, err
+	}
+
+	birthDate, err := validate.BirthDateDoctor(doctor.BirthDate)
+	if err != nil {
+		return nil, err
+	}
+
+	return birthDate, nil
+}
+
+func (l *doctorLogic) validateUpdatedDoctorFields(doctor *model.Doctor, doctorUpdate *model.Doctor) (*time.Time, error) {
+	if doctor.DNI != doctorUpdate.DNI {
+		if err := validate.DNIDoctor(doctor); err != nil {
+			return nil, err
+		}
+	}
+
+	if doctor.PhoneNumber != doctorUpdate.PhoneNumber {
+		if err := validate.PhoneNumberDoctor(doctor); err != nil {
+			return nil, err
+		}
+	}
+
+	if doctor.Email != doctorUpdate.Email {
+		if err := validate.EmailDoctor(doctor); err != nil {
+			return nil, err
+		}
+	}
+
+	birthDate, err := validate.BirthDateDoctor(doctor.BirthDate)
+	if err != nil {
+		return nil, err
+	}
+
+	return birthDate, nil
 }

@@ -130,19 +130,19 @@ func (l *patientLogic) DeletePatient(ID uint) error {
 }
 
 func (l *patientLogic) validatePatient(patient *model.Patient) error {
-	if err := validate.ValidateDNI(patient); err != nil {
+	if err := validate.DNIPatient(patient); err != nil {
 		return err
 	}
 
-	if err := validate.ValidatePhoneNumber(patient); err != nil {
+	if err := validate.PhoneNumberPatient(patient); err != nil {
 		return err
 	}
 
-	if err := validate.ValidateEmail(patient); err != nil {
+	if err := validate.EmailPatient(patient); err != nil {
 		return err
 	}
 
-	if err := validate.ValidateBirthDate(patient.BirthDate); err != nil {
+	if err := validate.BirthDatePatient(patient.BirthDate); err != nil {
 		return err
 	}
 
@@ -151,19 +151,19 @@ func (l *patientLogic) validatePatient(patient *model.Patient) error {
 
 func (l *patientLogic) validateUpdatedPatientFields(patient *model.Patient, patientUpdate *model.Patient) error {
 	if patient.DNI != patientUpdate.DNI {
-		if err := validate.ValidateDNI(patient); err != nil {
+		if err := validate.DNIPatient(patient); err != nil {
 			return err
 		}
 	}
 
 	if patient.PhoneNumber != patientUpdate.PhoneNumber {
-		if err := validate.ValidatePhoneNumber(patient); err != nil {
+		if err := validate.PhoneNumberPatient(patient); err != nil {
 			return err
 		}
 	}
 
 	if patient.Email != patientUpdate.Email {
-		if err := validate.ValidateEmail(patient); err != nil {
+		if err := validate.EmailPatient(patient); err != nil {
 			return err
 		}
 	}

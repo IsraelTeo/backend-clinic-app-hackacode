@@ -15,8 +15,8 @@ type Doctor struct {
 	Person
 	Especialty string  `json:"especialty" validate:"required,max=50"`
 	Days       string  `json:"days" validate:"required"`
-	StartTime  string  `json:"start_time" validate:"required,regex=^[0-9]{2}:[0-9]{2}$"`
-	EndTime    string  `json:"end_time" validate:"required,regex=^[0-9]{2}:[0-9]{2}$"`
+	StartTime  string  `json:"start_time" validate:"required"`
+	EndTime    string  `json:"end_time" validate:"required"`
 	Salary     float64 `json:"salary" validate:"required,numeric"`
 }
 
@@ -36,3 +36,33 @@ const (
 	Saturday  Day = "Sabado"
 	Sunday    Day = "Domingo"
 )
+
+type PersonInterface interface {
+	GetDNI() string
+	GetPhoneNumber() string
+	GetEmail() string
+}
+
+func (p *Patient) GetDNI() string {
+	return p.DNI
+}
+
+func (p *Patient) GetPhoneNumber() string {
+	return p.PhoneNumber
+}
+
+func (p *Patient) GetEmail() string {
+	return p.Email
+}
+
+func (d *Doctor) GetDNI() string {
+	return d.DNI
+}
+
+func (d *Doctor) GetPhoneNumber() string {
+	return d.PhoneNumber
+}
+
+func (d *Doctor) GetEmail() string {
+	return d.Email
+}
