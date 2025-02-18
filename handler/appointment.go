@@ -30,7 +30,7 @@ func (h *AppointmentHandler) GetAppointmentByID(c echo.Context) error {
 		})
 	}
 
-	log.Printf("handler: appointment fetching with ID: %d", ID)
+	log.Printf("appointment-handler: appointment fetching with ID: %d", ID)
 
 	appointment, err := h.logic.GetAppointmentByID(ID)
 	if err != nil {
@@ -51,7 +51,7 @@ func (h *AppointmentHandler) GetAppointmentByID(c echo.Context) error {
 }
 
 func (h *AppointmentHandler) GetAllAppointments(c echo.Context) error {
-	log.Println("handler: request received in GetAllAppointments")
+	log.Println("appointment-handler: request received in GetAllAppointments")
 
 	appointments, err := h.logic.GetAllAppointments()
 	if err != nil {
@@ -72,7 +72,7 @@ func (h *AppointmentHandler) GetAllAppointments(c echo.Context) error {
 }
 
 func (h *AppointmentHandler) CreateAppointment(c echo.Context) error {
-	log.Println("handler: request received in CreateAppointment")
+	log.Println("appointment-handler: request received in CreateAppointment")
 
 	appointment := model.Appointment{}
 	if err := c.Bind(&appointment); err != nil {
@@ -97,7 +97,6 @@ func (h *AppointmentHandler) CreateAppointment(c echo.Context) error {
 	if appointment.PackageID != 0 {
 		finalServPrice, err := h.logic.CreateAppointmentWithService(&appointment)
 		if err != nil {
-			log.Printf("handler: error in business logic: %v", err)
 			return response.WriteError(&response.WriteResponse{
 				C:       c,
 				Message: response.ErrorToCreatedAppointment.Error(),
@@ -117,7 +116,6 @@ func (h *AppointmentHandler) CreateAppointment(c echo.Context) error {
 	if appointment.ServiceID != 0 {
 		finalPkgPrice, err := h.logic.CreateAppointmentWithPackage(&appointment)
 		if err != nil {
-			log.Printf("handler: error in business logic: %v", err)
 			return response.WriteError(&response.WriteResponse{
 				C:       c,
 				Message: response.ErrorToCreatedAppointment.Error(),
@@ -177,7 +175,6 @@ func (h *AppointmentHandler) UpdateAppointment(c echo.Context) error {
 	if appointment.PackageID != 0 {
 		finalPkgPrice, err := h.logic.UpdateAppointmentWithPackage(ID, &appointment)
 		if err != nil {
-			log.Printf("handler: error in business logic: %v", err)
 			return response.WriteError(&response.WriteResponse{
 				C:       c,
 				Message: response.ErrorToUpdatedAppointment.Error(),
@@ -185,6 +182,7 @@ func (h *AppointmentHandler) UpdateAppointment(c echo.Context) error {
 				Data:    nil,
 			})
 		}
+
 		return response.WriteSuccess(&response.WriteResponse{
 			C:       c,
 			Message: response.SuccessAppointmentUpdated,
@@ -196,7 +194,6 @@ func (h *AppointmentHandler) UpdateAppointment(c echo.Context) error {
 	if appointment.ServiceID != 0 {
 		finalServPrice, err := h.logic.UpdateAppointmentWithService(ID, &appointment)
 		if err != nil {
-			log.Printf("handler: error in business logic: %v", err)
 			return response.WriteError(&response.WriteResponse{
 				C:       c,
 				Message: response.ErrorToUpdatedAppointment.Error(),
@@ -212,10 +209,10 @@ func (h *AppointmentHandler) UpdateAppointment(c echo.Context) error {
 		})
 	}
 
-	log.Println("handler: unexpected case, no appointment updated")
+	log.Println("appointment-handler: unexpected case, no appointment updated")
 	return response.WriteError(&response.WriteResponse{
 		C:       c,
-		Message: "No se pudo actualizar la cita",
+		Message: response.ErrorToUpdatedAppointment.Error(),
 		Status:  http.StatusInternalServerError,
 		Data:    nil,
 	})
@@ -232,7 +229,7 @@ func (h *AppointmentHandler) DeleteAppointment(c echo.Context) error {
 		})
 	}
 
-	log.Printf("handler: request received in DeleteAppointment with ID: %d", ID)
+	log.Printf("appointment-handler: request received in DeleteAppointment with ID: %d", ID)
 
 	if err := h.logic.DeleteAppointment(ID); err != nil {
 		return response.WriteError(&response.WriteResponse{

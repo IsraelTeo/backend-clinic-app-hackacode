@@ -70,12 +70,12 @@ func (l *appointmentLogic) GetAppointmentByID(ID uint) (*model.Appointment, erro
 func (l *appointmentLogic) GetAllAppointments() ([]model.Appointment, error) {
 	appointments, err := l.repositoryAppointmentMain.GetAll()
 	if err != nil {
-		log.Printf("appointment: Error fetching appointments: %v", err)
+		log.Printf("appointment-logic: Error fetching appointments: %v", err)
 		return nil, response.ErrorAppointmetsNotFound
 	}
 
 	if len(appointments) == 0 {
-		log.Println("appointment : No appointments found")
+		log.Println("appointment-logic: No appointments found")
 		return []model.Appointment{}, response.ErrorListAppointmentsEmpty
 	}
 
@@ -113,7 +113,7 @@ func (l *appointmentLogic) CreateAppointmentWithPackage(appointment *model.Appoi
 	}
 
 	if err := l.repositoryAppointment.Create(appointmentCreated); err != nil {
-		log.Printf("appointment: Error al crear la cita: %v", err)
+		log.Printf("appointment-logic: Error al crear la cita: %v", err)
 		return nil, err
 	}
 
@@ -158,7 +158,7 @@ func (l *appointmentLogic) CreateAppointmentWithService(appointment *model.Appoi
 	}
 
 	if err := l.repositoryAppointment.Create(appointmentCreated); err != nil {
-		log.Printf("appointment: Error al crear la cita: %v", err)
+		log.Printf("appointment-logic: Error al crear la cita: %v", err)
 		return &model.FinalServicePrice{}, err
 	}
 
@@ -197,7 +197,7 @@ func (l *appointmentLogic) UpdateAppointmentWithPackage(ID uint, appointment *mo
 	appointmentUpdate.TotalAmount = appointment.TotalAmount
 
 	if err := l.repositoryAppointment.Update(appointmentUpdate); err != nil {
-		log.Printf("appointment: Error actualizando la cita con ID %d: %v", ID, err)
+		log.Printf("appointment-logic: Error actualizando la cita con ID %d: %v", ID, err)
 		return nil, err
 	}
 
@@ -239,7 +239,7 @@ func (l *appointmentLogic) UpdateAppointmentWithService(ID uint, appointment *mo
 	appointmentUpdate.TotalAmount = appointment.TotalAmount
 
 	if err := l.repositoryAppointment.Update(appointmentUpdate); err != nil {
-		log.Printf("appointment: Error actualizando la cita con ID %d: %v", ID, err)
+		log.Printf("appointment-logic: Error actualizando la cita con ID %d: %v", ID, err)
 		return nil, err
 	}
 
@@ -265,13 +265,13 @@ func (l *appointmentLogic) DeleteAppointment(ID uint) error {
 func (l *appointmentLogic) parseStartAndEndTime(startTimeStr, endTimeStr string) (time.Time, time.Time, error) {
 	startTime, err := validate.ParseTime(startTimeStr)
 	if err != nil {
-		log.Printf("appointment: Invalid start time format: %v", err)
+		log.Printf("appointment-logic: Invalid start time format: %v", err)
 		return time.Time{}, time.Time{}, err
 	}
 
 	endTime, err := validate.ParseTime(endTimeStr)
 	if err != nil {
-		log.Printf("appointment: Invalid end time format: %v", err)
+		log.Printf("appointment-logic: Invalid end time format: %v", err)
 		return time.Time{}, time.Time{}, err
 	}
 
@@ -287,7 +287,7 @@ func (l *appointmentLogic) parseTimesAndDate(appointment *model.Appointment) (ti
 
 	appointmentDate, err := validate.ParseDate(appointment.Date)
 	if err != nil {
-		log.Printf("appointment: Invalid appointment date format: %v", err)
+		log.Printf("appointment-logic: Invalid appointment date format: %v", err)
 		return time.Time{}, time.Time{}, time.Time{}, response.ErrorAppointmentInvalidDateFormat
 	}
 
@@ -399,7 +399,7 @@ func (l *appointmentLogic) isServiceIDEXists(ID uint, hasInsurance bool) (*model
 func (l *appointmentLogic) isPackageIDExists(ID uint, hasInsurance bool) (*model.FinalPackagePriceWithInsegurance, error) {
 	pkg, err := l.repositoryPackageMain.GetByID(ID)
 	if err != nil || pkg == nil {
-		log.Printf("appointment: El paquete con ID %d no existe: %v", ID, err)
+		log.Printf("appointment-logic: The package with ID %d not exists: %v", ID, err)
 		return &model.FinalPackagePriceWithInsegurance{}, response.ErrorPackageNotFound
 	}
 
@@ -417,7 +417,7 @@ func (l *appointmentLogic) isPackageIDExists(ID uint, hasInsurance bool) (*model
 func (l *appointmentLogic) validateDoctorAvailability(doctorID uint) error {
 	doctor, err := l.repositoryDoctor.GetByID(doctorID)
 	if err != nil || doctor == nil {
-		log.Printf("appointment: Error fetching doctor with ID %d: %v", doctorID, err)
+		log.Printf("appointment-logic: Error fetching doctor with ID %d: %v", doctorID, err)
 		return response.ErrorDoctorNotFoundID
 	}
 	return nil
@@ -429,7 +429,7 @@ func (l *appointmentLogic) handlePatientCreation(appointment *model.Appointment)
 			return err
 		}
 		if err := l.repositoryPatient.Create(&appointment.Patient); err != nil {
-			log.Printf("appointment: Error creating patient: %v", err)
+			log.Printf("appointment-logic: Error creating patient: %v", err)
 			return err
 		}
 	}
@@ -443,23 +443,23 @@ func (l *appointmentLogic) validateAppointmentTime(appointment *model.Appointmen
 	}
 
 	if validate.IsDateInPast(appointmentDate) {
-		log.Printf("appointment: Appointment date is in the past")
+		log.Printf("appointment-logic: Appointment date is in the past")
 		return response.ErrorAppointmentDateInPast
 	}
 
 	if !validate.IsStartBeforeEnd(startTime, endTime) {
-		log.Printf("appointment: Start time is not before end time")
+		log.Printf("appointment-logic: Start time is not before end time")
 		return response.ErrorInvalidAppointmentTimeRange
 	}
 
 	existingAppointments, err := l.repositoryAppointmentMain.GetAppointmentsByDoctorAndDate(appointment.DoctorID, appointment.Date)
 	if err != nil {
-		log.Printf("appointment: Error fetching existing appointments: %v", err)
+		log.Printf("appointment-logic: Error fetching existing appointments: %v", err)
 		return err
 	}
 
 	if validate.HasTimeConflict(existingAppointments, startTime, endTime) {
-		log.Printf("appointment: Appointment time conflicts with existing appointments")
+		log.Printf("appointment-logic: Appointment time conflicts with existing appointments")
 		return response.ErrorAppointmentTimeConflict
 	}
 
