@@ -35,17 +35,17 @@ func EmailDoctor(doctor *model.Doctor) error {
 	return nil
 }
 
-func BirthDateDoctor(birthDateStr string) (*time.Time, error) {
+func BirthDateDoctor(birthDateStr string) (time.Time, error) {
 	birthDate, err := ParseDate(birthDateStr)
 	if err != nil {
 		log.Printf("validation: Error parsing birthdate: %v", birthDateStr)
-		return &birthDate, response.ErrorDoctorInvalidDateFormat
+		return birthDate, response.ErrorDoctorInvalidDateFormat
 	}
 
 	if !IsDateInPast(birthDate) {
 		log.Printf("validation: Error birthdate is future: %v", birthDateStr)
-		return nil, response.ErrorDoctorBirthDateIsFuture
+		return time.Time{}, response.ErrorDoctorBirthDateIsFuture
 	}
 
-	return &birthDate, nil
+	return birthDate, nil
 }

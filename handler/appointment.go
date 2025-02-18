@@ -94,25 +94,51 @@ func (h *AppointmentHandler) CreateAppointment(c echo.Context) error {
 		})
 	}
 
-	finalPricePkg, err := h.logic.CreateAppointment(&appointment)
-	if err != nil {
-		log.Printf("handler: error in business logic: %v", err)
-		return response.WriteError(&response.WriteResponse{
+	if appointment.PackageID != 0 {
+		finalServPrice, err := h.logic.CreateAppointmentWithService(&appointment)
+		if err != nil {
+			log.Printf("handler: error in business logic: %v", err)
+			return response.WriteError(&response.WriteResponse{
+				C:       c,
+				Message: response.ErrorToCreatedAppointment.Error(),
+				Status:  http.StatusInternalServerError,
+				Data:    nil,
+			})
+		}
+
+		return response.WriteSuccess(&response.WriteResponse{
 			C:       c,
-			Message: response.ErrorToCreatedAppointment.Error(),
-			Status:  http.StatusInternalServerError,
-			Data:    nil,
+			Message: response.SuccessPackageCreated,
+			Status:  http.StatusCreated,
+			Data:    finalServPrice,
 		})
 	}
 
-	return response.WriteSuccessAppointmentDesc(&response.WriteResponse{
+	if appointment.ServiceID != 0 {
+		finalPkgPrice, err := h.logic.CreateAppointmentWithPackage(&appointment)
+		if err != nil {
+			log.Printf("handler: error in business logic: %v", err)
+			return response.WriteError(&response.WriteResponse{
+				C:       c,
+				Message: response.ErrorToCreatedAppointment.Error(),
+				Status:  http.StatusInternalServerError,
+				Data:    nil,
+			})
+		}
+		return response.WriteSuccess(&response.WriteResponse{
+			C:       c,
+			Message: response.SuccessPackageCreated,
+			Status:  http.StatusCreated,
+			Data:    finalPkgPrice,
+		})
+	}
+	log.Println("handler: unexpected case, no appointment created")
+	return response.WriteError(&response.WriteResponse{
 		C:       c,
-		Message: response.SuccessAppointmentCreated,
-		Status:  http.StatusCreated,
-	},
-		finalPricePkg,
-		appointment.Patient.Insurance,
-	)
+		Message: "No se pudo crear la cita",
+		Status:  http.StatusInternalServerError,
+		Data:    nil,
+	})
 }
 
 func (h *AppointmentHandler) UpdateAppointment(c echo.Context) error {

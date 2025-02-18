@@ -86,7 +86,7 @@ func (l *doctorLogic) CreateDoctor(doctor *model.Doctor) error {
 	startTimeMain := combineDateAndTime(startTime, time.Now())
 	endTimeMain := combineDateAndTime(endTime, time.Now())
 
-	if !validate.IsStartBeforeEnd(startTime, &endTimeMain) {
+	if !validate.IsStartBeforeEnd(startTime, endTimeMain) {
 		return response.ErrorInvalidEndTimeInPastDoctor
 	}
 
@@ -142,7 +142,7 @@ func (l *doctorLogic) UpdateDoctor(ID uint, doctor *model.Doctor) error {
 	startTimeMain := combineDateAndTime(startTime, time.Now())
 	endTimeMain := combineDateAndTime(endTime, time.Now())
 
-	if !validate.IsStartBeforeEnd(&startTimeMain, &endTimeMain) {
+	if !validate.IsStartBeforeEnd(startTimeMain, endTimeMain) {
 		return response.ErrorInvalidEndTimeInPastDoctor
 	}
 
@@ -207,21 +207,21 @@ func normalizeDays(days string) (string, error) {
 	return strings.Join(normalizedDays, ","), nil
 }
 
-func parseShiftDoctor(doctor *model.Doctor) (*time.Time, *time.Time, error) {
+func parseShiftDoctor(doctor *model.Doctor) (time.Time, time.Time, error) {
 	startTime, err := validate.ParseTime(doctor.StartTime)
 	if err != nil {
-		return nil, nil, response.ErrorInvalidStartTimeDoctor
+		return time.Time{}, time.Time{}, response.ErrorInvalidStartTimeDoctor
 	}
 
 	endTime, err := validate.ParseTime(doctor.EndTime)
 	if err != nil {
-		return nil, nil, response.ErrorInvalidEndTimeDoctor
+		return time.Time{}, time.Time{}, response.ErrorInvalidEndTimeDoctor
 	}
 
 	return startTime, endTime, nil
 }
 
-func combineDateAndTime(timeObj *time.Time, referenceDate time.Time) time.Time {
+func combineDateAndTime(timeObj time.Time, referenceDate time.Time) time.Time {
 	return time.Date(
 		referenceDate.Year(),
 		referenceDate.Month(),
@@ -234,49 +234,49 @@ func combineDateAndTime(timeObj *time.Time, referenceDate time.Time) time.Time {
 	)
 }
 
-func (l *doctorLogic) validateDoctor(doctor *model.Doctor) (*time.Time, error) {
+func (l *doctorLogic) validateDoctor(doctor *model.Doctor) (time.Time, error) {
 	if err := validate.DNIDoctor(doctor); err != nil {
-		return nil, err
+		return time.Time{}, err
 	}
 
 	if err := validate.PhoneNumberDoctor(doctor); err != nil {
-		return nil, err
+		return time.Time{}, err
 	}
 
 	if err := validate.EmailDoctor(doctor); err != nil {
-		return nil, err
+		return time.Time{}, err
 	}
 
 	birthDate, err := validate.BirthDateDoctor(doctor.BirthDate)
 	if err != nil {
-		return nil, err
+		return time.Time{}, err
 	}
 
 	return birthDate, nil
 }
 
-func (l *doctorLogic) validateUpdatedDoctorFields(doctor *model.Doctor, doctorUpdate *model.Doctor) (*time.Time, error) {
+func (l *doctorLogic) validateUpdatedDoctorFields(doctor *model.Doctor, doctorUpdate *model.Doctor) (time.Time, error) {
 	if doctor.DNI != doctorUpdate.DNI {
 		if err := validate.DNIDoctor(doctor); err != nil {
-			return nil, err
+			return time.Time{}, err
 		}
 	}
 
 	if doctor.PhoneNumber != doctorUpdate.PhoneNumber {
 		if err := validate.PhoneNumberDoctor(doctor); err != nil {
-			return nil, err
+			return time.Time{}, err
 		}
 	}
 
 	if doctor.Email != doctorUpdate.Email {
 		if err := validate.EmailDoctor(doctor); err != nil {
-			return nil, err
+			return time.Time{}, err
 		}
 	}
 
 	birthDate, err := validate.BirthDateDoctor(doctor.BirthDate)
 	if err != nil {
-		return nil, err
+		return time.Time{}, err
 	}
 
 	return birthDate, nil

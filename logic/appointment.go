@@ -15,7 +15,8 @@ import (
 type AppointmentLogic interface {
 	GetAppointmentByID(ID uint) (*model.Appointment, error)
 	GetAllAppointments() ([]model.Appointment, error)
-	CreateAppointment(appointment *model.Appointment) (*model.FinalPackagePriceWithInsegurance, error)
+	CreateAppointmentWithPackage(appointment *model.Appointment) (*model.FinalPackagePriceWithInsegurance, error)
+	CreateAppointmentWithService(appointment *model.Appointment) (*model.FinalServicePrice, error)
 	UpdateAppointment(ID uint, appointment *model.Appointment) error
 	DeleteAppointment(ID uint) error
 }
@@ -81,10 +82,10 @@ func (l *appointmentLogic) GetAllAppointments() ([]model.Appointment, error) {
 	return appointments, nil
 }
 
-func (l *appointmentLogic) CreateAppointment(appointment *model.Appointment) (*model.FinalPackagePriceWithInsegurance, error) {
+func (l *appointmentLogic) CreateAppointmentWithPackage(appointment *model.Appointment) (*model.FinalPackagePriceWithInsegurance, error) {
 	doctor, err := l.repositoryDoctor.GetByID(appointment.DoctorID)
 	if err != nil || doctor == nil {
-		log.Printf("appointment: Error fetching doctor with ID %d: %v", appointment.DoctorID, err)
+		log.Printf("appointment-logic: Error fetching doctor with ID %d: %v", appointment.DoctorID, err)
 		return nil, response.ErrorDoctorNotFoundID
 	}
 
@@ -99,37 +100,30 @@ func (l *appointmentLogic) CreateAppointment(appointment *model.Appointment) (*m
 		}
 	}
 
-	//parseamos la fecha de la cita y horario
 	startTime, endTime, appointmentDate, err := l.parseTimesAndDate(appointment)
 	if err != nil {
 		return nil, err
 	}
 
-	//verificamos que la fecha de la cita sea en pasado
 	if validate.IsDateInPast(appointmentDate) {
 		log.Printf("appointment: Appointment date is in the past")
 		return nil, response.ErrorAppointmentDateInPast
 	}
 
-	//parsear fecha y horario del doctor
-	//verifica que el horario final esté en futuro
 	if !validate.IsStartBeforeEnd(startTime, endTime) {
 		log.Printf("appointment: Start time is not before end time")
 		return nil, response.ErrorInvalidAppointmentTimeRange
 	}
 
-	//obtiene el inicio y final del turno del doctor
 	doctorStartTime, doctorEndTime, err := l.parseStartAndEndTime(doctor.StartTime, doctor.EndTime)
 	if err != nil {
 		log.Printf("appointment: Invalid doctor end time format: %v", err)
 		return nil, err
 	}
 
-	//obtengo el día de la cita en español
 	appointmentDay := validate.TranslateDayToSpanish(appointmentDate.Weekday().String())
 	log.Printf("appointment: Día de la cita en español: %s", appointmentDay)
 
-	//Obtengo los días disponibles del doctor
 	validDays := strings.Split(doctor.Days, ",")
 	for i := range validDays {
 		validDays[i] = strings.ToLower(strings.TrimSpace(validDays[i]))
@@ -137,37 +131,30 @@ func (l *appointmentLogic) CreateAppointment(appointment *model.Appointment) (*m
 
 	log.Printf("appointment: Días disponibles del doctor: %v", validDays)
 
-	//día de la cita en minusculas
 	appointmentDay = strings.ToLower(appointmentDay)
 	log.Printf("appointment: Día de la cita en minúsculas: %s", appointmentDay)
 
-	//verifica que el médico esté disponible el día de la cita
 	if !validate.IsDayAvailable(appointmentDay, validDays) {
 		log.Printf("appointment: El médico no está disponible el día: %s", appointmentDay)
 		return nil, response.ErrorAppointmentDayNotAvailable
 	}
 
-	//verifica que el horario de la cita esté dentro del rango del turno del doctor
 	if !validate.IsWithinTimeRange(startTime, endTime, doctorStartTime, doctorEndTime) {
 		log.Printf("appointment: Appointment time is outside the allowed time range")
 		return nil, response.ErrorInvalidAppointmentTime
 	}
 
-	//Obtiene la cita del doctor y la fecha para verificar que no exista una cita en el mismo horario
 	existingAppointments, err := l.repositoryAppointmentMain.GetAppointmentsByDoctorAndDate(appointment.DoctorID, appointment.Date)
 	if err != nil {
 		log.Printf("appointment: Error fetching existing appointments: %v", err)
 		return nil, err
 	}
 
-	//verifica que no haya conflicto
 	if validate.HasTimeConflict(existingAppointments, startTime, endTime) {
 		log.Printf("appointment: Appointment time conflicts with existing appointments")
 		return nil, response.ErrorAppointmentTimeConflict
 	}
 
-	///////////////////////////////////////////////////////////////////////////////
-	//obtenemos el seguro médico del paciente
 	hasInsurance := appointment.Patient.Insurance
 
 	finalPkgPrice, err := l.isPackageIDExists(appointment.PackageID, hasInsurance)
@@ -221,37 +208,30 @@ func (l *appointmentLogic) CreateAppointmentWithService(appointment *model.Appoi
 		}
 	}
 
-	//parseamos la fecha de la cita y horario
 	startTime, endTime, appointmentDate, err := l.parseTimesAndDate(appointment)
 	if err != nil {
 		return &model.FinalServicePrice{}, err
 	}
 
-	//verificamos que la fecha de la cita sea en pasado
 	if validate.IsDateInPast(appointmentDate) {
 		log.Printf("appointment: Appointment date is in the past")
 		return nil, response.ErrorAppointmentDateInPast
 	}
 
-	//parsear fecha y horario del doctor
-	//verifica que el horario final esté en futuro
 	if !validate.IsStartBeforeEnd(startTime, endTime) {
 		log.Printf("appointment: Start time is not before end time")
 		return nil, response.ErrorInvalidAppointmentTimeRange
 	}
 
-	//obtiene el inicio y final del turno del doctor
 	doctorStartTime, doctorEndTime, err := l.parseStartAndEndTime(doctor.StartTime, doctor.EndTime)
 	if err != nil {
 		log.Printf("appointment: Invalid doctor end time format: %v", err)
 		return nil, err
 	}
 
-	//obtengo el día de la cita en español
 	appointmentDay := validate.TranslateDayToSpanish(appointmentDate.Weekday().String())
 	log.Printf("appointment: Día de la cita en español: %s", appointmentDay)
 
-	//Obtengo los días disponibles del doctor
 	validDays := strings.Split(doctor.Days, ",")
 	for i := range validDays {
 		validDays[i] = strings.ToLower(strings.TrimSpace(validDays[i]))
@@ -259,30 +239,25 @@ func (l *appointmentLogic) CreateAppointmentWithService(appointment *model.Appoi
 
 	log.Printf("appointment: Días disponibles del doctor: %v", validDays)
 
-	//día de la cita en minusculas
 	appointmentDay = strings.ToLower(appointmentDay)
 	log.Printf("appointment: Día de la cita en minúsculas: %s", appointmentDay)
 
-	//verifica que el médico esté disponible el día de la cita
 	if !validate.IsDayAvailable(appointmentDay, validDays) {
 		log.Printf("appointment: El médico no está disponible el día: %s", appointmentDay)
 		return nil, response.ErrorAppointmentDayNotAvailable
 	}
 
-	//verifica que el horario de la cita esté dentro del rango del turno del doctor
 	if !validate.IsWithinTimeRange(startTime, endTime, doctorStartTime, doctorEndTime) {
 		log.Printf("appointment: Appointment time is outside the allowed time range")
 		return nil, response.ErrorInvalidAppointmentTime
 	}
 
-	//Obtiene la cita del doctor y la fecha para verificar que no exista una cita en el mismo horario
 	existingAppointments, err := l.repositoryAppointmentMain.GetAppointmentsByDoctorAndDate(appointment.DoctorID, appointment.Date)
 	if err != nil {
 		log.Printf("appointment: Error fetching existing appointments: %v", err)
 		return nil, err
 	}
 
-	//verifica que no haya conflicto
 	if validate.HasTimeConflict(existingAppointments, startTime, endTime) {
 		log.Printf("appointment: Appointment time conflicts with existing appointments")
 		return nil, response.ErrorAppointmentTimeConflict
@@ -295,7 +270,6 @@ func (l *appointmentLogic) CreateAppointmentWithService(appointment *model.Appoi
 		return nil, err
 	}
 
-	//creamos la cita
 	appointmentCreated := &model.Appointment{
 		Patient:     appointment.Patient,
 		DoctorID:    appointment.DoctorID,
@@ -325,6 +299,7 @@ func (l *appointmentLogic) UpdateAppointment(ID uint, appointment *model.Appoint
 	if err != nil {
 		return err
 	}
+
 	if err := l.repositoryAppointment.Update(appointmentUpdate); err != nil {
 		log.Printf("appointment: Error updating appointment with ID %d: %v", ID, err)
 		return err
@@ -346,33 +321,33 @@ func (l *appointmentLogic) DeleteAppointment(ID uint) error {
 	return nil
 }
 
-func (l *appointmentLogic) parseStartAndEndTime(startTimeStr, endTimeStr string) (*time.Time, *time.Time, error) {
+func (l *appointmentLogic) parseStartAndEndTime(startTimeStr, endTimeStr string) (time.Time, time.Time, error) {
 	startTime, err := validate.ParseTime(startTimeStr)
 	if err != nil {
 		log.Printf("appointment: Invalid start time format: %v", err)
-		return &time.Time{}, &time.Time{}, err
+		return time.Time{}, time.Time{}, err
 	}
 
 	endTime, err := validate.ParseTime(endTimeStr)
 	if err != nil {
 		log.Printf("appointment: Invalid end time format: %v", err)
-		return &time.Time{}, &time.Time{}, err
+		return time.Time{}, time.Time{}, err
 	}
 
 	return startTime, endTime, nil
 }
 
-func (l *appointmentLogic) parseTimesAndDate(appointment *model.Appointment) (*time.Time, *time.Time, *time.Time, error) {
+func (l *appointmentLogic) parseTimesAndDate(appointment *model.Appointment) (time.Time, time.Time, time.Time, error) {
 	startTime, endTime, err := l.parseStartAndEndTime(appointment.EndTime, appointment.EndTime)
 	if err != nil {
 		log.Printf("appointment-logic: Invalid appointment date format: %v", err)
-		return nil, nil, nil, response.ErrorAppointmentInvalidDateFormat
+		return time.Time{}, time.Time{}, time.Time{}, response.ErrorAppointmentInvalidDateFormat
 	}
 
 	appointmentDate, err := validate.ParseDate(appointment.Date)
 	if err != nil {
 		log.Printf("appointment: Invalid appointment date format: %v", err)
-		return nil, nil, nil, response.ErrorAppointmentInvalidDateFormat
+		return time.Time{}, time.Time{}, time.Time{}, response.ErrorAppointmentInvalidDateFormat
 	}
 
 	return startTime, endTime, appointmentDate, nil
