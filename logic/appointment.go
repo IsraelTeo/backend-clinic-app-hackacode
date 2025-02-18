@@ -83,7 +83,7 @@ func (l *appointmentLogic) GetAllAppointments() ([]model.Appointment, error) {
 }
 
 func (l *appointmentLogic) CreateAppointmentWithPackage(appointment *model.Appointment) (*model.FinalPackagePriceWithInsegurance, error) {
-	if err := l.validateDoctorAvailability(appointment.DoctorID, appointment); err != nil {
+	if err := l.validateDoctorAvailability(appointment.DoctorID); err != nil {
 		return nil, err
 	}
 
@@ -128,7 +128,7 @@ func (l *appointmentLogic) CreateAppointmentWithPackage(appointment *model.Appoi
 }
 
 func (l *appointmentLogic) CreateAppointmentWithService(appointment *model.Appointment) (*model.FinalServicePrice, error) {
-	if err := l.validateDoctorAvailability(appointment.DoctorID, appointment); err != nil {
+	if err := l.validateDoctorAvailability(appointment.DoctorID); err != nil {
 		return nil, err
 	}
 
@@ -175,7 +175,7 @@ func (l *appointmentLogic) UpdateAppointmentWithPackage(ID uint, appointment *mo
 		return nil, err
 	}
 
-	if err := l.validateDoctorAvailability(appointment.DoctorID, appointment); err != nil {
+	if err := l.validateDoctorAvailability(appointment.DoctorID); err != nil {
 		return nil, err
 	}
 
@@ -217,7 +217,7 @@ func (l *appointmentLogic) UpdateAppointmentWithService(ID uint, appointment *mo
 		return nil, err
 	}
 
-	if err := l.validateDoctorAvailability(appointment.DoctorID, appointment); err != nil {
+	if err := l.validateDoctorAvailability(appointment.DoctorID); err != nil {
 		return nil, err
 	}
 
@@ -414,7 +414,7 @@ func (l *appointmentLogic) isPackageIDExists(ID uint, hasInsurance bool) (*model
 	}, nil
 }
 
-func (l *appointmentLogic) validateDoctorAvailability(doctorID uint, appointment *model.Appointment) error {
+func (l *appointmentLogic) validateDoctorAvailability(doctorID uint) error {
 	doctor, err := l.repositoryDoctor.GetByID(doctorID)
 	if err != nil || doctor == nil {
 		log.Printf("appointment: Error fetching doctor with ID %d: %v", doctorID, err)
