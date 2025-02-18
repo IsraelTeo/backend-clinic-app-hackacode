@@ -2,7 +2,6 @@ package logic
 
 import (
 	"log"
-	"strings"
 	"time"
 
 	"gihub.com/IsraelTeo/clinic-backend-hackacode-app/calculation"
@@ -17,7 +16,8 @@ type AppointmentLogic interface {
 	GetAllAppointments() ([]model.Appointment, error)
 	CreateAppointmentWithPackage(appointment *model.Appointment) (*model.FinalPackagePriceWithInsegurance, error)
 	CreateAppointmentWithService(appointment *model.Appointment) (*model.FinalServicePrice, error)
-	UpdateAppointment(ID uint, appointment *model.Appointment) error
+	UpdateAppointmentWithPackage(ID uint, appointment *model.Appointment) (*model.FinalPackagePriceWithInsegurance, error)
+	UpdateAppointmentWithService(ID uint, appointment *model.Appointment) (*model.FinalServicePrice, error)
 	DeleteAppointment(ID uint) error
 }
 
@@ -83,86 +83,23 @@ func (l *appointmentLogic) GetAllAppointments() ([]model.Appointment, error) {
 }
 
 func (l *appointmentLogic) CreateAppointmentWithPackage(appointment *model.Appointment) (*model.FinalPackagePriceWithInsegurance, error) {
-	doctor, err := l.repositoryDoctor.GetByID(appointment.DoctorID)
-	if err != nil || doctor == nil {
-		log.Printf("appointment-logic: Error fetching doctor with ID %d: %v", appointment.DoctorID, err)
-		return nil, response.ErrorDoctorNotFoundID
+	if err := l.validateDoctorAvailability(appointment.DoctorID, appointment); err != nil {
+		return nil, err
 	}
 
-	if l.isPatientExistsInAppointment(appointment) {
-		if err := validate.PatientToCreate(&appointment.Patient); err != nil {
-			return nil, err
-		}
-
-		if err := l.repositoryPatient.Create(&appointment.Patient); err != nil {
-			log.Printf("appointment: Error creating patient: %v", err)
-			return nil, err
-		}
+	if err := l.handlePatientCreation(appointment); err != nil {
+		return nil, err
 	}
 
-	startTime, endTime, appointmentDate, err := l.parseTimesAndDate(appointment)
+	if err := l.validateAppointmentTime(appointment); err != nil {
+		return nil, err
+	}
+
+	finalPkgPrice, err := l.isPackageIDExists(appointment.PackageID, appointment.Patient.Insurance)
 	if err != nil {
 		return nil, err
 	}
 
-	if validate.IsDateInPast(appointmentDate) {
-		log.Printf("appointment: Appointment date is in the past")
-		return nil, response.ErrorAppointmentDateInPast
-	}
-
-	if !validate.IsStartBeforeEnd(startTime, endTime) {
-		log.Printf("appointment: Start time is not before end time")
-		return nil, response.ErrorInvalidAppointmentTimeRange
-	}
-
-	doctorStartTime, doctorEndTime, err := l.parseStartAndEndTime(doctor.StartTime, doctor.EndTime)
-	if err != nil {
-		log.Printf("appointment: Invalid doctor end time format: %v", err)
-		return nil, err
-	}
-
-	appointmentDay := validate.TranslateDayToSpanish(appointmentDate.Weekday().String())
-	log.Printf("appointment: Día de la cita en español: %s", appointmentDay)
-
-	validDays := strings.Split(doctor.Days, ",")
-	for i := range validDays {
-		validDays[i] = strings.ToLower(strings.TrimSpace(validDays[i]))
-	}
-
-	log.Printf("appointment: Días disponibles del doctor: %v", validDays)
-
-	appointmentDay = strings.ToLower(appointmentDay)
-	log.Printf("appointment: Día de la cita en minúsculas: %s", appointmentDay)
-
-	if !validate.IsDayAvailable(appointmentDay, validDays) {
-		log.Printf("appointment: El médico no está disponible el día: %s", appointmentDay)
-		return nil, response.ErrorAppointmentDayNotAvailable
-	}
-
-	if !validate.IsWithinTimeRange(startTime, endTime, doctorStartTime, doctorEndTime) {
-		log.Printf("appointment: Appointment time is outside the allowed time range")
-		return nil, response.ErrorInvalidAppointmentTime
-	}
-
-	existingAppointments, err := l.repositoryAppointmentMain.GetAppointmentsByDoctorAndDate(appointment.DoctorID, appointment.Date)
-	if err != nil {
-		log.Printf("appointment: Error fetching existing appointments: %v", err)
-		return nil, err
-	}
-
-	if validate.HasTimeConflict(existingAppointments, startTime, endTime) {
-		log.Printf("appointment: Appointment time conflicts with existing appointments")
-		return nil, response.ErrorAppointmentTimeConflict
-	}
-
-	hasInsurance := appointment.Patient.Insurance
-
-	finalPkgPrice, err := l.isPackageIDExists(appointment.PackageID, hasInsurance)
-	if err != nil {
-		return nil, err
-	}
-
-	//creamos la cita
 	appointmentCreated := &model.Appointment{
 		Patient:     appointment.Patient,
 		DoctorID:    appointment.DoctorID,
@@ -191,81 +128,19 @@ func (l *appointmentLogic) CreateAppointmentWithPackage(appointment *model.Appoi
 }
 
 func (l *appointmentLogic) CreateAppointmentWithService(appointment *model.Appointment) (*model.FinalServicePrice, error) {
-	doctor, err := l.repositoryDoctor.GetByID(appointment.DoctorID)
-	if err != nil || doctor == nil {
-		log.Printf("appointment: Error fetching doctor with ID %d: %v", appointment.DoctorID, err)
-		return &model.FinalServicePrice{}, response.ErrorDoctorNotFoundID
-	}
-
-	if l.isPatientExistsInAppointment(appointment) {
-		if err := validate.PatientToCreate(&appointment.Patient); err != nil {
-			return &model.FinalServicePrice{}, err
-		}
-
-		if err := l.repositoryPatient.Create(&appointment.Patient); err != nil {
-			log.Printf("appointment: Error creating patient: %v", err)
-			return &model.FinalServicePrice{}, err
-		}
-	}
-
-	startTime, endTime, appointmentDate, err := l.parseTimesAndDate(appointment)
-	if err != nil {
-		return &model.FinalServicePrice{}, err
-	}
-
-	if validate.IsDateInPast(appointmentDate) {
-		log.Printf("appointment: Appointment date is in the past")
-		return nil, response.ErrorAppointmentDateInPast
-	}
-
-	if !validate.IsStartBeforeEnd(startTime, endTime) {
-		log.Printf("appointment: Start time is not before end time")
-		return nil, response.ErrorInvalidAppointmentTimeRange
-	}
-
-	doctorStartTime, doctorEndTime, err := l.parseStartAndEndTime(doctor.StartTime, doctor.EndTime)
-	if err != nil {
-		log.Printf("appointment: Invalid doctor end time format: %v", err)
+	if err := l.validateDoctorAvailability(appointment.DoctorID, appointment); err != nil {
 		return nil, err
 	}
 
-	appointmentDay := validate.TranslateDayToSpanish(appointmentDate.Weekday().String())
-	log.Printf("appointment: Día de la cita en español: %s", appointmentDay)
-
-	validDays := strings.Split(doctor.Days, ",")
-	for i := range validDays {
-		validDays[i] = strings.ToLower(strings.TrimSpace(validDays[i]))
-	}
-
-	log.Printf("appointment: Días disponibles del doctor: %v", validDays)
-
-	appointmentDay = strings.ToLower(appointmentDay)
-	log.Printf("appointment: Día de la cita en minúsculas: %s", appointmentDay)
-
-	if !validate.IsDayAvailable(appointmentDay, validDays) {
-		log.Printf("appointment: El médico no está disponible el día: %s", appointmentDay)
-		return nil, response.ErrorAppointmentDayNotAvailable
-	}
-
-	if !validate.IsWithinTimeRange(startTime, endTime, doctorStartTime, doctorEndTime) {
-		log.Printf("appointment: Appointment time is outside the allowed time range")
-		return nil, response.ErrorInvalidAppointmentTime
-	}
-
-	existingAppointments, err := l.repositoryAppointmentMain.GetAppointmentsByDoctorAndDate(appointment.DoctorID, appointment.Date)
-	if err != nil {
-		log.Printf("appointment: Error fetching existing appointments: %v", err)
+	if err := l.handlePatientCreation(appointment); err != nil {
 		return nil, err
 	}
 
-	if validate.HasTimeConflict(existingAppointments, startTime, endTime) {
-		log.Printf("appointment: Appointment time conflicts with existing appointments")
-		return nil, response.ErrorAppointmentTimeConflict
+	if err := l.validateAppointmentTime(appointment); err != nil {
+		return nil, err
 	}
 
-	hasInsurance := appointment.Patient.Insurance
-
-	finalServicePrice, err := l.isServiceIDEXists(appointment.ServiceID, hasInsurance)
+	finalServicePrice, err := l.isServiceIDEXists(appointment.ServiceID, appointment.Patient.Insurance)
 	if err != nil {
 		return nil, err
 	}
@@ -294,28 +169,94 @@ func (l *appointmentLogic) CreateAppointmentWithService(appointment *model.Appoi
 	}, nil
 }
 
-func (l *appointmentLogic) UpdateAppointment(ID uint, appointment *model.Appointment) error {
+func (l *appointmentLogic) UpdateAppointmentWithPackage(ID uint, appointment *model.Appointment) (*model.FinalPackagePriceWithInsegurance, error) {
 	appointmentUpdate, err := l.GetAppointmentByID(ID)
 	if err != nil {
-		return err
+		return nil, err
 	}
+
+	if err := l.validateDoctorAvailability(appointment.DoctorID, appointment); err != nil {
+		return nil, err
+	}
+
+	if err := l.validateAppointmentTime(appointment); err != nil {
+		return nil, err
+	}
+
+	finalPkgPrice, err := l.isPackageIDExists(appointment.PackageID, appointment.Patient.Insurance)
+	if err != nil {
+		return nil, err
+	}
+
+	appointmentUpdate.Patient = appointment.Patient
+	appointmentUpdate.DoctorID = appointment.DoctorID
+	appointmentUpdate.PackageID = appointment.PackageID
+	appointmentUpdate.Date = appointment.Date
+	appointmentUpdate.StartTime = appointment.StartTime
+	appointmentUpdate.EndTime = appointment.EndTime
+	appointmentUpdate.TotalAmount = appointment.TotalAmount
 
 	if err := l.repositoryAppointment.Update(appointmentUpdate); err != nil {
-		log.Printf("appointment: Error updating appointment with ID %d: %v", ID, err)
-		return err
+		log.Printf("appointment: Error actualizando la cita con ID %d: %v", ID, err)
+		return nil, err
 	}
 
-	return nil
+	return &model.FinalPackagePriceWithInsegurance{
+		InsuranceDiscount: finalPkgPrice.InsuranceDiscount,
+		FinalPackagePrice: model.FinalPackagePrice{
+			TotalAmount:     finalPkgPrice.TotalAmount,
+			DiscountPackage: finalPkgPrice.DiscountPackage,
+			FinalPrice:      finalPkgPrice.FinalPrice,
+		},
+	}, nil
+}
+
+func (l *appointmentLogic) UpdateAppointmentWithService(ID uint, appointment *model.Appointment) (*model.FinalServicePrice, error) {
+	appointmentUpdate, err := l.GetAppointmentByID(ID)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := l.validateDoctorAvailability(appointment.DoctorID, appointment); err != nil {
+		return nil, err
+	}
+
+	if err := l.validateAppointmentTime(appointment); err != nil {
+		return nil, err
+	}
+
+	finalServicePrice, err := l.isServiceIDEXists(appointment.ServiceID, appointment.Patient.Insurance)
+	if err != nil {
+		return nil, err
+	}
+
+	appointmentUpdate.Patient = appointment.Patient
+	appointmentUpdate.DoctorID = appointment.DoctorID
+	appointmentUpdate.ServiceID = appointment.ServiceID
+	appointmentUpdate.Date = appointment.Date
+	appointmentUpdate.StartTime = appointment.StartTime
+	appointmentUpdate.EndTime = appointment.EndTime
+	appointmentUpdate.TotalAmount = appointment.TotalAmount
+
+	if err := l.repositoryAppointment.Update(appointmentUpdate); err != nil {
+		log.Printf("appointment: Error actualizando la cita con ID %d: %v", ID, err)
+		return nil, err
+	}
+
+	return &model.FinalServicePrice{
+		TotalAmount:       finalServicePrice.TotalAmount,
+		InsuranceDiscount: finalServicePrice.InsuranceDiscount,
+		FinalPrice:        finalServicePrice.FinalPrice,
+	}, nil
 }
 
 func (l *appointmentLogic) DeleteAppointment(ID uint) error {
-	_, err := l.repositoryAppointment.GetByID(ID)
-	if err != nil {
-		return err
+	if _, err := l.GetAppointmentByID(ID); err != nil {
+		return response.ErrorAppointmentNotFound
 	}
 
 	if err := l.repositoryAppointment.Delete(ID); err != nil {
-		return err
+		return response.ErrorToDeletedAppointment
 	}
 
 	return nil
@@ -351,31 +292,6 @@ func (l *appointmentLogic) parseTimesAndDate(appointment *model.Appointment) (ti
 	}
 
 	return startTime, endTime, appointmentDate, nil
-}
-
-func (l *appointmentLogic) validateDoctor(doctorID uint) error {
-	doctor, err := l.repositoryDoctor.GetByID(doctorID)
-	if err != nil || doctor == nil {
-		log.Printf("appointment: Error fetching doctor with ID %d: %v", doctorID, err)
-		return response.ErrorDoctorNotFoundID
-	}
-	return nil
-}
-
-func (l *appointmentLogic) handlePatientByID(appointment *model.Appointment) error {
-	if appointment.PatientID == 0 {
-		return nil
-	}
-
-	log.Println("the request brought an ID")
-	existingPatient, err := l.repositoryPatient.GetByID(appointment.PatientID)
-	if err != nil {
-		log.Printf("appointment: Error fetching patient by ID: %v", err)
-		return response.ErrorPatientNotFoundID
-	}
-
-	appointment.Patient = *existingPatient
-	return nil
 }
 
 func (l *appointmentLogic) ValidatePatient(patient *model.Patient) error {
@@ -496,6 +412,58 @@ func (l *appointmentLogic) isPackageIDExists(ID uint, hasInsurance bool) (*model
 			FinalPrice:      finalPricePkg.FinalPrice,
 		},
 	}, nil
+}
+
+func (l *appointmentLogic) validateDoctorAvailability(doctorID uint, appointment *model.Appointment) error {
+	doctor, err := l.repositoryDoctor.GetByID(doctorID)
+	if err != nil || doctor == nil {
+		log.Printf("appointment: Error fetching doctor with ID %d: %v", doctorID, err)
+		return response.ErrorDoctorNotFoundID
+	}
+	return nil
+}
+
+func (l *appointmentLogic) handlePatientCreation(appointment *model.Appointment) error {
+	if l.isPatientExistsInAppointment(appointment) {
+		if err := validate.PatientToCreate(&appointment.Patient); err != nil {
+			return err
+		}
+		if err := l.repositoryPatient.Create(&appointment.Patient); err != nil {
+			log.Printf("appointment: Error creating patient: %v", err)
+			return err
+		}
+	}
+	return nil
+}
+
+func (l *appointmentLogic) validateAppointmentTime(appointment *model.Appointment) error {
+	startTime, endTime, appointmentDate, err := l.parseTimesAndDate(appointment)
+	if err != nil {
+		return err
+	}
+
+	if validate.IsDateInPast(appointmentDate) {
+		log.Printf("appointment: Appointment date is in the past")
+		return response.ErrorAppointmentDateInPast
+	}
+
+	if !validate.IsStartBeforeEnd(startTime, endTime) {
+		log.Printf("appointment: Start time is not before end time")
+		return response.ErrorInvalidAppointmentTimeRange
+	}
+
+	existingAppointments, err := l.repositoryAppointmentMain.GetAppointmentsByDoctorAndDate(appointment.DoctorID, appointment.Date)
+	if err != nil {
+		log.Printf("appointment: Error fetching existing appointments: %v", err)
+		return err
+	}
+
+	if validate.HasTimeConflict(existingAppointments, startTime, endTime) {
+		log.Printf("appointment: Appointment time conflicts with existing appointments")
+		return response.ErrorAppointmentTimeConflict
+	}
+
+	return nil
 }
 
 /*//nos dieron un ID de paquete en el JSON?

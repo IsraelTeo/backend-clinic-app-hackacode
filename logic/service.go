@@ -78,8 +78,7 @@ func (l *serviceLogic) UpdateService(ID uint, service *model.Service) error {
 }
 
 func (l *serviceLogic) DeleteService(ID uint) error {
-	_, err := l.repository.GetByID(ID)
-	if err != nil {
+	if _, err := l.repository.GetByID(ID); err != nil {
 		log.Printf("service-logic: Error fetching service with ID %d: %v", ID, err)
 		return response.ErrorServiceNotFound
 	}

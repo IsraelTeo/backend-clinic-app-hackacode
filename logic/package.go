@@ -127,7 +127,7 @@ func (l *packageLogic) UpdatePackage(ID uint, packageServices *model.CreatePacka
 	}
 
 	finalPkgPrice := calculation.TotalServicePackageAmount(selectedServices)
-	
+
 	existingPackage.Name = packageServices.Name
 	existingPackage.Services = selectedServices
 	existingPackage.Price = finalPkgPrice.FinalPrice
@@ -141,8 +141,7 @@ func (l *packageLogic) UpdatePackage(ID uint, packageServices *model.CreatePacka
 }
 
 func (l *packageLogic) DeletePackage(ID uint) error {
-	_, err := l.repositoryPkg.GetByID(ID)
-	if err != nil {
+	if _, err := l.repositoryPkg.GetByID(ID); err != nil {
 		log.Printf("package-logic: Error fetching package with ID %d: %v", ID, err)
 		return response.ErrorPackageNotFound
 	}

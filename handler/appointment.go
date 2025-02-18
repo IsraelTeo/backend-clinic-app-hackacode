@@ -132,6 +132,7 @@ func (h *AppointmentHandler) CreateAppointment(c echo.Context) error {
 			Data:    finalPkgPrice,
 		})
 	}
+
 	log.Println("handler: unexpected case, no appointment created")
 	return response.WriteError(&response.WriteResponse{
 		C:       c,
@@ -173,19 +174,49 @@ func (h *AppointmentHandler) UpdateAppointment(c echo.Context) error {
 		})
 	}
 
-	if err := h.logic.UpdateAppointment(ID, &appointment); err != nil {
-		return response.WriteError(&response.WriteResponse{
+	if appointment.PackageID != 0 {
+		finalPkgPrice, err := h.logic.UpdateAppointmentWithPackage(ID, &appointment)
+		if err != nil {
+			log.Printf("handler: error in business logic: %v", err)
+			return response.WriteError(&response.WriteResponse{
+				C:       c,
+				Message: response.ErrorToUpdatedAppointment.Error(),
+				Status:  http.StatusInternalServerError,
+				Data:    nil,
+			})
+		}
+		return response.WriteSuccess(&response.WriteResponse{
 			C:       c,
-			Message: response.ErrorToUpdatedAppointment.Error(),
-			Status:  http.StatusInternalServerError,
-			Data:    nil,
+			Message: response.SuccessAppointmentUpdated,
+			Status:  http.StatusOK,
+			Data:    finalPkgPrice,
 		})
 	}
 
-	return response.WriteSuccess(&response.WriteResponse{
+	if appointment.ServiceID != 0 {
+		finalServPrice, err := h.logic.UpdateAppointmentWithService(ID, &appointment)
+		if err != nil {
+			log.Printf("handler: error in business logic: %v", err)
+			return response.WriteError(&response.WriteResponse{
+				C:       c,
+				Message: response.ErrorToUpdatedAppointment.Error(),
+				Status:  http.StatusInternalServerError,
+				Data:    nil,
+			})
+		}
+		return response.WriteSuccess(&response.WriteResponse{
+			C:       c,
+			Message: response.SuccessAppointmentUpdated,
+			Status:  http.StatusOK,
+			Data:    finalServPrice,
+		})
+	}
+
+	log.Println("handler: unexpected case, no appointment updated")
+	return response.WriteError(&response.WriteResponse{
 		C:       c,
-		Message: response.SuccessAppointmentUpdated,
-		Status:  http.StatusOK,
+		Message: "No se pudo actualizar la cita",
+		Status:  http.StatusInternalServerError,
 		Data:    nil,
 	})
 }

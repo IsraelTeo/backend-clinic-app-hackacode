@@ -166,8 +166,7 @@ func (l *doctorLogic) UpdateDoctor(ID uint, doctor *model.Doctor) error {
 }
 
 func (l *doctorLogic) DeleteDoctor(ID uint) error {
-	_, err := l.GetDoctorByID(ID)
-	if err != nil {
+	if _, err := l.GetDoctorByID(ID); err != nil {
 		log.Printf("doctor-logic: Error fetching doctor with ID %d: %v to update", ID, err)
 		return response.ErrorDoctorNotFoundID
 	}
