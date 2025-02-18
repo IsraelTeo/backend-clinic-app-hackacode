@@ -32,27 +32,53 @@ func (s *loginService) Login(c echo.Context) error {
 	user := userLogin{}
 	if err := c.Bind(&user); err != nil {
 		log.Printf("login-service: Error binding user input: %v", err)
-		return response.WriteError(c, response.ErrorBadRequestUser.Error(), http.StatusBadRequest)
+		return response.WriteError(&response.WriteResponse{
+			C:       c,
+			Message: response.ErrorBadRequestUser.Error(),
+			Status:  http.StatusBadRequest,
+			Data:    nil,
+		})
 	}
 
 	userFound, err := s.repository.GetUserByEmail(user.Email)
 	if err != nil {
 		log.Printf("login-service: User not found with email: %s, error: %v", user.Email, err)
-		return response.WriteError(c, response.ErrorInvalidEmail.Error(), http.StatusUnauthorized)
+		return response.WriteError(&response.WriteResponse{
+			C:       c,
+			Message: response.ErrorInvalidEmail.Error(),
+			Status:  http.StatusUnauthorized,
+			Data:    nil,
+		})
 	}
 
 	if !comparePassword(user.Password, userFound.Password) {
 		log.Printf("login-service: Password mismatch for user: %s", user.Email)
-		return response.WriteError(c, response.ErrorBadCretendials.Error(), http.StatusUnauthorized)
+		return response.WriteError(&response.WriteResponse{
+			C:       c,
+			Message: response.ErrorInvalidPassword.Error(),
+			Status:  http.StatusUnauthorized,
+			Data:    nil,
+		})
 	}
 
-	log.Printf("[INFO] LoginService: Generating token for user: %s", user.Email)
+	log.Printf("login-service:: Generating token for user: %s", user.Email)
 	token, err := generateToken(userFound)
 	if err != nil {
 		log.Printf("login-service: Error generating token: %v", err)
-		return response.WriteError(c, response.ErrorGeneratingToken.Error(), http.StatusInternalServerError)
+		return response.WriteError(&response.WriteResponse{
+			C:       c,
+			Message: response.ErrorGeneratingToken.Error(),
+			Status:  http.StatusInternalServerError,
+			Data:    nil,
+		})
 	}
 
 	log.Printf("login-service: Login successful for user: %s", user.Email)
-	return response.WriteSuccess(c, response.SuccessLogin, http.StatusOK, token)
+
+	return response.WriteSuccess(&response.WriteResponse{
+		C:       c,
+		Message: response.SuccessLogin,
+		Status:  http.StatusOK,
+		Data:    token,
+	})
 }

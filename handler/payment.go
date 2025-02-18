@@ -20,16 +20,32 @@ func NewPaymentHandler(logic logic.PaymentLogic) *PaymentHandler {
 
 func (h *PaymentHandler) PaymentRegister(c echo.Context) error {
 	log.Println("handler: request received in PaymentRegister")
+
 	payment := model.Payment{}
+
 	if err := c.Bind(&payment); err != nil {
-		return response.WriteError(c, "Invalid request payload", http.StatusBadRequest)
+		return response.WriteError(&response.WriteResponse{
+			C:       c,
+			Message: err.Error(),
+			Status:  http.StatusBadRequest,
+			Data:    nil,
+		})
 	}
 
 	paymentResponse, err := h.logic.PaymentRegister(&payment)
 	if err != nil {
-		return response.WriteError(c, "Error processing payment", http.StatusInternalServerError)
+		return response.WriteError(&response.WriteResponse{
+			C:       c,
+			Message: "Error processing payment",
+			Status:  http.StatusInternalServerError,
+			Data:    nil,
+		})
 	}
 
-	return response.WriteSuccessPayment(c, response.SuccessPaymentRegister, http.StatusCreated, *paymentResponse)
-
+	return response.WriteSuccess(&response.WriteResponse{
+		C:       c,
+		Message: response.SuccessPaymentRegister,
+		Status:  http.StatusCreated,
+		Data:    paymentResponse,
+	})
 }

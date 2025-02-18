@@ -18,3 +18,20 @@ type CreatePackageRequest struct {
 	Name       string `json:"name" validate:"required,max=50"`
 	ServiceIDs []uint `json:"service_ids" validate:"required"`
 }
+
+type FinalServicePrice struct {
+	TotalAmount       float64
+	InsuranceDiscount float64
+	FinalPrice        float64
+}
+
+type FinalPackagePrice struct {
+	TotalAmount     float64
+	DiscountPackage float64
+	FinalPrice      float64
+}
+
+type FinalPackagePriceWithInsegurance struct {
+	InsuranceDiscount float64
+	FinalPackagePrice
+}

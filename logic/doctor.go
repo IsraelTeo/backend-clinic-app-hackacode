@@ -66,13 +66,11 @@ func (l *doctorLogic) GetAllDoctors() ([]model.Doctor, error) {
 }
 
 func (l *doctorLogic) CreateDoctor(doctor *model.Doctor) error {
-	//Valimos el DNI, DNI, número telefónico no sean duplicads y que la fecha de nacimiento que no sea en pasadodel doctor
 	birthDate, err := l.validateDoctor(doctor)
 	if err != nil {
 		return err
 	}
 
-	//Normalizamos días, es decir: Obtenemos los días que trabaja el doctor
 	normalizedDays, err := normalizeDays(doctor.Days)
 	if err != nil {
 		return err
@@ -80,22 +78,18 @@ func (l *doctorLogic) CreateDoctor(doctor *model.Doctor) error {
 
 	doctor.Days = normalizedDays
 
-	//Parseamos el horario inicial y final del torno, es decir: Su turno
 	startTime, endTime, err := parseShiftDoctor(doctor)
 	if err != nil {
 		return err
 	}
 
-	//Obtener la fecha y horario del horario inicial y horario final
 	startTimeMain := combineDateAndTime(startTime, time.Now())
 	endTimeMain := combineDateAndTime(endTime, time.Now())
 
-	//verificamos que el tiempo final fuera en futuro del tiempo inicial
-	if !validate.IsStartBeforeEnd(*startTime, endTimeMain) {
+	if !validate.IsStartBeforeEnd(startTime, &endTimeMain) {
 		return response.ErrorInvalidEndTimeInPastDoctor
 	}
 
-	//construye el doctor
 	newDoctor := model.Doctor{
 		Person: model.Person{
 			Name:        doctor.Name,
@@ -128,13 +122,11 @@ func (l *doctorLogic) UpdateDoctor(ID uint, doctor *model.Doctor) error {
 		return response.ErrorDoctorNotFoundID
 	}
 
-	//Valimos el DNI, DNI, número telefónico no sean duplicads y que la fecha de nacimiento que no sea en pasadodel doctor
 	birthDate, err := l.validateUpdatedDoctorFields(doctor, doctorUpdate)
 	if err != nil {
 		return err
 	}
 
-	//Normalizamos días, es decir: Obtenemos los días que trabaja el doctor
 	normalizedDays, err := normalizeDays(doctor.Days)
 	if err != nil {
 		return err
@@ -142,18 +134,15 @@ func (l *doctorLogic) UpdateDoctor(ID uint, doctor *model.Doctor) error {
 
 	doctor.Days = normalizedDays
 
-	//Parseamos el horario inicial y final del torno, es decir: Su turno
 	startTime, endTime, err := parseShiftDoctor(doctor)
 	if err != nil {
 		return err
 	}
 
-	//Obtener la fecha y horario del horario inicial y horario final
 	startTimeMain := combineDateAndTime(startTime, time.Now())
 	endTimeMain := combineDateAndTime(endTime, time.Now())
 
-	//verificamos que el tiempo final fuera en futuro del tiempo inicial
-	if !validate.IsStartBeforeEnd(startTimeMain, endTimeMain) {
+	if !validate.IsStartBeforeEnd(&startTimeMain, &endTimeMain) {
 		return response.ErrorInvalidEndTimeInPastDoctor
 	}
 
@@ -229,7 +218,7 @@ func parseShiftDoctor(doctor *model.Doctor) (*time.Time, *time.Time, error) {
 		return nil, nil, response.ErrorInvalidEndTimeDoctor
 	}
 
-	return &startTime, &endTime, nil
+	return startTime, endTime, nil
 }
 
 func combineDateAndTime(timeObj *time.Time, referenceDate time.Time) time.Time {

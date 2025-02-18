@@ -23,81 +23,160 @@ func NewPackageHandler(logicPkg logic.PackageLogic, logicServ logic.ServiceLogic
 func (h *PackageHandler) GetPackageByID(c echo.Context) error {
 	ID, err := validate.ParseID(c)
 	if err != nil {
-		return response.WriteError(c, err.Error(), http.StatusBadRequest)
+		return response.WriteError(&response.WriteResponse{
+			C:       c,
+			Message: err.Error(),
+			Status:  http.StatusBadRequest,
+			Data:    nil,
+		})
 	}
 
-	log.Printf("handler: package fetching with ID: %d", ID)
+	log.Printf("package-handler: package fetching with ID: %d", ID)
 
 	packageService, err := h.logicPkg.GetPackageByID(uint(ID))
 	if err != nil {
-		return response.WriteError(c, err.Error(), http.StatusNotFound)
+		return response.WriteError(&response.WriteResponse{
+			C:       c,
+			Message: err.Error(),
+			Status:  http.StatusNotFound,
+			Data:    nil,
+		})
 	}
-	return response.WriteSuccess(c, response.SuccessPackageFound, http.StatusOK, packageService)
+
+	return response.WriteSuccess(&response.WriteResponse{
+		C:       c,
+		Message: response.SuccessPackageFound,
+		Status:  http.StatusOK,
+		Data:    packageService,
+	})
 }
 
 func (h *PackageHandler) GetAllPackages(c echo.Context) error {
-	log.Println("handler: request received in GetAllPackages")
+	log.Println("package-handler: request received in GetAllPackages")
 
 	packageServices, err := h.logicPkg.GetAllPackages()
 	if err != nil {
-		return response.WriteError(c, err.Error(), http.StatusNotFound)
+		return response.WriteError(&response.WriteResponse{
+			C:       c,
+			Message: err.Error(),
+			Status:  http.StatusNotFound,
+			Data:    nil,
+		})
 	}
 
-	return response.WriteSuccess(c, response.SuccessPackagesFound, http.StatusOK, packageServices)
+	return response.WriteSuccess(&response.WriteResponse{
+		C:       c,
+		Message: response.SuccessPackagesFound,
+		Status:  http.StatusOK,
+		Data:    packageServices,
+	})
 }
 
 func (h *PackageHandler) CreatePackage(c echo.Context) error {
-	log.Println("handler: request received in CreatePackage")
+	log.Println("package-handler: request received in CreatePackage")
 
 	var pkgRequest model.CreatePackageRequest
 	if err := c.Bind(&pkgRequest); err != nil {
-		return response.WriteError(c, "Invalid request format", http.StatusBadRequest)
+		return response.WriteError(&response.WriteResponse{
+			C:       c,
+			Message: err.Error(),
+			Status:  http.StatusBadRequest,
+			Data:    nil,
+		})
 	}
 
-	// Validar la entrada
 	if len(pkgRequest.ServiceIDs) == 0 {
-		return response.WriteError(c, "No service IDs provided", http.StatusBadRequest)
+		return response.WriteError(&response.WriteResponse{
+			C:       c,
+			Message: "Service IDs cannot be empty",
+			Status:  http.StatusBadRequest,
+			Data:    nil,
+		})
 	}
 
-	// Pasar el objeto al servicio de lógica
 	if err := h.logicPkg.CreatePackage(&pkgRequest); err != nil {
-		return response.WriteError(c, err.Error(), http.StatusInternalServerError)
+		return response.WriteError(&response.WriteResponse{
+			C:       c,
+			Message: err.Error(),
+			Status:  http.StatusInternalServerError,
+			Data:    nil,
+		})
 	}
 
-	return response.WriteSuccess(c, response.SuccessPackageCreated, http.StatusCreated, nil)
+	return response.WriteSuccess(&response.WriteResponse{
+		C:       c,
+		Message: response.SuccessPackageCreated,
+		Status:  http.StatusCreated,
+		Data:    nil,
+	})
 }
 
 func (h *PackageHandler) UpdatePackage(c echo.Context) error {
 	ID, err := validate.ParseID(c)
 	if err != nil {
-		return response.WriteError(c, err.Error(), http.StatusBadRequest)
+		return response.WriteError(&response.WriteResponse{
+			C:       c,
+			Message: err.Error(),
+			Status:  http.StatusBadRequest,
+			Data:    nil,
+		})
 	}
 
-	log.Printf("handler: request received in UpdatePackage with ID: %d", ID)
+	log.Printf("package-handler: request received in UpdatePackage with ID: %d", ID)
 
 	packageServices := model.CreatePackageRequest{}
 	if err := c.Bind(&packageServices); err != nil {
-		return response.WriteError(c, err.Error(), http.StatusBadRequest)
+		return response.WriteError(&response.WriteResponse{
+			C:       c,
+			Message: err.Error(),
+			Status:  http.StatusBadRequest,
+			Data:    nil,
+		})
 	}
 
 	if err := h.logicPkg.UpdatePackage(uint(ID), &packageServices); err != nil {
-		return response.WriteError(c, err.Error(), http.StatusInternalServerError)
+		return response.WriteError(&response.WriteResponse{
+			C:       c,
+			Message: err.Error(),
+			Status:  http.StatusInternalServerError,
+			Data:    nil,
+		})
 	}
 
-	return response.WriteSuccess(c, response.SuccessPackageUpdated, http.StatusOK, nil)
+	return response.WriteSuccess(&response.WriteResponse{
+		C:       c,
+		Message: response.SuccessPackageUpdated,
+		Status:  http.StatusOK,
+		Data:    nil,
+	})
 }
 
 func (h *PackageHandler) DeletePackage(c echo.Context) error {
 	ID, err := validate.ParseID(c)
 	if err != nil {
-		return response.WriteError(c, err.Error(), http.StatusBadRequest)
+		return response.WriteError(&response.WriteResponse{
+			C:       c,
+			Message: err.Error(),
+			Status:  http.StatusBadRequest,
+			Data:    nil,
+		})
 	}
 
-	log.Printf("handler: request received in DeletePackage with ID: %d", ID)
+	log.Printf("package-handler: request received in DeletePackage with ID: %d", ID)
 
 	if err := h.logicPkg.DeletePackage(uint(ID)); err != nil {
-		return response.WriteError(c, err.Error(), http.StatusInternalServerError)
+		return response.WriteError(&response.WriteResponse{
+			C:       c,
+			Message: err.Error(),
+			Status:  http.StatusInternalServerError,
+			Data:    nil,
+		})
 	}
 
-	return response.WriteSuccess(c, response.SuccessPackageDeleted, http.StatusOK, nil)
+	return response.WriteSuccess(&response.WriteResponse{
+		C:       c,
+		Message: response.SuccessPackageDeleted,
+		Status:  http.StatusOK,
+		Data:    nil,
+	})
 }

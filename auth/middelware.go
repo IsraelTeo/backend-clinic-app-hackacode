@@ -13,7 +13,12 @@ func ValidateJWT(next echo.HandlerFunc) echo.HandlerFunc {
 		_, err := validateToken(c)
 		if err != nil {
 			log.Printf("Invalid token: %v", err)
-			return response.WriteError(c, err.Error(), http.StatusUnauthorized)
+			return response.WriteError(&response.WriteResponse{
+				C:       c,
+				Message: err.Error(),
+				Status:  http.StatusUnauthorized,
+				Data:    nil,
+			})
 		}
 
 		return next(c)

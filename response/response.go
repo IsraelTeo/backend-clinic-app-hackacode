@@ -30,6 +30,7 @@ var (
 	ErrorBadRequestUser  = errors.New("el cuerpo de la solicitud no es válido para el usuario")
 	ErrorBadCretendials  = errors.New("credenciales inválidas")
 	ErrorInvalidEmail    = errors.New("el email no es válido o no está registrado")
+	ErrorInvalidPassword = errors.New("la contraseña es incorrecta")
 	ErrorGeneratingToken = errors.New("no se pudo generar el token de autenticación")
 )
 
@@ -115,7 +116,7 @@ var (
 	ErrorInvalidStartTimeDoctor       = errors.New("el horario de inicio del turno del médico está mal formateado")
 	ErrorInvalidStartTimeInPastDoctor = errors.New("el horario de inicio del turno del médico debe ser en tiempo futuro")
 	ErrorInvalidEndTimeDoctor         = errors.New("el horario de final del turno del médico está mal formateado")
-	ErrorInvalidEndTimeInPastDoctor   = errors.New("el horario de final del turno del médico debe ser en tiempo futuro depués del horario inicial del turno")
+	ErrorInvalidEndTimeInPastDoctor   = errors.New("el horario de final del turno del médico debe ser en tiempo futuro después del horario inicial del turno")
 	ErrorDoctorExistsDNI              = errors.New("ya existe un médico con el DNI ingresado")
 	ErrorDoctorExistsPhoneNumber      = errors.New("el número telefónico ingresado ya existe")
 	ErrorDoctorExistsEmail            = errors.New("el email ingresado ya existe")
@@ -179,9 +180,9 @@ var (
 	ErrorInvalidAppointmentTimeRange  = errors.New("el rango de tiempo especificado para la cita no es válido; asegúrese de que la hora de inicio sea anterior a la de finalización")
 	ErrorAppointmentTimeFormat        = errors.New("el formato de hora ingresado no es válido; use el formato HH:MM")
 	ErrorPatientExists                = errors.New("el paciente ya fue registrado anteriormente, solo ingresa su id")
-	ErrorPatientDataRequired          = errors.New("se requieren datos del paciente")
+	ErrorPatientDataRequired          = errors.New("se requiere el ID del paciente o sus datos para registrarlo los datos del paciente")
 	ErrorInvalidAppointment           = errors.New("debe seleccionar al menos un paquete o servicio para la cita")
-	ErrorPackageAndServiceEmpty       = errors.New("ni paquete ni servicio especificado")
+	ErrorPackageAndServiceEmpty       = errors.New("se necesita especificar el ID de un paquete o de un servicio médico")
 )
 
 // Mensajes de éxito de pago realizado
@@ -200,45 +201,44 @@ var (
 	ErrorInvalidPaymentType    = errors.New("el tipo de pago es inválido, ingrese: efectivo, pago por aplicación o pago con tarjeta")
 )
 
-func WriteSuccess(c echo.Context, message string, status int, data interface{}) error {
-	return c.JSON(status, map[string]interface{}{
-		"status":  status,
-		"message": message,
-		"data":    data,
+type WriteResponse struct {
+	C       echo.Context
+	Message string
+	Status  uint
+	Data    interface{}
+}
+
+func WriteSuccess(r *WriteResponse) error {
+	return r.C.JSON(int(r.Status), map[string]interface{}{
+		"status":  r.Status,
+		"message": r.Message,
+		"data":    r.Data,
 	})
 }
 
-func WriteError(c echo.Context, message string, status int) error {
-	return c.JSON(status, map[string]interface{}{
-		"error":  message,
-		"status": status,
+func WriteError(r *WriteResponse) error {
+	return r.C.JSON(int(r.Status), map[string]interface{}{
+		"error":  r.Message,
+		"status": r.Status,
 	})
 }
 
-func WriteSuccessAppointmentDesc(c echo.Context, message string, status int, originalPrice, packageDiscount, insuranceDiscount, finalPrice float64, hasInsurance bool) error {
-	return c.JSON(status, map[string]interface{}{
-		"El descuento por paquete es de: $/.": fmt.Sprintf("%.2f", packageDiscount),
-		"El descuento por seguro es de: $/.":  fmt.Sprintf("%.2f", insuranceDiscount),
-		"El precio de la cita es: $/.":        fmt.Sprintf("%.2f", originalPrice),
-		"El precio final de la cita es: $/.":  fmt.Sprintf("%.2f", finalPrice),
+func WriteSuccessAppointmentDesc(r *WriteResponse, finalPricePkg *model.FinalPackagePriceWithInsegurance, hasInsurance bool) error {
+	return r.C.JSON(int(r.Status), map[string]interface{}{
+		"El descuento por paquete es de: $/.": fmt.Sprintf("%.2f", finalPricePkg.DiscountPackage),
+		"El descuento por seguro es de: $/.":  fmt.Sprintf("%.2f", finalPricePkg.InsuranceDiscount),
+		"El precio de la cita es: $/.":        fmt.Sprintf("%.2f", finalPricePkg.TotalAmount),
+		"El precio final de la cita es: $/.":  fmt.Sprintf("%.2f", finalPricePkg.FinalPrice),
 		"tiene seguro":                        hasInsurance,
-		"message":                             message,
-		"status":                              status,
+		"message":                             r.Message,
+		"status":                              r.Status,
 	})
 }
 
-func WriteSuccessAppointment(c echo.Context, message string, status int, originalPrice float64) error {
-	return c.JSON(status, map[string]interface{}{
-		"status":                       status,
-		"message":                      message,
-		"El precio de la cita es: $/.": originalPrice,
-	})
-}
-
-func WriteSuccessPayment(c echo.Context, message string, status int, paymentResponse model.PaymentResponse) error {
-	return c.JSON(status, map[string]interface{}{
-		"status":  status,
-		"message": message,
+func WriteSuccessPayment(r *WriteResponse, paymentResponse *model.PaymentResponse) error {
+	return r.C.JSON(int(r.Status), map[string]interface{}{
+		"status":  r.Status,
+		"message": r.Message,
 		"data":    paymentResponse,
 	})
 }

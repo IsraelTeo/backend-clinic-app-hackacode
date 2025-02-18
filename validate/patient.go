@@ -48,3 +48,45 @@ func BirthDatePatient(birthDateStr string) error {
 
 	return nil
 }
+
+func PatientToCreate(patient *model.Patient) error {
+	if err := DNIPatient(patient); err != nil {
+		return err
+	}
+
+	if err := PhoneNumberPatient(patient); err != nil {
+		return err
+	}
+
+	if err := EmailPatient(patient); err != nil {
+		return err
+	}
+
+	if err := BirthDatePatient(patient.BirthDate); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func PatientFieldsToUpdate(patient *model.Patient, patientUpdate *model.Patient) error {
+	if patient.DNI != patientUpdate.DNI {
+		if err := DNIPatient(patient); err != nil {
+			return err
+		}
+	}
+
+	if patient.PhoneNumber != patientUpdate.PhoneNumber {
+		if err := PhoneNumberPatient(patient); err != nil {
+			return err
+		}
+	}
+
+	if patient.Email != patientUpdate.Email {
+		if err := EmailPatient(patient); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}

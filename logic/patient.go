@@ -70,7 +70,7 @@ func (l *patientLogic) GetAllPatients() ([]model.Patient, error) {
 }
 
 func (l *patientLogic) CreatePatient(patient *model.Patient) error {
-	if err := l.validatePatient(patient); err != nil {
+	if err := validate.PatientToCreate(patient); err != nil {
 		return err
 	}
 
@@ -89,7 +89,7 @@ func (l *patientLogic) UpdatePatient(ID uint, patient *model.Patient) error {
 		return response.ErrorPatientNotFoundID
 	}
 
-	if err := l.validateUpdatedPatientFields(patient, patientUpdate); err != nil {
+	if err := validate.PatientFieldsToUpdate(patient, patientUpdate); err != nil {
 		return err
 	}
 
@@ -124,48 +124,6 @@ func (l *patientLogic) DeletePatient(ID uint) error {
 	if err := l.repositoryPatient.Delete(ID); err != nil {
 		log.Printf("patient-logic: Error deleting patient with ID %d: %v", ID, err)
 		return response.ErrorToDeletedPatient
-	}
-
-	return nil
-}
-
-func (l *patientLogic) validatePatient(patient *model.Patient) error {
-	if err := validate.DNIPatient(patient); err != nil {
-		return err
-	}
-
-	if err := validate.PhoneNumberPatient(patient); err != nil {
-		return err
-	}
-
-	if err := validate.EmailPatient(patient); err != nil {
-		return err
-	}
-
-	if err := validate.BirthDatePatient(patient.BirthDate); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (l *patientLogic) validateUpdatedPatientFields(patient *model.Patient, patientUpdate *model.Patient) error {
-	if patient.DNI != patientUpdate.DNI {
-		if err := validate.DNIPatient(patient); err != nil {
-			return err
-		}
-	}
-
-	if patient.PhoneNumber != patientUpdate.PhoneNumber {
-		if err := validate.PhoneNumberPatient(patient); err != nil {
-			return err
-		}
-	}
-
-	if patient.Email != patientUpdate.Email {
-		if err := validate.EmailPatient(patient); err != nil {
-			return err
-		}
 	}
 
 	return nil

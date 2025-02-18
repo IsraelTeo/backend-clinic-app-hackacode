@@ -22,33 +22,63 @@ func NewDoctorHandler(logic logic.DoctorLogic) *DoctorHandler {
 func (h *DoctorHandler) GetDoctorByID(c echo.Context) error {
 	ID, err := validate.ParseID(c)
 	if err != nil {
-		return response.WriteError(c, err.Error(), http.StatusBadRequest)
+		return response.WriteError(&response.WriteResponse{
+			C:       c,
+			Message: err.Error(),
+			Status:  http.StatusBadRequest,
+			Data:    nil,
+		})
 	}
 
 	log.Printf("handler: doctor fetching with ID: %d", ID)
 
 	doctor, err := h.logic.GetDoctorByID(ID)
 	if err != nil {
-		return response.WriteError(c, err.Error(), http.StatusNotFound)
+		return response.WriteError(&response.WriteResponse{
+			C:       c,
+			Message: err.Error(),
+			Status:  http.StatusNotFound,
+			Data:    nil,
+		})
 	}
 
-	return response.WriteSuccess(c, response.SuccessDoctorFound, http.StatusOK, doctor)
+	return response.WriteSuccess(&response.WriteResponse{
+		C:       c,
+		Message: response.SuccessDoctorFound,
+		Status:  http.StatusOK,
+		Data:    doctor,
+	})
 }
 
 func (h *DoctorHandler) GetDoctorByDNI(c echo.Context) error {
 	DNI := c.QueryParam("dni")
 	if DNI == "" {
-		return response.WriteError(c, response.ErrorPatientDNIRequired.Error(), http.StatusBadRequest)
+		return response.WriteError(&response.WriteResponse{
+			C:       c,
+			Message: response.ErrorPatientDNIRequired.Error(),
+			Status:  http.StatusBadRequest,
+			Data:    nil,
+		})
 	}
 
-	log.Printf("handler: request received to fetch patient with DNI: %s", DNI)
+	log.Printf("handler: request received to fetch doctor with DNI: %s", DNI)
 
-	patient, err := h.logic.GetDoctorByDNI(DNI)
+	doctor, err := h.logic.GetDoctorByDNI(DNI)
 	if err != nil {
-		return response.WriteError(c, err.Error(), http.StatusNotFound)
+		return response.WriteError(&response.WriteResponse{
+			C:       c,
+			Message: err.Error(),
+			Status:  http.StatusNotFound,
+			Data:    nil,
+		})
 	}
 
-	return response.WriteSuccess(c, response.SuccessPatientFound, http.StatusOK, patient)
+	return response.WriteSuccess(&response.WriteResponse{
+		C:       c,
+		Message: response.SuccessDoctorFound,
+		Status:  http.StatusOK,
+		Data:    doctor,
+	})
 }
 
 func (h *DoctorHandler) GetAllDoctors(c echo.Context) error {
@@ -56,10 +86,30 @@ func (h *DoctorHandler) GetAllDoctors(c echo.Context) error {
 
 	doctors, err := h.logic.GetAllDoctors()
 	if err != nil {
-		return response.WriteError(c, err.Error(), http.StatusNotFound)
+		return response.WriteError(&response.WriteResponse{
+			C:       c,
+			Message: err.Error(),
+			Status:  http.StatusNotFound,
+			Data:    nil,
+		})
 	}
 
-	return response.WriteSuccess(c, response.SuccessDoctorsFound, http.StatusOK, doctors)
+	if len(doctors) == 0 {
+		return response.WriteError(&response.WriteResponse{
+			C:       c,
+			Message: response.SuccessPatiensListEmpty,
+			Status:  http.StatusNoContent,
+			Data:    []model.Doctor{},
+		})
+
+	}
+
+	return response.WriteSuccess(&response.WriteResponse{
+		C:       c,
+		Message: response.SuccessDoctorsFound,
+		Status:  http.StatusOK,
+		Data:    doctors,
+	})
 }
 
 func (h *DoctorHandler) CreateDoctor(c echo.Context) error {
@@ -67,55 +117,115 @@ func (h *DoctorHandler) CreateDoctor(c echo.Context) error {
 
 	doctor := model.Doctor{}
 	if err := c.Bind(&doctor); err != nil {
-		return response.WriteError(c, err.Error(), http.StatusBadRequest)
+		return response.WriteError(&response.WriteResponse{
+			C:       c,
+			Message: err.Error(),
+			Status:  http.StatusBadRequest,
+			Data:    nil,
+		})
 	}
 
 	if err := c.Validate(&doctor); err != nil {
-		return response.WriteError(c, response.ErrorBadRequest.Error(), http.StatusBadRequest)
+		return response.WriteError(&response.WriteResponse{
+			C:       c,
+			Message: response.ErrorBadRequest.Error(),
+			Status:  http.StatusBadRequest,
+			Data:    nil,
+		})
 	}
 
 	if err := h.logic.CreateDoctor(&doctor); err != nil {
-		return response.WriteError(c, err.Error(), http.StatusInternalServerError)
+		return response.WriteError(&response.WriteResponse{
+			C:       c,
+			Message: err.Error(),
+			Status:  http.StatusInternalServerError,
+			Data:    nil,
+		})
 	}
 
-	return response.WriteSuccess(c, response.SuccessDoctorCreated, http.StatusCreated, nil)
+	return response.WriteSuccess(&response.WriteResponse{
+		C:       c,
+		Message: response.SuccessDoctorCreated,
+		Status:  http.StatusCreated,
+		Data:    nil,
+	})
 }
 
 func (h *DoctorHandler) UpdateDoctor(c echo.Context) error {
 	ID, err := validate.ParseID(c)
 	if err != nil {
-		return response.WriteError(c, err.Error(), http.StatusBadRequest)
+		return response.WriteError(&response.WriteResponse{
+			C:       c,
+			Message: err.Error(),
+			Status:  http.StatusBadRequest,
+			Data:    nil,
+		})
 	}
 
 	log.Printf("handler: request received in UpdateDoctor with ID: %d", ID)
 
 	doctor := model.Doctor{}
 	if err := c.Bind(&doctor); err != nil {
-		return response.WriteError(c, err.Error(), http.StatusBadRequest)
+		return response.WriteError(&response.WriteResponse{
+			C:       c,
+			Message: err.Error(),
+			Status:  http.StatusBadRequest,
+			Data:    nil,
+		})
 	}
 
 	if err := c.Validate(&doctor); err != nil {
-		return response.WriteError(c, response.ErrorBadRequest.Error(), http.StatusBadRequest)
+		return response.WriteError(&response.WriteResponse{
+			C:       c,
+			Message: response.ErrorBadRequest.Error(),
+			Status:  http.StatusBadRequest,
+			Data:    nil,
+		})
 	}
 
 	if err := h.logic.UpdateDoctor(ID, &doctor); err != nil {
-		return response.WriteError(c, err.Error(), http.StatusInternalServerError)
+		return response.WriteError(&response.WriteResponse{
+			C:       c,
+			Message: err.Error(),
+			Status:  http.StatusInternalServerError,
+			Data:    nil,
+		})
 	}
 
-	return response.WriteSuccess(c, response.SuccessDoctorUpdated, http.StatusOK, nil)
+	return response.WriteSuccess(&response.WriteResponse{
+		C:       c,
+		Message: response.SuccessDoctorUpdated,
+		Status:  http.StatusOK,
+		Data:    nil,
+	})
 }
 
 func (h *DoctorHandler) DeleteDoctor(c echo.Context) error {
 	ID, err := validate.ParseID(c)
 	if err != nil {
-		return response.WriteError(c, err.Error(), http.StatusBadRequest)
+		return response.WriteError(&response.WriteResponse{
+			C:       c,
+			Message: err.Error(),
+			Status:  http.StatusBadRequest,
+			Data:    nil,
+		})
 	}
 
 	log.Printf("handler: request received in DeleteDoctor with ID: %d", ID)
 
 	if err := h.logic.DeleteDoctor(ID); err != nil {
-		return response.WriteError(c, err.Error(), http.StatusInternalServerError)
+		return response.WriteError(&response.WriteResponse{
+			C:       c,
+			Message: err.Error(),
+			Status:  http.StatusInternalServerError,
+			Data:    nil,
+		})
 	}
 
-	return response.WriteSuccess(c, response.SuccessDoctorDeleted, http.StatusOK, nil)
+	return response.WriteSuccess(&response.WriteResponse{
+		C:       c,
+		Message: response.SuccessDoctorDeleted,
+		Status:  http.StatusOK,
+		Data:    nil,
+	})
 }
