@@ -36,14 +36,14 @@ func (l *serviceLogic) GetServiceByID(ID uint) (*model.Service, error) {
 
 func (l *serviceLogic) GetAllServices() ([]model.Service, error) {
 	services, err := l.repository.GetAll()
-	if err != nil {
-		log.Printf("service-logic: Error fetching services: %v", err)
-		return nil, response.ErrorServiceNotFound
-	}
-
 	if len(services) == 0 {
 		log.Println("service-logic: No services found")
 		return []model.Service{}, response.ErrorListServicesEmpty
+	}
+
+	if err != nil {
+		log.Printf("service-logic: Error fetching services: %v", err)
+		return nil, response.ErrorServiceNotFound
 	}
 
 	return services, nil

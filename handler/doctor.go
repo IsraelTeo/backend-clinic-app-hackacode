@@ -85,6 +85,15 @@ func (h *DoctorHandler) GetAllDoctors(c echo.Context) error {
 	log.Println("handler: request received in GetAllDoctors")
 
 	doctors, err := h.logic.GetAllDoctors()
+	if len(doctors) == 0 {
+		return response.WriteError(&response.WriteResponse{
+			C:       c,
+			Message: response.SuccessPatiensListEmpty,
+			Status:  http.StatusOK,
+			Data:    []model.Doctor{},
+		})
+	}
+
 	if err != nil {
 		return response.WriteError(&response.WriteResponse{
 			C:       c,
@@ -92,16 +101,6 @@ func (h *DoctorHandler) GetAllDoctors(c echo.Context) error {
 			Status:  http.StatusNotFound,
 			Data:    nil,
 		})
-	}
-
-	if len(doctors) == 0 {
-		return response.WriteError(&response.WriteResponse{
-			C:       c,
-			Message: response.SuccessPatiensListEmpty,
-			Status:  http.StatusNoContent,
-			Data:    []model.Doctor{},
-		})
-
 	}
 
 	return response.WriteSuccess(&response.WriteResponse{

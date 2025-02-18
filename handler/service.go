@@ -54,6 +54,15 @@ func (h *ServiceHandler) GetAllServices(c echo.Context) error {
 	log.Println("service-handler: request received in GetAllServices")
 
 	services, err := h.logic.GetAllServices()
+	if len(services) == 0 {
+		return response.WriteSuccess(&response.WriteResponse{
+			C:       c,
+			Message: response.SuccessServicesListEmpty,
+			Status:  http.StatusOK,
+			Data:    []model.Service{},
+		})
+	}
+
 	if err != nil {
 		return response.WriteError(&response.WriteResponse{
 			C:       c,

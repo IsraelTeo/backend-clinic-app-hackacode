@@ -18,22 +18,25 @@ type PackageLogic interface {
 }
 
 type packageLogic struct {
-	repositoryPkg  repository.Repository[model.Package]
-	repositoryServ repository.Repository[model.Service]
+	repositoryPkg     repository.Repository[model.Package]
+	repositoryPkgMain repository.PackageRepository
+	repositoryServ    repository.Repository[model.Service]
 }
 
 func NewPackageLogic(
 	repositoryPkg repository.Repository[model.Package],
+	repositoryPkgMain repository.PackageRepository,
 	repositoryServ repository.Repository[model.Service],
 ) PackageLogic {
 	return &packageLogic{
-		repositoryPkg:  repositoryPkg,
-		repositoryServ: repositoryServ,
+		repositoryPkg:     repositoryPkg,
+		repositoryPkgMain: repositoryPkgMain,
+		repositoryServ:    repositoryServ,
 	}
 }
 
 func (l *packageLogic) GetPackageByID(ID uint) (*model.Package, error) {
-	packageService, err := l.repositoryPkg.GetByID(ID)
+	packageService, err := l.repositoryPkgMain.GetByID(ID)
 	if err != nil {
 		log.Printf("package-logic: Error fetching package with ID %d: %v", ID, err)
 		return nil, response.ErrorPackageNotFound
@@ -43,15 +46,10 @@ func (l *packageLogic) GetPackageByID(ID uint) (*model.Package, error) {
 }
 
 func (l *packageLogic) GetAllPackages() ([]model.Package, error) {
-	packageServices, err := l.repositoryPkg.GetAll()
+	packageServices, err := l.repositoryPkgMain.GetAll()
 	if err != nil {
-		log.Printf("package-logib: Error fetching packages: %v", err)
+		log.Printf("package-logic: Error fetching packages: %v", err)
 		return nil, response.ErrorPackageNotFound
-	}
-
-	if len(packageServices) == 0 {
-		log.Println("package: No packages found")
-		return []model.Package{}, response.ErrorListPackagesEmpty
 	}
 
 	return packageServices, nil

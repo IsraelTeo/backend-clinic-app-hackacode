@@ -85,6 +85,15 @@ func (h *PatientHandler) GetAllPatients(c echo.Context) error {
 	log.Println("patient-handler: request received in GetAllPatients")
 
 	patients, err := h.logic.GetAllPatients()
+	if len(patients) == 0 {
+		return response.WriteError(&response.WriteResponse{
+			C:       c,
+			Message: response.SuccessPatiensListEmpty,
+			Status:  http.StatusOK,
+			Data:    []model.Patient{},
+		})
+	}
+
 	if err != nil {
 		return response.WriteError(&response.WriteResponse{
 			C:       c,
@@ -92,16 +101,6 @@ func (h *PatientHandler) GetAllPatients(c echo.Context) error {
 			Status:  http.StatusNotFound,
 			Data:    nil,
 		})
-	}
-
-	if len(patients) == 0 {
-		return response.WriteError(&response.WriteResponse{
-			C:       c,
-			Message: response.SuccessPatiensListEmpty,
-			Status:  http.StatusNoContent,
-			Data:    []model.Patient{},
-		})
-
 	}
 
 	return response.WriteSuccess(&response.WriteResponse{

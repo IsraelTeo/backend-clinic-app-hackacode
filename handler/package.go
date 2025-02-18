@@ -55,6 +55,15 @@ func (h *PackageHandler) GetAllPackages(c echo.Context) error {
 	log.Println("package-handler: request received in GetAllPackages")
 
 	packageServices, err := h.logicPkg.GetAllPackages()
+	if len(packageServices) == 0 {
+		return response.WriteError(&response.WriteResponse{
+			C:       c,
+			Message: response.SuccessPatiensListEmpty,
+			Status:  http.StatusNoContent,
+			Data:    []model.Package{},
+		})
+
+	}
 	if err != nil {
 		return response.WriteError(&response.WriteResponse{
 			C:       c,

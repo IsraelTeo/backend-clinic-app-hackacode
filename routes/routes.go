@@ -53,9 +53,11 @@ func setUpService(api *echo.Group) {
 
 func setUpPackage(api *echo.Group) {
 	packageRepository := repository.NewRepository[model.Package](db.GDB)
-	packageRepositoryMain := repository.NewRepository[model.Service](db.GDB)
-	packageLogic := logic.NewPackageLogic(packageRepository, packageRepositoryMain)
-	serviceLogic := logic.NewServiceLogic(packageRepositoryMain)
+	packageRepositoryMain := repository.NewPackageRepository(db.GDB)
+	serviceRepository := repository.NewRepository[model.Service](db.GDB)
+
+	packageLogic := logic.NewPackageLogic(packageRepository, packageRepositoryMain, serviceRepository)
+	serviceLogic := logic.NewServiceLogic(serviceRepository)
 	packageHandler := handler.NewPackageHandler(packageLogic, serviceLogic)
 
 	packageServices := api.Group("/packages")

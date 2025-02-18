@@ -54,6 +54,15 @@ func (h *AppointmentHandler) GetAllAppointments(c echo.Context) error {
 	log.Println("appointment-handler: request received in GetAllAppointments")
 
 	appointments, err := h.logic.GetAllAppointments()
+	if len(appointments) == 0 {
+		return response.WriteError(&response.WriteResponse{
+			C:       c,
+			Message: response.SuccessPatiensListEmpty,
+			Status:  http.StatusOK,
+			Data:    []model.Appointment{},
+		})
+	}
+
 	if err != nil {
 		return response.WriteError(&response.WriteResponse{
 			C:       c,
@@ -85,21 +94,12 @@ func (h *AppointmentHandler) CreateAppointment(c echo.Context) error {
 		})
 	}
 
-	if err := c.Validate(&appointment); err != nil {
-		return response.WriteError(&response.WriteResponse{
-			C:       c,
-			Message: response.ErrorBadRequest.Error(),
-			Status:  http.StatusBadRequest,
-			Data:    nil,
-		})
-	}
-
 	if appointment.PackageID != 0 {
 		finalServPrice, err := h.logic.CreateAppointmentWithService(&appointment)
 		if err != nil {
 			return response.WriteError(&response.WriteResponse{
 				C:       c,
-				Message: response.ErrorToCreatedAppointment.Error(),
+				Message: err.Error(),
 				Status:  http.StatusInternalServerError,
 				Data:    nil,
 			})
@@ -118,7 +118,7 @@ func (h *AppointmentHandler) CreateAppointment(c echo.Context) error {
 		if err != nil {
 			return response.WriteError(&response.WriteResponse{
 				C:       c,
-				Message: response.ErrorToCreatedAppointment.Error(),
+				Message: err.Error(),
 				Status:  http.StatusInternalServerError,
 				Data:    nil,
 			})
@@ -131,7 +131,16 @@ func (h *AppointmentHandler) CreateAppointment(c echo.Context) error {
 		})
 	}
 
-	log.Println("handler: unexpected case, no appointment created")
+	if err := c.Validate(&appointment); err != nil {
+		return response.WriteError(&response.WriteResponse{
+			C:       c,
+			Message: response.ErrorBadRequest.Error(),
+			Status:  http.StatusBadRequest,
+			Data:    nil,
+		})
+	}
+
+	log.Println("appointment-handler: unexpected case, no appointment created")
 	return response.WriteError(&response.WriteResponse{
 		C:       c,
 		Message: "No se pudo crear la cita",
@@ -151,7 +160,7 @@ func (h *AppointmentHandler) UpdateAppointment(c echo.Context) error {
 		})
 	}
 
-	log.Printf("handler: request received in UpdateAppointment with ID: %d", ID)
+	log.Printf("appointment-handler: request received in UpdateAppointment with ID: %d", ID)
 
 	appointment := model.Appointment{}
 	if err := c.Bind(&appointment); err != nil {

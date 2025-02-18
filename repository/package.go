@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"fmt"
 	"log"
 
 	"gihub.com/IsraelTeo/clinic-backend-hackacode-app/model"
@@ -8,7 +9,7 @@ import (
 )
 
 type PackageRepository interface {
-	GetByID(id uint) (*model.Package, error)
+	GetByID(ID uint) (*model.Package, error)
 	GetAll() ([]model.Package, error)
 }
 
@@ -16,35 +17,31 @@ type packageRepository struct {
 	db *gorm.DB
 }
 
-// Nueva función que crea una nueva instancia del repositorio
 func NewPackageRepository(db *gorm.DB) PackageRepository {
 	return &packageRepository{db: db}
 }
 
-// Implementación del método GetByID
-func (r *packageRepository) GetByID(id uint) (*model.Package, error) {
+func (r *packageRepository) GetByID(ID uint) (*model.Package, error) {
+	log.Printf("Getting package with ID: %d", ID)
 	pkg := &model.Package{}
 
-	// Pre-cargar los servicios asociados al paquete
-	err := r.db.Preload("Services").First(pkg, "id = ?", id).Error
+	err := r.db.Preload("Services").First(pkg, "id = ?", ID).Error
 	if err != nil {
-		log.Printf("package: Error fetching package with ID %d: %v", id, err)
 		return nil, err
 	}
 
+	log.Printf("resultado: %v", pkg)
 	return pkg, nil
 }
 
-// Implementación del método GetAll
 func (r *packageRepository) GetAll() ([]model.Package, error) {
 	var packages []model.Package
 
-	// Obtener todos los paquetes, con los servicios pre-cargados
 	err := r.db.Preload("Services").Find(&packages).Error
 	if err != nil {
-		log.Printf("package: Error fetching all packages: %v", err)
 		return nil, err
 	}
 
+	fmt.Printf("resultado: %v", packages)
 	return packages, nil
 }
