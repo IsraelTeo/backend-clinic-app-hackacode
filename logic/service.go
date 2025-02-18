@@ -3,9 +3,9 @@ package logic
 import (
 	"log"
 
-	"gihub.com/IsraelTeo/clinic-backend-hackacode-app/model"
-	"gihub.com/IsraelTeo/clinic-backend-hackacode-app/repository"
-	"gihub.com/IsraelTeo/clinic-backend-hackacode-app/response"
+	"github.com/IsraelTeo/clinic-backend-hackacode-app/model"
+	"github.com/IsraelTeo/clinic-backend-hackacode-app/repository"
+	"github.com/IsraelTeo/clinic-backend-hackacode-app/response"
 )
 
 type ServiceLogic interface {
@@ -36,11 +36,6 @@ func (l *serviceLogic) GetServiceByID(ID uint) (*model.Service, error) {
 
 func (l *serviceLogic) GetAllServices() ([]model.Service, error) {
 	services, err := l.repository.GetAll()
-	if len(services) == 0 {
-		log.Println("service-logic: No services found")
-		return []model.Service{}, response.ErrorListServicesEmpty
-	}
-
 	if err != nil {
 		log.Printf("service-logic: Error fetching services: %v", err)
 		return nil, response.ErrorServiceNotFound

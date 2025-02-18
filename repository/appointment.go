@@ -3,8 +3,8 @@ package repository
 import (
 	"errors"
 
-	"gihub.com/IsraelTeo/clinic-backend-hackacode-app/model"
-	"gihub.com/IsraelTeo/clinic-backend-hackacode-app/response"
+	"github.com/IsraelTeo/clinic-backend-hackacode-app/model"
+	"github.com/IsraelTeo/clinic-backend-hackacode-app/response"
 	"gorm.io/gorm"
 )
 
@@ -20,7 +20,6 @@ type appointmentRepository struct {
 	db *gorm.DB
 }
 
-// NewAppointmentRepository crea una nueva instancia del repositorio
 func NewAppointmentRepository(db *gorm.DB) AppointmentRepository {
 	return &appointmentRepository{db: db}
 }

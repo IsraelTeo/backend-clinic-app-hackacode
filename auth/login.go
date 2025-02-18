@@ -4,8 +4,8 @@ import (
 	"log"
 	"net/http"
 
-	"gihub.com/IsraelTeo/clinic-backend-hackacode-app/repository"
-	"gihub.com/IsraelTeo/clinic-backend-hackacode-app/response"
+	"github.com/IsraelTeo/clinic-backend-hackacode-app/repository"
+	"github.com/IsraelTeo/clinic-backend-hackacode-app/response"
 	"github.com/labstack/echo/v4"
 )
 

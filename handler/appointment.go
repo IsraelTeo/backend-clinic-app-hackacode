@@ -4,10 +4,10 @@ import (
 	"log"
 	"net/http"
 
-	"gihub.com/IsraelTeo/clinic-backend-hackacode-app/logic"
-	"gihub.com/IsraelTeo/clinic-backend-hackacode-app/model"
-	"gihub.com/IsraelTeo/clinic-backend-hackacode-app/response"
-	"gihub.com/IsraelTeo/clinic-backend-hackacode-app/validate"
+	"github.com/IsraelTeo/clinic-backend-hackacode-app/logic"
+	"github.com/IsraelTeo/clinic-backend-hackacode-app/model"
+	"github.com/IsraelTeo/clinic-backend-hackacode-app/response"
+	"github.com/IsraelTeo/clinic-backend-hackacode-app/validate"
 	"github.com/labstack/echo/v4"
 )
 
@@ -143,7 +143,7 @@ func (h *AppointmentHandler) CreateAppointment(c echo.Context) error {
 	log.Println("appointment-handler: unexpected case, no appointment created")
 	return response.WriteError(&response.WriteResponse{
 		C:       c,
-		Message: "No se pudo crear la cita",
+		Message: response.ErrorToCreatedAppointment.Error(),
 		Status:  http.StatusInternalServerError,
 		Data:    nil,
 	})

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"gihub.com/IsraelTeo/clinic-backend-hackacode-app/model"
+	"github.com/IsraelTeo/clinic-backend-hackacode-app/model"
 	"github.com/labstack/echo/v4"
 )
 

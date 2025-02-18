@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"gihub.com/IsraelTeo/clinic-backend-hackacode-app/model"
+	"github.com/IsraelTeo/clinic-backend-hackacode-app/model"
 	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"
 )

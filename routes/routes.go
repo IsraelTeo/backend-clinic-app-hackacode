@@ -1,12 +1,12 @@
 package routes
 
 import (
-	"gihub.com/IsraelTeo/clinic-backend-hackacode-app/auth"
-	"gihub.com/IsraelTeo/clinic-backend-hackacode-app/db"
-	"gihub.com/IsraelTeo/clinic-backend-hackacode-app/handler"
-	"gihub.com/IsraelTeo/clinic-backend-hackacode-app/logic"
-	"gihub.com/IsraelTeo/clinic-backend-hackacode-app/model"
-	"gihub.com/IsraelTeo/clinic-backend-hackacode-app/repository"
+	"github.com/IsraelTeo/clinic-backend-hackacode-app/auth"
+	"github.com/IsraelTeo/clinic-backend-hackacode-app/db"
+	"github.com/IsraelTeo/clinic-backend-hackacode-app/handler"
+	"github.com/IsraelTeo/clinic-backend-hackacode-app/logic"
+	"github.com/IsraelTeo/clinic-backend-hackacode-app/model"
+	"github.com/IsraelTeo/clinic-backend-hackacode-app/repository"
 	"github.com/labstack/echo/v4"
 )
 

@@ -3,8 +3,8 @@ package db
 import (
 	"fmt"
 
-	"gihub.com/IsraelTeo/clinic-backend-hackacode-app/config"
-	"gihub.com/IsraelTeo/clinic-backend-hackacode-app/model"
+	"github.com/IsraelTeo/clinic-backend-hackacode-app/config"
+	"github.com/IsraelTeo/clinic-backend-hackacode-app/model"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )

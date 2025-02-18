@@ -1,4 +1,4 @@
-module gihub.com/IsraelTeo/clinic-backend-hackacode-app
+module github.com/IsraelTeo/clinic-backend-hackacode-app
 
 go 1.22.6
 

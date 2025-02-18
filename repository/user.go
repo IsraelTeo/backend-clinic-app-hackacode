@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"gihub.com/IsraelTeo/clinic-backend-hackacode-app/model"
+	"github.com/IsraelTeo/clinic-backend-hackacode-app/model"
 	"gorm.io/gorm"
 )
 

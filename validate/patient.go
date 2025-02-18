@@ -3,8 +3,8 @@ package validate
 import (
 	"log"
 
-	"gihub.com/IsraelTeo/clinic-backend-hackacode-app/model"
-	"gihub.com/IsraelTeo/clinic-backend-hackacode-app/response"
+	"github.com/IsraelTeo/clinic-backend-hackacode-app/model"
+	"github.com/IsraelTeo/clinic-backend-hackacode-app/response"
 )
 
 func DNIPatient(patient *model.Patient) error {

@@ -1,6 +1,6 @@
 package calculation
 
-import "gihub.com/IsraelTeo/clinic-backend-hackacode-app/model"
+import "github.com/IsraelTeo/clinic-backend-hackacode-app/model"
 
 func TotalServicePackageAmount(services []model.Service) *model.FinalPackagePrice {
 	//verifica que la lista de servicios no esté vacía

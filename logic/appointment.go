@@ -4,11 +4,11 @@ import (
 	"log"
 	"time"
 
-	"gihub.com/IsraelTeo/clinic-backend-hackacode-app/calculation"
-	"gihub.com/IsraelTeo/clinic-backend-hackacode-app/model"
-	"gihub.com/IsraelTeo/clinic-backend-hackacode-app/repository"
-	"gihub.com/IsraelTeo/clinic-backend-hackacode-app/response"
-	"gihub.com/IsraelTeo/clinic-backend-hackacode-app/validate"
+	"github.com/IsraelTeo/clinic-backend-hackacode-app/calculation"
+	"github.com/IsraelTeo/clinic-backend-hackacode-app/model"
+	"github.com/IsraelTeo/clinic-backend-hackacode-app/repository"
+	"github.com/IsraelTeo/clinic-backend-hackacode-app/response"
+	"github.com/IsraelTeo/clinic-backend-hackacode-app/validate"
 )
 
 type AppointmentLogic interface {

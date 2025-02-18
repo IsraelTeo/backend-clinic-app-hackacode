@@ -4,10 +4,10 @@ import (
 	"log"
 	"net/http"
 
-	"gihub.com/IsraelTeo/clinic-backend-hackacode-app/logic"
-	"gihub.com/IsraelTeo/clinic-backend-hackacode-app/model"
-	"gihub.com/IsraelTeo/clinic-backend-hackacode-app/response"
-	"gihub.com/IsraelTeo/clinic-backend-hackacode-app/validate"
+	"github.com/IsraelTeo/clinic-backend-hackacode-app/logic"
+	"github.com/IsraelTeo/clinic-backend-hackacode-app/model"
+	"github.com/IsraelTeo/clinic-backend-hackacode-app/response"
+	"github.com/IsraelTeo/clinic-backend-hackacode-app/validate"
 	"github.com/labstack/echo/v4"
 )
 
@@ -62,8 +62,8 @@ func (h *PackageHandler) GetAllPackages(c echo.Context) error {
 			Status:  http.StatusNoContent,
 			Data:    []model.Package{},
 		})
-
 	}
+
 	if err != nil {
 		return response.WriteError(&response.WriteResponse{
 			C:       c,
