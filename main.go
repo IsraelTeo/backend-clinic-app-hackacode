@@ -14,7 +14,7 @@ import (
 )
 
 func main() {
-	// Cargar las variables de entorno**
+	// Cargar las variables de entorno
 	if err := godotenv.Load(); err != nil {
 		log.Fatal("Error loading .env file")
 	}
@@ -50,6 +50,9 @@ func main() {
 	}))
 	e.Use(middleware.Recover())
 	e.Use(middleware.Logger())
+
+	// Habilitar CORS
+	e.Use(middleware.CORSWithConfig(config.CorsConfig()))
 
 	//Inicia servidor en el puerto: 8080
 	if err := config.StartServer(e, ":8080"); err != nil {
