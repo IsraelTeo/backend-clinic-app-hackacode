@@ -101,27 +101,26 @@ func setUpPatient(api *echo.Group) {
 }
 
 func setUpAppointment(api *echo.Group) {
-	appointmentRepository := repository.NewRepository[model.Appointment](db.GDB)
-	appointmentRepositoryMain := repository.NewAppointmentRepository(db.GDB)
-	doctorRepository := repository.NewRepository[model.Doctor](db.GDB)
-	patientRepository := repository.NewRepository[model.Patient](db.GDB)
-	patientRepositoryMain := repository.NewPatientRepository(db.GDB)
-	patientLogic := logic.NewPatientLogic(patientRepository, patientRepositoryMain, appointmentRepositoryMain)
-	packageRepository := repository.NewRepository[model.Package](db.GDB)
-	serviceRepository := repository.NewRepository[model.Service](db.GDB)
-	packageRepositoryMain := repository.NewPackageRepository(db.GDB)
+	appointmentRepo := repository.NewRepository[model.Appointment](db.GDB)
+	appointmentRepoMain := repository.NewAppointmentRepository(db.GDB)
+	doctorRepo := repository.NewRepository[model.Doctor](db.GDB)
+	patientRepo := repository.NewRepository[model.Patient](db.GDB)
+	patientRepoMain := repository.NewPatientRepository(db.GDB)
+	serviceRepo := repository.NewRepository[model.Service](db.GDB)
+	packageRepoMain := repository.NewPackageRepository(db.GDB)
 
-	appointmentLogic := logic.NewAppointmentLogic(
-		appointmentRepository,
-		doctorRepository,
-		patientRepository,
-		appointmentRepositoryMain,
-		packageRepository,
-		serviceRepository,
-		patientLogic,
-		patientRepositoryMain,
-		packageRepositoryMain,
-	)
+	patientLogic := logic.NewPatientLogic(patientRepo, patientRepoMain, appointmentRepoMain)
+
+	appointmentRepositories := logic.AppointmentRepositories{
+		RepositoryAppointment:     appointmentRepo,
+		RepositoryAppointmentMain: appointmentRepoMain,
+		RepositoryDoctor:          doctorRepo,
+		RepositoryPatient:         patientRepo,
+		RepositoryService:         serviceRepo,
+		RepositoryPackageMain:     packageRepoMain,
+	}
+
+	appointmentLogic := logic.NewAppointmentLogic(appointmentRepositories, patientLogic)
 
 	appointmentHandler := handler.NewAppointmentHandler(appointmentLogic)
 

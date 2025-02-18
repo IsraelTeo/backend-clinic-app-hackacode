@@ -21,44 +21,29 @@ type AppointmentLogic interface {
 	DeleteAppointment(ID uint) error
 }
 
-type appointmentLogic struct {
-	repositoryAppointment     repository.Repository[model.Appointment]
-	repositoryAppointmentMain repository.AppointmentRepository
-	repositoryDoctor          repository.Repository[model.Doctor]
-	repositoryPatient         repository.Repository[model.Patient]
-	repositoryPackage         repository.Repository[model.Package]
-	repositoryService         repository.Repository[model.Service]
-	logicPatient              PatientLogic
-	repositoryPatientMain     repository.PatientRepository
-	repositoryPackageMain     repository.PackageRepository
+type AppointmentRepositories struct {
+	RepositoryAppointment     repository.Repository[model.Appointment]
+	RepositoryAppointmentMain repository.AppointmentRepository
+	RepositoryDoctor          repository.Repository[model.Doctor]
+	RepositoryPatient         repository.Repository[model.Patient]
+	RepositoryService         repository.Repository[model.Service]
+	RepositoryPackageMain     repository.PackageRepository
 }
 
-func NewAppointmentLogic(
-	repositoryAppointment repository.Repository[model.Appointment],
-	repositoryDoctor repository.Repository[model.Doctor],
-	repositoryPatient repository.Repository[model.Patient],
-	repositoryAppointmentMain repository.AppointmentRepository,
-	repositoryPackage repository.Repository[model.Package],
-	repositoryService repository.Repository[model.Service],
-	logicPatient PatientLogic,
-	repositoryPatientMain repository.PatientRepository,
-	repositoryPackageMain repository.PackageRepository,
-) AppointmentLogic {
+type appointmentLogic struct {
+	repo         AppointmentRepositories
+	logicPatient PatientLogic
+}
+
+func NewAppointmentLogic(repo AppointmentRepositories, logicPatient PatientLogic) AppointmentLogic {
 	return &appointmentLogic{
-		repositoryAppointment:     repositoryAppointment,
-		repositoryDoctor:          repositoryDoctor,
-		repositoryPatient:         repositoryPatient,
-		repositoryAppointmentMain: repositoryAppointmentMain,
-		repositoryPackage:         repositoryPackage,
-		repositoryService:         repositoryService,
-		logicPatient:              logicPatient,
-		repositoryPatientMain:     repositoryPatientMain,
-		repositoryPackageMain:     repositoryPackageMain,
+		repo:         repo,
+		logicPatient: logicPatient,
 	}
 }
 
 func (l *appointmentLogic) GetAppointmentByID(ID uint) (*model.Appointment, error) {
-	appointment, err := l.repositoryAppointmentMain.GetByID(ID)
+	appointment, err := l.repo.RepositoryAppointmentMain.GetByID(ID)
 	if err != nil {
 		log.Printf("appointment-logic: Error fetching appointment with ID %d: %v", ID, err)
 		return nil, response.ErrorAppointmentNotFound
@@ -68,7 +53,7 @@ func (l *appointmentLogic) GetAppointmentByID(ID uint) (*model.Appointment, erro
 }
 
 func (l *appointmentLogic) GetAllAppointments() ([]model.Appointment, error) {
-	appointments, err := l.repositoryAppointmentMain.GetAll()
+	appointments, err := l.repo.RepositoryAppointmentMain.GetAll()
 	if err != nil {
 		log.Printf("appointment-logic: Error fetching appointments: %v", err)
 		return nil, response.ErrorAppointmetsNotFound
@@ -112,7 +97,7 @@ func (l *appointmentLogic) CreateAppointmentWithPackage(appointment *model.Appoi
 		TotalAmount: appointment.TotalAmount,
 	}
 
-	if err := l.repositoryAppointment.Create(appointmentCreated); err != nil {
+	if err := l.repo.RepositoryAppointment.Create(appointmentCreated); err != nil {
 		log.Printf("appointment-logic: Error al crear la cita: %v", err)
 		return nil, err
 	}
@@ -157,7 +142,7 @@ func (l *appointmentLogic) CreateAppointmentWithService(appointment *model.Appoi
 		TotalAmount: appointment.TotalAmount,
 	}
 
-	if err := l.repositoryAppointment.Create(appointmentCreated); err != nil {
+	if err := l.repo.RepositoryAppointment.Create(appointmentCreated); err != nil {
 		log.Printf("appointment-logic: Error al crear la cita: %v", err)
 		return &model.FinalServicePrice{}, err
 	}
@@ -196,7 +181,7 @@ func (l *appointmentLogic) UpdateAppointmentWithPackage(ID uint, appointment *mo
 	appointmentUpdate.EndTime = appointment.EndTime
 	appointmentUpdate.TotalAmount = appointment.TotalAmount
 
-	if err := l.repositoryAppointment.Update(appointmentUpdate); err != nil {
+	if err := l.repo.RepositoryAppointment.Update(appointmentUpdate); err != nil {
 		log.Printf("appointment-logic: Error actualizando la cita con ID %d: %v", ID, err)
 		return nil, err
 	}
@@ -238,7 +223,7 @@ func (l *appointmentLogic) UpdateAppointmentWithService(ID uint, appointment *mo
 	appointmentUpdate.EndTime = appointment.EndTime
 	appointmentUpdate.TotalAmount = appointment.TotalAmount
 
-	if err := l.repositoryAppointment.Update(appointmentUpdate); err != nil {
+	if err := l.repo.RepositoryAppointment.Update(appointmentUpdate); err != nil {
 		log.Printf("appointment-logic: Error actualizando la cita con ID %d: %v", ID, err)
 		return nil, err
 	}
@@ -255,7 +240,7 @@ func (l *appointmentLogic) DeleteAppointment(ID uint) error {
 		return response.ErrorAppointmentNotFound
 	}
 
-	if err := l.repositoryAppointment.Delete(ID); err != nil {
+	if err := l.repo.RepositoryAppointment.Delete(ID); err != nil {
 		return response.ErrorToDeletedAppointment
 	}
 
@@ -355,7 +340,7 @@ func (l *appointmentLogic) isPatientIDExists(ID uint) *model.Patient {
 	}
 
 	log.Println("appointment-logic: the request brought an ID patient")
-	patient, err := l.repositoryPatient.GetByID(ID)
+	patient, err := l.repo.RepositoryPatient.GetByID(ID)
 	if err != nil {
 		log.Printf("appointment-logic: Error fetching patient by ID: %v", err)
 		return nil
@@ -375,7 +360,7 @@ func (l *appointmentLogic) isServiceIDEXists(ID uint, hasInsurance bool) (*model
 
 	log.Println("appointment-logic: the request brought an ID service")
 
-	service, err := l.repositoryService.GetByID(ID)
+	service, err := l.repo.RepositoryService.GetByID(ID)
 	if err != nil || service == nil {
 		log.Printf("appointment: El servicio con ID %d no existe: %v", ID, err)
 		return &model.FinalServicePrice{}, response.ErrorServiceNotFound
@@ -397,7 +382,7 @@ func (l *appointmentLogic) isServiceIDEXists(ID uint, hasInsurance bool) (*model
 }
 
 func (l *appointmentLogic) isPackageIDExists(ID uint, hasInsurance bool) (*model.FinalPackagePriceWithInsegurance, error) {
-	pkg, err := l.repositoryPackageMain.GetByID(ID)
+	pkg, err := l.repo.RepositoryPackageMain.GetByID(ID)
 	if err != nil || pkg == nil {
 		log.Printf("appointment-logic: The package with ID %d not exists: %v", ID, err)
 		return &model.FinalPackagePriceWithInsegurance{}, response.ErrorPackageNotFound
@@ -415,7 +400,7 @@ func (l *appointmentLogic) isPackageIDExists(ID uint, hasInsurance bool) (*model
 }
 
 func (l *appointmentLogic) validateDoctorAvailability(doctorID uint) error {
-	doctor, err := l.repositoryDoctor.GetByID(doctorID)
+	doctor, err := l.repo.RepositoryDoctor.GetByID(doctorID)
 	if err != nil || doctor == nil {
 		log.Printf("appointment-logic: Error fetching doctor with ID %d: %v", doctorID, err)
 		return response.ErrorDoctorNotFoundID
@@ -428,7 +413,7 @@ func (l *appointmentLogic) handlePatientCreation(appointment *model.Appointment)
 		if err := validate.PatientToCreate(&appointment.Patient); err != nil {
 			return err
 		}
-		if err := l.repositoryPatient.Create(&appointment.Patient); err != nil {
+		if err := l.repo.RepositoryPatient.Create(&appointment.Patient); err != nil {
 			log.Printf("appointment-logic: Error creating patient: %v", err)
 			return err
 		}
@@ -452,7 +437,7 @@ func (l *appointmentLogic) validateAppointmentTime(appointment *model.Appointmen
 		return response.ErrorInvalidAppointmentTimeRange
 	}
 
-	existingAppointments, err := l.repositoryAppointmentMain.GetAppointmentsByDoctorAndDate(appointment.DoctorID, appointment.Date)
+	existingAppointments, err := l.repo.RepositoryAppointmentMain.GetAppointmentsByDoctorAndDate(appointment.DoctorID, appointment.Date)
 	if err != nil {
 		log.Printf("appointment-logic: Error fetching existing appointments: %v", err)
 		return err
