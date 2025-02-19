@@ -102,15 +102,9 @@ func (l *packageLogic) UpdatePackage(ID uint, packageServices *model.CreatePacka
 		return response.ErrorPackageNotFound
 	}
 
-	services, err := l.repositoryServ.GetAll()
-	if err != nil {
-		log.Printf("package: Error fetching services: %v", err)
-		return response.ErrorFetchingServices
-	}
-
-	if len(services) == 0 {
-		log.Println("package: No services found")
-		return response.ErrorListServicesEmpty
+	if err := l.repositoryPkgMain.ClearServices(ID); err != nil {
+		log.Printf("package: Error clearing services for package ID %d: %v", ID, err)
+		return response.ErrorClearingServices
 	}
 
 	selectedServices := []model.Service{}
@@ -144,7 +138,7 @@ func (l *packageLogic) DeletePackage(ID uint) error {
 		return response.ErrorPackageNotFound
 	}
 
-	if err := l.repositoryPkg.Delete(ID); err != nil {
+	if err := l.repositoryPkgMain.Delete(ID); err != nil {
 		log.Printf("package: Error deleting package with ID %d: %v", ID, err)
 		return response.ErrorToDeletedPackage
 	}

@@ -1,7 +1,6 @@
 package repository
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/IsraelTeo/clinic-backend-hackacode-app/model"
@@ -11,6 +10,8 @@ import (
 type PackageRepository interface {
 	GetByID(ID uint) (*model.Package, error)
 	GetAll() ([]model.Package, error)
+	ClearServices(packageID uint) error
+	Delete(ID uint) error
 }
 
 type packageRepository struct {
@@ -42,6 +43,17 @@ func (r *packageRepository) GetAll() ([]model.Package, error) {
 		return nil, err
 	}
 
-	fmt.Printf("resultado: %v", packages)
 	return packages, nil
+}
+
+func (r *packageRepository) ClearServices(packageID uint) error {
+	return r.db.Exec("DELETE FROM package_services WHERE package_id = ?", packageID).Error
+}
+
+func (r *packageRepository) Delete(ID uint) error {
+	if err := r.ClearServices(ID); err != nil {
+		return err
+	}
+
+	return r.db.Delete(&model.Package{}, ID).Error
 }

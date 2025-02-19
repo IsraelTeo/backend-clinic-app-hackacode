@@ -90,6 +90,7 @@ var (
 	ErrorToDeletedPackage   = errors.New("no se pudo eliminar el paquete")
 	ErrorNoServicesProvided = errors.New("no se proporcionaron servicios para el paquete")
 	ErrorFetchingServices   = errors.New("no se pudieron obtener los servicios para el paquete")
+	ErrorClearingServices   = errors.New("no se pudieron actualizar correctamente los servicios del paquete")
 )
 
 // Mensajes de exito de doctores
