@@ -2,6 +2,7 @@ package repository
 
 import (
 	"errors"
+	"time"
 
 	"github.com/IsraelTeo/clinic-backend-hackacode-app/model"
 	"github.com/IsraelTeo/clinic-backend-hackacode-app/response"
@@ -59,12 +60,24 @@ func (r *appointmentRepository) GetAppointmentsByDoctor(doctorID uint) ([]model.
 	return appointments, nil
 }
 
-func (r *appointmentRepository) GetAppointmentsByDoctorAndDate(doctorID uint, date string) ([]model.Appointment, error) {
+/*func (r *appointmentRepository) GetAppointmentsByDoctorAndDate(doctorID uint, date string) ([]model.Appointment, error) {
 	var appointments []model.Appointment
 	if err := r.db.Where("doctor_id = ? AND date = ?", doctorID, date).Find(&appointments).Error; err != nil {
 		return nil, err
 	}
 
+	return appointments, nil
+}*/
+
+func (r *appointmentRepository) GetAppointmentsByDoctorAndDate(doctorID uint, date string) ([]model.Appointment, error) {
+	var appointments []model.Appointment
+	dateTime, err := time.Parse("2006-01-02", date)
+	if err != nil {
+		return nil, err
+	}
+	if err := r.db.Where("doctor_id = ? AND date = ?", doctorID, dateTime).Find(&appointments).Error; err != nil {
+		return nil, err
+	}
 	return appointments, nil
 }
 

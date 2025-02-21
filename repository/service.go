@@ -7,6 +7,7 @@ import (
 
 type ServiceRepository interface {
 	GetAllServicesByID(ID []uint) ([]model.Service, error)
+	Delete(ID uint) error
 }
 
 type serviceRepository struct {
@@ -23,4 +24,12 @@ func (r *serviceRepository) GetAllServicesByID(ID []uint) ([]model.Service, erro
 		return nil, err
 	}
 	return services, nil
+}
+
+func (r *serviceRepository) Delete(ID uint) error {
+	if err := r.db.Exec("DELETE FROM package_services WHERE service_id = ?", ID).Error; err != nil {
+		return err
+	}
+
+	return r.db.Delete(&model.Service{}, ID).Error
 }

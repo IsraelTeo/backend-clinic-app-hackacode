@@ -4,7 +4,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/IsraelTeo/clinic-backend-hackacode-app/logic"
+	"github.com/IsraelTeo/clinic-backend-hackacode-app/appointment"
 	"github.com/IsraelTeo/clinic-backend-hackacode-app/model"
 	"github.com/IsraelTeo/clinic-backend-hackacode-app/response"
 	"github.com/IsraelTeo/clinic-backend-hackacode-app/validate"
@@ -12,11 +12,11 @@ import (
 )
 
 type AppointmentHandler struct {
-	logic logic.AppointmentLogic
+	logicAppointment appointment.AppointmentLogic
 }
 
-func NewAppointmentHandler(logic logic.AppointmentLogic) *AppointmentHandler {
-	return &AppointmentHandler{logic: logic}
+func NewAppointmentHandler(logicAppointment appointment.AppointmentLogic) *AppointmentHandler {
+	return &AppointmentHandler{logicAppointment: logicAppointment}
 }
 
 func (h *AppointmentHandler) GetAppointmentByID(c echo.Context) error {
@@ -32,7 +32,7 @@ func (h *AppointmentHandler) GetAppointmentByID(c echo.Context) error {
 
 	log.Printf("appointment-handler: appointment fetching with ID: %d", ID)
 
-	appointment, err := h.logic.GetAppointmentByID(ID)
+	appointment, err := h.logicAppointment.GetAppointmentByID(ID)
 	if err != nil {
 		return response.WriteError(&response.WriteResponse{
 			C:       c,
@@ -53,7 +53,7 @@ func (h *AppointmentHandler) GetAppointmentByID(c echo.Context) error {
 func (h *AppointmentHandler) GetAllAppointments(c echo.Context) error {
 	log.Println("appointment-handler: request received in GetAllAppointments")
 
-	appointments, err := h.logic.GetAllAppointments()
+	appointments, err := h.logicAppointment.GetAllAppointments()
 	if len(appointments) == 0 {
 		return response.WriteError(&response.WriteResponse{
 			C:       c,
@@ -94,58 +94,20 @@ func (h *AppointmentHandler) CreateAppointment(c echo.Context) error {
 		})
 	}
 
-	if appointment.PackageID != 0 {
-		finalServPrice, err := h.logic.CreateAppointmentWithService(&appointment)
-		if err != nil {
-			return response.WriteError(&response.WriteResponse{
-				C:       c,
-				Message: err.Error(),
-				Status:  http.StatusInternalServerError,
-				Data:    nil,
-			})
-		}
-
-		return response.WriteSuccess(&response.WriteResponse{
-			C:       c,
-			Message: response.SuccessPackageCreated,
-			Status:  http.StatusCreated,
-			Data:    finalServPrice,
-		})
-	}
-
-	if appointment.ServiceID != 0 {
-		finalPkgPrice, err := h.logic.CreateAppointmentWithPackage(&appointment)
-		if err != nil {
-			return response.WriteError(&response.WriteResponse{
-				C:       c,
-				Message: err.Error(),
-				Status:  http.StatusInternalServerError,
-				Data:    nil,
-			})
-		}
-		return response.WriteSuccess(&response.WriteResponse{
-			C:       c,
-			Message: response.SuccessPackageCreated,
-			Status:  http.StatusCreated,
-			Data:    finalPkgPrice,
-		})
-	}
-
-	if err := c.Validate(&appointment); err != nil {
+	finalPrice, err := h.logicAppointment.CreateAppointment(&appointment)
+	if err != nil {
 		return response.WriteError(&response.WriteResponse{
 			C:       c,
-			Message: response.ErrorBadRequest.Error(),
-			Status:  http.StatusBadRequest,
-			Data:    nil,
+			Message: err.Error(), Status: http.StatusInternalServerError,
+			Data: nil,
 		})
 	}
 
-	log.Println("appointment-handler: unexpected case, no appointment created")
-	return response.WriteError(&response.WriteResponse{
+	return response.WriteSuccess(&response.WriteResponse{
 		C:       c,
-		Message: response.ErrorToCreatedAppointment.Error(),
-		Status:  http.StatusInternalServerError,
-		Data:    nil,
+		Message: response.SuccessAppointmentCreated,
+		Status:  http.StatusCreated,
+		Data:    finalPrice,
 	})
 }
 
@@ -172,58 +134,21 @@ func (h *AppointmentHandler) UpdateAppointment(c echo.Context) error {
 		})
 	}
 
-	if err := c.Validate(&appointment); err != nil {
+	finalPrice, err := h.logicAppointment.UpdateAppointment(ID, &appointment)
+	if err != nil {
 		return response.WriteError(&response.WriteResponse{
 			C:       c,
-			Message: response.ErrorBadRequest.Error(),
-			Status:  http.StatusBadRequest,
+			Message: err.Error(),
+			Status:  http.StatusInternalServerError,
 			Data:    nil,
 		})
 	}
 
-	if appointment.PackageID != 0 {
-		finalPkgPrice, err := h.logic.UpdateAppointmentWithPackage(ID, &appointment)
-		if err != nil {
-			return response.WriteError(&response.WriteResponse{
-				C:       c,
-				Message: response.ErrorToUpdatedAppointment.Error(),
-				Status:  http.StatusInternalServerError,
-				Data:    nil,
-			})
-		}
-
-		return response.WriteSuccess(&response.WriteResponse{
-			C:       c,
-			Message: response.SuccessAppointmentUpdated,
-			Status:  http.StatusOK,
-			Data:    finalPkgPrice,
-		})
-	}
-
-	if appointment.ServiceID != 0 {
-		finalServPrice, err := h.logic.UpdateAppointmentWithService(ID, &appointment)
-		if err != nil {
-			return response.WriteError(&response.WriteResponse{
-				C:       c,
-				Message: response.ErrorToUpdatedAppointment.Error(),
-				Status:  http.StatusInternalServerError,
-				Data:    nil,
-			})
-		}
-		return response.WriteSuccess(&response.WriteResponse{
-			C:       c,
-			Message: response.SuccessAppointmentUpdated,
-			Status:  http.StatusOK,
-			Data:    finalServPrice,
-		})
-	}
-
-	log.Println("appointment-handler: unexpected case, no appointment updated")
-	return response.WriteError(&response.WriteResponse{
+	return response.WriteSuccess(&response.WriteResponse{
 		C:       c,
-		Message: response.ErrorToUpdatedAppointment.Error(),
-		Status:  http.StatusInternalServerError,
-		Data:    nil,
+		Message: response.SuccessAppointmentUpdated,
+		Status:  http.StatusOK,
+		Data:    finalPrice,
 	})
 }
 
@@ -240,7 +165,7 @@ func (h *AppointmentHandler) DeleteAppointment(c echo.Context) error {
 
 	log.Printf("appointment-handler: request received in DeleteAppointment with ID: %d", ID)
 
-	if err := h.logic.DeleteAppointment(ID); err != nil {
+	if err := h.logicAppointment.DeleteAppointment(ID); err != nil {
 		return response.WriteError(&response.WriteResponse{
 			C:       c,
 			Message: response.ErrorToDeletedDoctor.Error(),

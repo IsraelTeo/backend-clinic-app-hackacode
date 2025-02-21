@@ -10,7 +10,7 @@ type Service struct {
 type Package struct {
 	ID       uint      `json:"id" gorm:"primaryKey;autoIncrement"`
 	Name     string    `json:"name"`
-	Services []Service `json:"services" gorm:"many2many:package_services;constraint:OnDelete:CASCADE""`
+	Services []Service `json:"services" gorm:"many2many:package_services;constraint:OnDelete:CASCADE,OnUpdate:CASCADE"`
 	Price    float64   `json:"price"`
 }
 

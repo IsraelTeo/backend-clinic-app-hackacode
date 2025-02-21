@@ -17,11 +17,12 @@ type ServiceLogic interface {
 }
 
 type serviceLogic struct {
-	repository repository.Repository[model.Service]
+	repository        repository.Repository[model.Service]
+	repositoryService repository.ServiceRepository
 }
 
-func NewServiceLogic(repository repository.Repository[model.Service]) ServiceLogic {
-	return &serviceLogic{repository: repository}
+func NewServiceLogic(repository repository.Repository[model.Service], repositoryService repository.ServiceRepository) ServiceLogic {
+	return &serviceLogic{repository: repository, repositoryService: repositoryService}
 }
 
 func (l *serviceLogic) GetServiceByID(ID uint) (*model.Service, error) {
@@ -78,7 +79,7 @@ func (l *serviceLogic) DeleteService(ID uint) error {
 		return response.ErrorServiceNotFound
 	}
 
-	if err := l.repository.Delete(ID); err != nil {
+	if err := l.repositoryService.Delete(ID); err != nil {
 		log.Printf("services-logic: Error deleting customer with ID %d: %v", ID, err)
 		return response.ErrorToDeletedService
 	}

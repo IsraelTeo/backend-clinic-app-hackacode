@@ -4,11 +4,9 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-	"time"
 	"unicode"
 
 	"github.com/IsraelTeo/clinic-backend-hackacode-app/db"
-	"github.com/IsraelTeo/clinic-backend-hackacode-app/model"
 	"github.com/IsraelTeo/clinic-backend-hackacode-app/response"
 	"github.com/go-playground/validator"
 	"github.com/labstack/echo/v4"
@@ -85,49 +83,6 @@ func ParseID(c echo.Context) (uint, error) {
 	}
 
 	return uint(id), nil
-}
-
-func ParseTime(timeStr string) (time.Time, error) {
-	parsedTime, err := time.Parse("15:04", timeStr)
-	if err != nil {
-		return time.Time{}, err
-	}
-
-	return parsedTime, nil
-}
-
-func ParseDate(dateStr string) (time.Time, error) {
-	parsedDate, err := time.Parse("2006-01-02", dateStr)
-	if err != nil {
-		return time.Time{}, err
-	}
-
-	return parsedDate, nil
-}
-
-func IsDateInPast(date time.Time) bool {
-	now := time.Now()
-	return date.Before(now)
-}
-
-func IsStartBeforeEnd(start, end time.Time) bool {
-	return start.Before(end)
-}
-
-func IsWithinTimeRange(startTime, endTime, rangeStart, rangeEnd time.Time) bool {
-	return !(startTime.Before(rangeStart) || endTime.After(rangeEnd))
-}
-
-func HasTimeConflict(existingAppointments []model.Appointment, newStartTime, newEndTime time.Time) bool {
-	for _, appointment := range existingAppointments {
-		parsedEndTime, _ := ParseTime(appointment.EndTime)
-		parsedStartTime, _ := ParseTime(appointment.StartTime)
-		if newStartTime.Before(parsedEndTime) && newEndTime.After(parsedStartTime) {
-			return true
-		}
-	}
-
-	return false
 }
 
 var dayTranslations = map[string]string{

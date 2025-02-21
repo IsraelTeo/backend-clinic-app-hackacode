@@ -181,9 +181,11 @@ var (
 	ErrorInvalidAppointmentTimeRange  = errors.New("el rango de tiempo especificado para la cita no es válido; asegúrese de que la hora de inicio sea anterior a la de finalización")
 	ErrorAppointmentTimeFormat        = errors.New("el formato de hora ingresado no es válido; use el formato HH:MM")
 	ErrorPatientExists                = errors.New("el paciente ya fue registrado anteriormente, solo ingresa su id")
+	ErrorBodyPatientEmpty             = errors.New("no hay cuerpo del paciente en la solicitud")
 	ErrorPatientDataRequired          = errors.New("se requiere el ID del paciente o sus datos para registrarlo los datos del paciente")
 	ErrorInvalidAppointment           = errors.New("debe seleccionar al menos un paquete o servicio para la cita")
 	ErrorPackageAndServiceEmpty       = errors.New("se necesita especificar el ID de un paquete o de un servicio médico")
+	ErrorFetchingAppointments         = errors.New("no se pudo obtener la disponibilidad del médico para la fecha seleccionada")
 )
 
 // Mensajes de éxito de pago realizado

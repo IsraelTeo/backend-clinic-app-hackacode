@@ -57,11 +57,6 @@ func (l *doctorLogic) GetAllDoctors() ([]model.Doctor, error) {
 		return nil, response.ErrorDoctorsNotFound
 	}
 
-	if len(doctors) == 0 {
-		log.Println("doctor-logic: No doctors found")
-		return []model.Doctor{}, response.ErrorListDoctorsEmpty
-	}
-
 	return doctors, nil
 }
 

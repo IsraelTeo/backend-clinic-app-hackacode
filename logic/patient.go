@@ -89,7 +89,7 @@ func (l *patientLogic) UpdatePatient(ID uint, patient *model.Patient) error {
 		return response.ErrorPatientNotFoundID
 	}
 
-	if err := validate.PatientFieldsToUpdate(patient, patientUpdate); err != nil {
+	if err := validate.PatientToUpdate(patient, patientUpdate); err != nil {
 		return err
 	}
 
