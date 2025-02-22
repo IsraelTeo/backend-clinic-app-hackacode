@@ -25,7 +25,7 @@ func (r *repository[T]) GetByID(ID uint) (*T, error) {
 	if err := r.db.First(entity, ID).Error; err != nil {
 		return nil, err
 	}
-	
+
 	return entity, nil
 }
 

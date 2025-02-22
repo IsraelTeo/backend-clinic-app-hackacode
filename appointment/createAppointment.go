@@ -86,6 +86,10 @@ func (l *appointmentCreate) CreateAppointment(appointment *model.Appointment) (i
 		return nil, response.ErrorDoctorNotFoundID
 	}
 
+	if appointment.Patient == nil {
+		appointment.Patient = new(model.Patient)
+	}
+
 	appointment.Patient.ID = appointment.PatientID
 
 	patient, err := l.getPatient(appointment)
@@ -94,7 +98,8 @@ func (l *appointmentCreate) CreateAppointment(appointment *model.Appointment) (i
 		return nil, err
 	}
 
-	if err := l.appointmentTime.ValidateAppointmentTime(appointment); err != nil {
+	err = l.appointmentTime.ValidateAppointmentTime(appointment)
+	if err != nil {
 		return nil, err
 	}
 
@@ -106,7 +111,8 @@ func (l *appointmentCreate) CreateAppointment(appointment *model.Appointment) (i
 
 	appointmentCreated := l.buildAppointment(appointment, patient)
 
-	if err := l.repositoryAppointment.Create(appointmentCreated); err != nil {
+	err = l.repositoryAppointment.Create(appointmentCreated)
+	if err != nil {
 		log.Printf("appointment-create-logic -> method: CreateAppointment: Error creating appointment: %v", err)
 		return nil, err
 	}
@@ -117,7 +123,7 @@ func (l *appointmentCreate) CreateAppointment(appointment *model.Appointment) (i
 func (l *appointmentCreate) getPatient(appointment *model.Appointment) (*model.Patient, error) {
 	log.Printf("appointment-create-logic -> method: getPatientt: received")
 
-	if appointment.Patient.ID != 0 {
+	if appointment.PatientID != 0 {
 		patient, err := l.appointmentPatientID.IsPatientIDExists(appointment.Patient.ID)
 		if err != nil {
 			log.Printf("appointment-create-logic -> method: getPatient: Error getting patient by ID: %v", err)
@@ -133,7 +139,7 @@ func (l *appointmentCreate) getPatient(appointment *model.Appointment) (*model.P
 		return nil, err
 	}
 
-	return &appointment.Patient, nil
+	return appointment.Patient, nil
 }
 
 // Método para obtener el precio de un servicio o paquete
@@ -175,7 +181,7 @@ func (l *appointmentCreate) buildAppointment(appointment *model.Appointment, pat
 	log.Printf("appointment-create-logic -> method: buildAppointment: received")
 
 	return &model.Appointment{
-		Patient:     *patient,
+		Patient:     patient,
 		DoctorID:    appointment.DoctorID,
 		ServiceID:   appointment.ServiceID,
 		PackageID:   appointment.PackageID,

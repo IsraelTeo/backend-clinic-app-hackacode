@@ -12,7 +12,6 @@ import (
 var GDB *gorm.DB
 
 func Connection(cfg *config.Config) error {
-
 	DSN := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
 		cfg.DBUser,
 		cfg.DBPassword,
@@ -27,6 +26,7 @@ func Connection(cfg *config.Config) error {
 		return err
 	}
 
+	GDB = GDB.Debug()
 	return nil
 }
 

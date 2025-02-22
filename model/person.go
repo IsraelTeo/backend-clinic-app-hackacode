@@ -1,7 +1,7 @@
 package model
 
 type Person struct {
-	ID          uint   `gorm:"primaryKey;autoIncrement" json:"id"`
+	ID          uint   `gorm:"primaryKey;autoIncrement" json:"id"` //
 	Name        string `json:"name" validate:"required,max=50"`
 	LastName    string `json:"last_name" validate:"required,max=80"`
 	DNI         string `json:"dni" validate:"required,max=20"`

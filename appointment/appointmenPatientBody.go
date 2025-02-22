@@ -24,7 +24,7 @@ func NewAppointmentPatientBody(patientLogic logic.PatientLogic) AppointmentPatie
 
 func (l *appointmentPatientBody) isPatientBodyExists(appointment *model.Appointment) bool {
 	log.Printf("appointment-patient-body-logic -> method: isPatientBodyExists: received")
-	return appointment.Patient.ID == 0
+	return appointment.Patient != nil
 }
 
 func (l *appointmentPatientBody) HandlePatientBodyCreation(appointment *model.Appointment) error {
@@ -33,7 +33,7 @@ func (l *appointmentPatientBody) HandlePatientBodyCreation(appointment *model.Ap
 		return response.ErrorBodyPatientEmpty
 	}
 
-	if err := l.patientLogic.CreatePatient(&appointment.Patient); err != nil {
+	if err := l.patientLogic.CreatePatient(appointment.Patient); err != nil {
 		log.Printf("appointment-patient-body-logic -> method: handlerPatientBodyCreation: Error creating patient: %v", err)
 		return err
 	}
@@ -47,7 +47,7 @@ func (l *appointmentPatientBody) HandlePatientBodyUpdate(appointment *model.Appo
 		return response.ErrorBodyPatientEmpty
 	}
 
-	if err := l.patientLogic.UpdatePatient(appointment.PatientID, &appointment.Patient); err != nil {
+	if err := l.patientLogic.UpdatePatient(appointment.PatientID, appointment.Patient); err != nil {
 		log.Printf("appointment-patient-body-logic -> method: handlerPatientBodyCreation: Error creating patient: %v", err)
 		return err
 	}

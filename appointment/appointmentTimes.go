@@ -60,63 +60,85 @@ func (l *appointmentTime) parseTimesAndDate(appointment *model.Appointment) (tim
 	return startTime, endTime, appointmentDate, nil
 }
 
-func (l *appointmentTime) hasTimeConflict(appointment *model.Appointment, startTimeAppointment, endTimeAppointment, appointmentDate time.Time) bool {
+func (l *appointmentTime) hasTimeConflict(appointment *model.Appointment, startTimeAppointment, endTimeAppointment, appointmentDate time.Time) error {
 	log.Printf("appointment-times-logic -> method:  hasTimeConflict: received")
 
 	doctor, err := l.repositoryDoctor.GetByID(appointment.DoctorID)
 	if err != nil {
 		log.Printf("appointment-times-logic -> method:  hasTimeConflict: Error doctor fetching with ID: %d error: %v", appointment.DoctorID, err)
-		return true
-	}
-
-	appointments, err := l.repositoryAppointmentMain.GetAppointmentsByDoctor(appointment.DoctorID)
-	if err != nil {
-		log.Printf("appointment-times-logic -> method:  hasTimeConflict: Error doctor fetching appoinments: error: %v", err)
-		return true
+		return response.ErrorDoctorNotFoundID
 	}
 
 	workingDays := strings.Split(doctor.Days, ",")
 
-	appointmentWeekDay := validate.TranslateDay(time.Weekday(appointmentDate.Weekday()).String())
+	appointmentWeekDaySpanish := validate.DayToGolang[appointmentDate.Weekday()]
 
-	if !validate.IsDayAvailable(appointmentWeekDay, workingDays) {
-		log.Printf("appointment-times-logic -> method: hasTimeConflict: Conflict detected - Doctor does not work on this day: %v", appointmentWeekDay)
-		return true
+	//verifica que el día de la cita sea un día que el médico tenga turno
+	if !validate.IsDayAvailable(appointmentWeekDaySpanish, workingDays) {
+		log.Printf("appointment-times-logic -> method: hasTimeConflict: Conflict detected - Doctor does not work on this day: %v", appointment.Date)
+		return response.ErrorAppointmentDayNotAvailable
 	}
 
 	doctorStartTime, doctorEndTime, err := l.parseStartAndEndTime(doctor.StartTime, doctor.EndTime)
 	if err != nil {
 		log.Printf("appointment-times-logic -> method: hasTimeConflict: Error parsing doctor's working hours: %v", err)
-		return true
+		return err
 	}
 
-	if !validate.IsWithinTimeRange(startTimeAppointment, endTimeAppointment, doctorStartTime, doctorEndTime) {
+	//verifica que el horario de la cita esté dentro del turno del doctor
+	if !validate.IsWithinTimeRange(startTimeAppointment, endTimeAppointment, doctorStartTime, doctorEndTime, true, true) {
 		log.Printf("appointment-times-logic -> method: hasTimeConflict: Conflict detected - Appointment time (%v - %v) is outside doctor's working hours (%v - %v)",
 			startTimeAppointment, endTimeAppointment, doctorStartTime, doctorEndTime)
-		return true
+		return response.ErrorAppointmentTimeConflict
 	}
 
-	for _, a := range appointments {
-		if a.Date != appointmentDate.Format("2006-01-02") {
-			continue // Ignoramos citas de otros días
-		}
+	doctorAppointments, err := l.repositoryAppointmentMain.GetAppointmentsByDoctorAndDate(appointment.DoctorID, appointmentDate)
+	if err != nil {
+		log.Printf("appointment-times-logic -> method:  hasTimeConflict: Error doctor fetching appoinments: error: %v", err)
+		return response.ErrorFetchingAppointments
+	}
 
-		parsedStartTime, err1 := validate.ParseTime(a.StartTime)
-		parsedEndTime, err2 := validate.ParseTime(a.EndTime)
-		if err1 != nil || err2 != nil {
-			log.Println("❌ Error al parsear los horarios de las citas existentes")
+	//para validar que la cita nueva no cruce horario con otra cita del médico
+	/*for _, doctorAppointment := range doctorAppointments {
+		if doctorAppointment.Date != appointmentDate.Format("2006-01-02") {
 			continue
 		}
 
-		// ✅ Comparar solo la hora, ignorando la fecha
-		if startTimeAppointment.Hour() < parsedEndTime.Hour() && endTimeAppointment.Hour() > parsedStartTime.Hour() {
-			log.Printf("⛔ Conflict: Overlapping appointment on %s (%v - %v) with existing appointment (%v - %v)",
-				appointmentDate.Format("2006-01-02"), startTimeAppointment, endTimeAppointment, parsedStartTime, parsedEndTime)
-			return true
+		parsedDoctorStartTime, parsedDoctorEndTime, err := l.parseStartAndEndTime(doctorAppointment.StartTime, doctorAppointment.EndTime)
+		if err != nil {
+			log.Println("❌ Error al parsear los horarios de las citas existentes")
+			return err
+		}
+
+		appointmentStartHour := startTimeAppointment.Hour()
+		appointmentEndHour := endTimeAppointment.Hour()
+		doctorStartHour := parsedDoctorStartTime.Hour()
+		doctorEndHour := parsedDoctorEndTime.Hour()
+
+		if appointmentStartHour < doctorEndHour || appointmentEndHour > doctorStartHour {
+			return response.ErrorAppointmentTimeConflict
+		}
+	}*/
+
+	for _, doctorAppointment := range doctorAppointments {
+		if doctorAppointment.Date != appointmentDate.Format("2006-01-02") {
+			continue
+		}
+
+		parsedDoctorStartTime, parsedDoctorEndTime, err := l.parseStartAndEndTime(doctorAppointment.StartTime, doctorAppointment.EndTime)
+		if err != nil {
+			return err
+		}
+
+		appointmentStartTime := startTimeAppointment
+		appointmentEndTime := endTimeAppointment
+
+		if appointmentStartTime.Before(parsedDoctorEndTime) && appointmentEndTime.After(parsedDoctorStartTime) {
+			return response.ErrorAppointmentTimeConflict
 		}
 	}
 
-	return false
+	return nil
 }
 
 func (l *appointmentTime) ValidateAppointmentTime(appointment *model.Appointment) error {
@@ -139,9 +161,9 @@ func (l *appointmentTime) ValidateAppointmentTime(appointment *model.Appointment
 		return response.ErrorInvalidAppointmentTimeRange
 	}
 
-	if l.hasTimeConflict(appointment, startTime, endTime, appointmentDate) {
+	if err := l.hasTimeConflict(appointment, startTime, endTime, appointmentDate); err != nil {
 		log.Printf("appointment-times-logic -> method: ValidateAppointmentTime: Appointment time conflicts with existing appointments")
-		return response.ErrorAppointmentTimeConflict
+		return err
 	}
 
 	return nil

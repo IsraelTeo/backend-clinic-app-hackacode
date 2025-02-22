@@ -2,8 +2,10 @@ package validate
 
 import (
 	"fmt"
+	"log"
 	"strconv"
 	"strings"
+	"time"
 	"unicode"
 
 	"github.com/IsraelTeo/clinic-backend-hackacode-app/db"
@@ -95,6 +97,16 @@ var dayTranslations = map[string]string{
 	"Domingo":   "Sunday",
 }
 
+var DayToGolang = map[time.Weekday]string{
+	time.Monday:    "Lunes",
+	time.Tuesday:   "Martes",
+	time.Wednesday: "Miércoles",
+	time.Thursday:  "Jueves",
+	time.Friday:    "Viernes",
+	time.Saturday:  "Sábado",
+	time.Sunday:    "Domingo",
+}
+
 func TranslateDayToSpanish(englishDay string) string {
 	daysTranslation := map[string]string{
 		"Sunday":    "domingo",
@@ -118,9 +130,12 @@ func TranslateDay(day string) string {
 }
 
 func IsDayAvailable(appointmentDay string, validDays []string) bool {
-	appointmentDay = normalizeDay(appointmentDay)
+	log.Printf("appointment date \n: %s", appointmentDay)
+	appointmentDayNormalized := normalizeDay(appointmentDay)
+
+	log.Printf("appointment date \n: %v ", validDays)
 	for _, validDay := range validDays {
-		if validDay == appointmentDay {
+		if normalizeDay(validDay) == appointmentDayNormalized {
 			return true
 		}
 	}
@@ -129,8 +144,10 @@ func IsDayAvailable(appointmentDay string, validDays []string) bool {
 }
 
 func normalizeDay(day string) string {
-	day = strings.ToLower(day)
-	return removeAccents(day)
+	dayTrimed := strings.TrimSpace(day)
+	dayLower := strings.ToLower(dayTrimed)
+	dayNormalized := removeAccents(dayLower)
+	return dayNormalized
 }
 
 func removeAccents(input string) string {

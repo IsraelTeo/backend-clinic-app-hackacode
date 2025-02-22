@@ -44,8 +44,10 @@ func (l paymentLogic) PaymentRegister(payment *model.Payment) (*model.PaymentRes
 	if payment.TotalAmount == 0 {
 		return nil, response.ErrorTotalAmountEmpty
 	}
-	// validar totalAmount debe ser el mismo valor que ya se tiene del total amount de la cita, si no no se hace el pago
-	if payment.TotalAmount != appointment.TotalAmount {
+
+	// validar totalAmount no debe ser un valor que ya se tiene del total amount de la cita, si no no se hace el pago
+	//
+	if payment.TotalAmount < appointment.TotalAmount {
 		return nil, response.ErrorTotalAmountBadRequest
 	}
 

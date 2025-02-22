@@ -6,6 +6,7 @@ import (
 
 	"github.com/IsraelTeo/clinic-backend-hackacode-app/model"
 	"github.com/IsraelTeo/clinic-backend-hackacode-app/response"
+	"github.com/IsraelTeo/clinic-backend-hackacode-app/validate"
 	"gorm.io/gorm"
 )
 
@@ -13,7 +14,7 @@ type AppointmentRepository interface {
 	GetByID(ID uint) (*model.Appointment, error)
 	GetAll() ([]model.Appointment, error)
 	GetAppointmentsByDoctor(doctorID uint) ([]model.Appointment, error)
-	GetAppointmentsByDoctorAndDate(doctorID uint, date string) ([]model.Appointment, error)
+	GetAppointmentsByDoctorAndDate(doctorID uint, date time.Time) ([]model.Appointment, error)
 	UpdatePaid(appointmentID uint) error
 	UnlinkPatientAppointments(patientID uint) error
 }
@@ -69,15 +70,16 @@ func (r *appointmentRepository) GetAppointmentsByDoctor(doctorID uint) ([]model.
 	return appointments, nil
 }*/
 
-func (r *appointmentRepository) GetAppointmentsByDoctorAndDate(doctorID uint, date string) ([]model.Appointment, error) {
+func (r *appointmentRepository) GetAppointmentsByDoctorAndDate(doctorID uint, date time.Time) ([]model.Appointment, error) {
 	var appointments []model.Appointment
-	dateTime, err := time.Parse("2006-01-02", date)
+
+	dateStr := validate.FormatDate(date)
+
+	err := r.db.Where("doctor_id = ? AND date = ?", doctorID, dateStr).Find(&appointments).Error
 	if err != nil {
 		return nil, err
 	}
-	if err := r.db.Where("doctor_id = ? AND date = ?", doctorID, dateTime).Find(&appointments).Error; err != nil {
-		return nil, err
-	}
+
 	return appointments, nil
 }
 

@@ -149,7 +149,7 @@ func (l *appointmentUpdate) getPatientToUpdate(appointment *model.Appointment) (
 		return nil, err
 	}
 
-	return &appointment.Patient, nil
+	return appointment.Patient, nil
 }
 
 // Método para obtener el precio de un servicio o paquete
@@ -192,7 +192,7 @@ func (l *appointmentUpdate) buildUpdatedAppointment(existingAppointment, updated
 
 	return &model.Appointment{
 		ID:          existingAppointment.ID, // Mantiene el mismo ID
-		Patient:     *patient,
+		Patient:     patient,
 		DoctorID:    updatedAppointment.DoctorID,
 		ServiceID:   updatedAppointment.ServiceID,
 		PackageID:   updatedAppointment.PackageID,

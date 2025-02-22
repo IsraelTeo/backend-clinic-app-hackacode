@@ -20,6 +20,7 @@ func NewAppointmentDoctorID(repositoryDoctor repository.Repository[model.Doctor]
 
 func (l *appointmentDoctorID) IsDoctorExists(doctorID uint) bool {
 	log.Println("appointment-doctor-logic -> method: IsDoctorExists: received")
+
 	_, err := l.repositoryDoctor.GetByID(doctorID)
 	if err != nil {
 		log.Printf("appointment-doctor-logic -> method: IsDoctorExists: Error fetching doctor with ID %d: %v", doctorID, err)

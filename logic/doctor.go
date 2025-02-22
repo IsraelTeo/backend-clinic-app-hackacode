@@ -201,18 +201,18 @@ func normalizeDays(days string) (string, error) {
 	return strings.Join(normalizedDays, ","), nil
 }
 
-func parseShiftDoctor(doctor *model.Doctor) (time.Time, time.Time, error) {
-	startTime, err := validate.ParseTime(doctor.StartTime)
+func parseShiftDoctor(doctor *model.Doctor) (start_, end_ time.Time, err error) {
+	start_, err = validate.ParseTime(doctor.StartTime)
 	if err != nil {
 		return time.Time{}, time.Time{}, response.ErrorInvalidStartTimeDoctor
 	}
 
-	endTime, err := validate.ParseTime(doctor.EndTime)
+	end_, err = validate.ParseTime(doctor.EndTime)
 	if err != nil {
 		return time.Time{}, time.Time{}, response.ErrorInvalidEndTimeDoctor
 	}
 
-	return startTime, endTime, nil
+	return start_, end_, nil
 }
 
 func combineDateAndTime(timeObj time.Time, referenceDate time.Time) time.Time {
@@ -224,7 +224,7 @@ func combineDateAndTime(timeObj time.Time, referenceDate time.Time) time.Time {
 		timeObj.Minute(),
 		0,
 		0,
-		referenceDate.Location(),
+		nil,
 	)
 }
 
