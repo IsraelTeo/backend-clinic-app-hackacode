@@ -35,6 +35,7 @@ type appointmentCreate struct {
 	repositoryService     repository.Repository[model.Service]
 	repositoryPackage     repository.Repository[model.Package]
 	repositoryPatient     repository.Repository[model.Patient]
+	repositoryPatientMain repository.PatientRepository
 
 	appointmentPatientBody AppointmentPatientBody
 	appointmentDoctor      AppointmentDoctorID
@@ -50,6 +51,7 @@ func NewAppointmentCreate(
 	repositoryService repository.Repository[model.Service],
 	repositoryPackage repository.Repository[model.Package],
 	repositoryPatient repository.Repository[model.Patient],
+	repositoryPatientMain repository.PatientRepository,
 	appointmentPatientBody AppointmentPatientBody,
 	appointmentDoctor AppointmentDoctorID,
 	appointmentPackageID AppointmentPackageID,
@@ -63,6 +65,7 @@ func NewAppointmentCreate(
 		repositoryService:     repositoryService,
 		repositoryPackage:     repositoryPackage,
 		repositoryPatient:     repositoryPatient,
+		repositoryPatientMain: repositoryPatientMain,
 
 		appointmentPatientBody: appointmentPatientBody,
 		appointmentDoctor:      appointmentDoctor,
@@ -81,35 +84,49 @@ func (l *appointmentCreate) CreateAppointment(appointment *model.Appointment) (i
 		return nil, errors.New("internal server error")
 	}
 
+	//Verifica la existencia del médico
 	if !l.appointmentDoctor.IsDoctorExists(appointment.DoctorID) {
 		log.Printf("appointment-create-logic -> method: CreateAppointment: Doctor not found with ID: %d", appointment.DoctorID)
 		return nil, response.ErrorDoctorNotFoundID
 	}
 
-	if appointment.Patient == nil {
+	/*if appointment.Patient == nil {
 		appointment.Patient = new(model.Patient)
+	}*/
+
+	//Recibo el DNI del paciente
+	//Busco al paciente por DNI
+	patientFound, err := l.isPatientDNIExists(appointment.PatientDNI)
+	if err != nil {
+		return nil, err
 	}
 
-	appointment.Patient.ID = appointment.PatientID
+	//Obtengo el paciente
+	//Obtengo el ID del paciente para realizar la relación con la cita
+	//appointment.PatientID = patientFound.ID
+	//Válida los tiempos
+	//Crea la cita
 
-	patient, err := l.getPatient(appointment)
+	//appointment.Patient.ID = appointment.PatientID
+
+	/*patient, err := l.getPatient(appointment)
 	if err != nil {
 		log.Printf("appointment-create-logic -> method: CreateAppointment: Error getting patient: %v", err)
 		return nil, err
-	}
+	}*/
 
 	err = l.appointmentTime.ValidateAppointmentTime(appointment)
 	if err != nil {
 		return nil, err
 	}
 
-	priceDetails, err := l.getPriceDetails(appointment, patient)
+	priceDetails, err := l.getPriceDetails(appointment, patientFound)
 	if err != nil {
 		log.Printf("appointment-create-logic -> method: CreateAppointment: Error getting price details: %v", err)
 		return nil, err
 	}
 
-	appointmentCreated := l.buildAppointment(appointment, patient)
+	appointmentCreated := l.buildAppointment(appointment, patientFound)
 
 	err = l.repositoryAppointment.Create(appointmentCreated)
 	if err != nil {
@@ -120,26 +137,48 @@ func (l *appointmentCreate) CreateAppointment(appointment *model.Appointment) (i
 	return priceDetails, nil
 }
 
-func (l *appointmentCreate) getPatient(appointment *model.Appointment) (*model.Patient, error) {
-	log.Printf("appointment-create-logic -> method: getPatientt: received")
+/*func (l *appointmentCreate) getPatient(appointment *model.Appointment) (*model.Patient, error) {
+log.Printf("appointment-create-logic -> method: getPatientt: received")
 
-	if appointment.PatientID != 0 {
-		patient, err := l.appointmentPatientID.IsPatientIDExists(appointment.Patient.ID)
-		if err != nil {
-			log.Printf("appointment-create-logic -> method: getPatient: Error getting patient by ID: %v", err)
-			return nil, err
-		}
-
-		return patient, nil
+/*if appointment.PatientID != 0 {
+	patient, err := l.appointmentPatientID.IsPatientIDExists(appointment.Patient.ID)
+	if err != nil {
+		log.Printf("appointment-create-logic -> method: getPatient: Error getting patient by ID: %v", err)
+		return nil, err
 	}
 
-	err := l.appointmentPatientBody.HandlePatientBodyCreation(appointment)
+	return patient, nil
+}*/
+
+/*err := l.appointmentPatientBody.HandlePatientBodyCreation(appointment)
 	if err != nil {
 		log.Printf("appointment-create-logic -> method: getPatient: Error creating patient: %v", err)
 		return nil, err
 	}
 
 	return appointment.Patient, nil
+	return nil, nil
+}*/
+
+/*func (l *appointmentCreate) isPatientIDExists(ID uint) (*model.Patient, error) {
+	log.Println("appointment-patient-id-logic -> method: isPatientIDexists: received")
+
+	patient, err := l.repositoryPatient.GetByID(ID)
+	if err != nil {
+		log.Printf("appointment-patient-id-logic -> method: isPatientIDexists: Error fetching patient by ID: %v", err)
+		return nil, response.ErrorPatientNotFoundID
+	}
+
+	return patient, nil
+}*/
+
+func (l *appointmentCreate) isPatientDNIExists(DNI string) (*model.Patient, error) {
+	patient, err := l.repositoryPatientMain.GetPatientByDNI(DNI)
+	if err != nil {
+		return nil, response.ErrorPatientNotFoundDNI
+	}
+
+	return patient, nil
 }
 
 // Método para obtener el precio de un servicio o paquete
@@ -181,7 +220,7 @@ func (l *appointmentCreate) buildAppointment(appointment *model.Appointment, pat
 	log.Printf("appointment-create-logic -> method: buildAppointment: received")
 
 	return &model.Appointment{
-		Patient:     patient,
+		PatientID:   patient.ID,
 		DoctorID:    appointment.DoctorID,
 		ServiceID:   appointment.ServiceID,
 		PackageID:   appointment.PackageID,

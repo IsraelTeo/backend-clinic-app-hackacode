@@ -164,7 +164,8 @@ func removeAccents(input string) string {
 }
 
 func CheckEmailExists[T any](email string, entity *T) bool {
-	if err := db.GDB.Where("email = ?", email).First(&entity).Error; err != nil {
+	err := db.GDB.Where("email = ?", email).First(&entity).Error
+	if err != nil {
 		return false
 	}
 
@@ -172,7 +173,8 @@ func CheckEmailExists[T any](email string, entity *T) bool {
 }
 
 func CheckDNIExists[T any](DNI string, entity *T) bool {
-	if err := db.GDB.Where("DNI = ?", DNI).First(&entity).Error; err != nil {
+	err := db.GDB.Where("DNI = ?", DNI).First(&entity).Error
+	if err != nil {
 		return false
 	}
 
@@ -180,7 +182,8 @@ func CheckDNIExists[T any](DNI string, entity *T) bool {
 }
 
 func CheckPhoneNumberExists[T any](phoneNumber string, entity *T) bool {
-	if err := db.GDB.Where("phone_number = ?", phoneNumber).First(&entity).Error; err != nil {
+	err := db.GDB.Where("phone_number = ?", phoneNumber).First(&entity).Error
+	if err != nil {
 		return false
 	}
 

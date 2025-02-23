@@ -123,7 +123,7 @@ func setUpAppointment(api *echo.Group) {
 
 	appointmentPatientBodyLogic := appointment.NewAppointmentPatientBody(appointmentPatientLogic)
 	appointmentPatientIDLogic := appointment.NewAppointmentPatientID(patientRepo)
-	appointmentServiceIDLogic := appointment.NewAppointmentServiceID(appointmentRepo)
+	appointmentServiceIDLogic := appointment.NewAppointmentServiceID(appointmentRepo, serviceRepo)
 	appointmentPackageIDLogic := appointment.NewAppointmentPackageID(packageRepoMain)
 	appointmentTimeLogic := appointment.NewAppointmentTime(appointmentRepoMain, doctorRepo)
 
@@ -132,7 +132,7 @@ func setUpAppointment(api *echo.Group) {
 
 	// Creación de la lógica para la creación de citas
 	logicAppointmentCreate := appointment.NewAppointmentCreate(
-		appointmentRepo, doctorRepo, serviceRepo, packageRepo, patientRepo,
+		appointmentRepo, doctorRepo, serviceRepo, packageRepo, patientRepo, patientRepoMain,
 		appointmentPatientBodyLogic, appointmentDoctor, appointmentPackageIDLogic,
 		appointmentPatientIDLogic, appointmentServiceIDLogic, appointmentTimeLogic,
 	)
@@ -152,8 +152,18 @@ func setUpAppointment(api *echo.Group) {
 	*/
 	// Creación de la lógica para la actualización de citas
 	logicAppointmentUpdate := appointment.NewAppointmentUpdate(
-		appointmentRepo, doctorRepo, serviceRepo, packageRepo, patientRepo, appointmentPatientBodyLogic, appointmentDoctorLogic, appointmentPackageIDLogic, appointmentPatientIDLogic,
-		appointmentServiceIDLogic, appointmentTimeLogic,
+		appointmentRepo,
+		doctorRepo,
+		serviceRepo,
+		packageRepo,
+		patientRepo,
+		patientRepoMain,
+		appointmentPatientBodyLogic,
+		appointmentDoctorLogic,
+		appointmentPackageIDLogic,
+		appointmentPatientIDLogic,
+		appointmentServiceIDLogic,
+		appointmentTimeLogic,
 	)
 
 	// Creación de la lógica general de citas

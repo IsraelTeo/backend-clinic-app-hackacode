@@ -78,12 +78,13 @@ func (l *doctorLogic) CreateDoctor(doctor *model.Doctor) error {
 		return err
 	}
 
-	startTimeMain := combineDateAndTime(startTime, time.Now())
-	endTimeMain := combineDateAndTime(endTime, time.Now())
+	/*
+		startTimeMain := combineDateAndTime(startTime, time.Now())
+		endTimeMain := combineDateAndTime(endTime, time.Now())
 
-	if !validate.IsStartBeforeEnd(startTime, endTimeMain) {
-		return response.ErrorInvalidEndTimeInPastDoctor
-	}
+		if !validate.IsStartBeforeEnd(startTime, endTimeMain) {
+			return response.ErrorInvalidEndTimeInPastDoctor
+		}*/
 
 	newDoctor := model.Doctor{
 		Person: model.Person{
@@ -97,8 +98,8 @@ func (l *doctorLogic) CreateDoctor(doctor *model.Doctor) error {
 		},
 		Especialty: doctor.Especialty,
 		Days:       normalizedDays,
-		StartTime:  startTimeMain.Format("15:04"),
-		EndTime:    endTimeMain.Format("15:04"),
+		StartTime:  startTime.String(),
+		EndTime:    endTime.String(),
 		Salary:     doctor.Salary,
 	}
 
@@ -229,15 +230,18 @@ func combineDateAndTime(timeObj time.Time, referenceDate time.Time) time.Time {
 }
 
 func (l *doctorLogic) validateDoctor(doctor *model.Doctor) (time.Time, error) {
-	if err := validate.DNIDoctor(doctor); err != nil {
+	err := validate.DNIDoctor(doctor)
+	if err != nil {
 		return time.Time{}, err
 	}
 
-	if err := validate.PhoneNumberDoctor(doctor); err != nil {
+	err = validate.PhoneNumberDoctor(doctor)
+	if err != nil {
 		return time.Time{}, err
 	}
 
-	if err := validate.EmailDoctor(doctor); err != nil {
+	err = validate.EmailDoctor(doctor)
+	if err != nil {
 		return time.Time{}, err
 	}
 

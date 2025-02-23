@@ -17,6 +17,14 @@ type serviceRepository struct {
 func NewServiceRepository(db *gorm.DB) ServiceRepository {
 	return &serviceRepository{db: db}
 }
+func (r *serviceRepository) GetServiceByID(ID uint) (*model.Service, error) {
+	service := model.Service{}
+	if err := r.db.First(service, ID).Error; err != nil {
+		return nil, err
+	}
+
+	return &service, nil
+}
 
 func (r *serviceRepository) GetAllServicesByID(ID []uint) ([]model.Service, error) {
 	var services []model.Service

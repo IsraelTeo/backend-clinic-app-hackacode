@@ -33,6 +33,7 @@ type appointmentUpdate struct {
 	repositoryService     repository.Repository[model.Service]
 	repositoryPackage     repository.Repository[model.Package]
 	repositoryPatient     repository.Repository[model.Patient]
+	repositoryPatientMain repository.PatientRepository
 
 	appointmentPatientBody AppointmentPatientBody
 	appointmentDoctor      AppointmentDoctorID
@@ -48,6 +49,7 @@ func NewAppointmentUpdate(
 	repositoryService repository.Repository[model.Service],
 	repositoryPackage repository.Repository[model.Package],
 	repositoryPatient repository.Repository[model.Patient],
+	repositoryPatientMain repository.PatientRepository,
 	appointmentPatientBody AppointmentPatientBody,
 	appointmentDoctor AppointmentDoctorID,
 	appointmentPackageID AppointmentPackageID,
@@ -61,6 +63,7 @@ func NewAppointmentUpdate(
 		repositoryService:     repositoryService,
 		repositoryPackage:     repositoryPackage,
 		repositoryPatient:     repositoryPatient,
+		repositoryPatientMain: repositoryPatientMain,
 
 		appointmentPatientBody: appointmentPatientBody,
 		appointmentDoctor:      appointmentDoctor,
@@ -88,13 +91,13 @@ func NewAppointmentUpdate(
 	}
 }*/
 
-func (l *appointmentUpdate) UpdateAppointment(appointmentID uint, updatedAppointment *model.Appointment) (interface{}, error) {
+func (l *appointmentUpdate) UpdateAppointment(ID uint, updatedAppointment *model.Appointment) (interface{}, error) {
 	log.Printf("appointment-update-logic -> method: UpdateAppointment: received")
 
 	// Buscar la cita existente
-	existingAppointment, err := l.repositoryAppointment.GetByID(appointmentID)
+	existingAppointment, err := l.repositoryAppointment.GetByID(ID)
 	if err != nil {
-		log.Printf("appointment-update-logic -> method: UpdateAppointment: Appointment not found with ID: %d", appointmentID)
+		log.Printf("appointment-update-logic -> method: UpdateAppointment: Appointment not found with ID: %d", ID)
 		return nil, response.ErrorAppointmentNotFound
 	}
 
@@ -105,21 +108,31 @@ func (l *appointmentUpdate) UpdateAppointment(appointmentID uint, updatedAppoint
 	}
 
 	// Obtener o actualizar el paciente
-	patient, err := l.getPatientToUpdate(updatedAppointment)
+	/*patient, err := l.getPatientToUpdate(updatedAppointment)
 	if err != nil {
 		log.Printf("appointment-update-logic -> method: UpdateAppointment: Error getting patient: %v", err)
+		return nil, err
+	}*/
+
+	patientFound, err := l.isPatientDNIExists(updatedAppointment.PatientDNI)
+	if err != nil {
+		return nil, err
+	}
+
+	err = l.appointmentTime.ValidateAppointmentTime(updatedAppointment)
+	if err != nil {
 		return nil, err
 	}
 
 	// Obtener los detalles de precio actualizados
-	priceDetails, err := l.getPriceDetails(updatedAppointment, patient)
+	priceDetails, err := l.getPriceDetails(updatedAppointment, patientFound)
 	if err != nil {
 		log.Printf("appointment-update-logic -> method: UpdateAppointment: Error getting price details: %v", err)
 		return nil, err
 	}
 
 	// Construir la cita actualizada
-	updatedAppointmentData := l.buildUpdatedAppointment(existingAppointment, updatedAppointment, patient)
+	updatedAppointmentData := l.buildUpdatedAppointment(existingAppointment, updatedAppointment, patientFound)
 
 	// Guardar la actualización en la BD
 	if err := l.repositoryAppointment.Update(updatedAppointmentData); err != nil {
@@ -130,7 +143,16 @@ func (l *appointmentUpdate) UpdateAppointment(appointmentID uint, updatedAppoint
 	return priceDetails, nil
 }
 
-func (l *appointmentUpdate) getPatientToUpdate(appointment *model.Appointment) (*model.Patient, error) {
+func (l *appointmentUpdate) isPatientDNIExists(DNI string) (*model.Patient, error) {
+	patient, err := l.repositoryPatientMain.GetPatientByDNI(DNI)
+	if err != nil {
+		return nil, response.ErrorPatientNotFoundDNI
+	}
+
+	return patient, nil
+}
+
+/*func (l *appointmentUpdate) getPatientToUpdate(appointment *model.Appointment) (*model.Patient, error) {
 	log.Printf("appointment-create-logic -> method: getPatientt: received")
 
 	if appointment.Patient.ID != 0 {
@@ -150,7 +172,7 @@ func (l *appointmentUpdate) getPatientToUpdate(appointment *model.Appointment) (
 	}
 
 	return appointment.Patient, nil
-}
+}*/
 
 // Método para obtener el precio de un servicio o paquete
 func (l *appointmentUpdate) getPriceDetails(appointment *model.Appointment, patient *model.Patient) (interface{}, error) {
@@ -191,15 +213,15 @@ func (l *appointmentUpdate) buildUpdatedAppointment(existingAppointment, updated
 	log.Printf("appointment-update-logic -> method: buildUpdatedAppointment: received")
 
 	return &model.Appointment{
-		ID:          existingAppointment.ID, // Mantiene el mismo ID
-		Patient:     patient,
+		ID:          existingAppointment.ID,
+		PatientID:   patient.ID,
 		DoctorID:    updatedAppointment.DoctorID,
 		ServiceID:   updatedAppointment.ServiceID,
 		PackageID:   updatedAppointment.PackageID,
 		Date:        updatedAppointment.Date,
 		StartTime:   updatedAppointment.StartTime,
 		EndTime:     updatedAppointment.EndTime,
-		Paid:        existingAppointment.Paid, // Mantiene el estado de pago
+		Paid:        existingAppointment.Paid,
 		TotalAmount: updatedAppointment.TotalAmount,
 	}
 }

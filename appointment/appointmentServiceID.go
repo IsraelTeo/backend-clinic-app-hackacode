@@ -18,8 +18,8 @@ type AppointmentServiceID interface {
 	IsServiceIDEXists(ID uint, hasInsurance bool) (*model.FinalServicePrice, error)
 }
 
-func NewAppointmentServiceID(repositoryAppointment repository.Repository[model.Appointment]) AppointmentServiceID {
-	return &appointmentServiceID{repositoryAppointment: repositoryAppointment}
+func NewAppointmentServiceID(repositoryAppointment repository.Repository[model.Appointment], repositoryService repository.Repository[model.Service]) AppointmentServiceID {
+	return &appointmentServiceID{repositoryAppointment: repositoryAppointment, repositoryService: repositoryService}
 }
 
 func (l *appointmentServiceID) IsServiceIDEXists(ID uint, hasInsurance bool) (*model.FinalServicePrice, error) {
