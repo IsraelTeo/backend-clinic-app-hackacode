@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/IsraelTeo/clinic-backend-hackacode-app/model"
+	"github.com/IsraelTeo/clinic-backend-hackacode-app/response"
 	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"
 )
@@ -83,7 +84,7 @@ func validateToken(c echo.Context) (model.User, error) {
 	jwtToken, err := jwt.Parse(token, validateMethodAndGetSecret)
 	if err != nil {
 		log.Printf("Token not valid: %v\n", err)
-		return model.User{}, fmt.Errorf("invalid token: %w", err)
+		return model.User{}, response.ErrorTokenInvalid
 	}
 
 	userData, ok := jwtToken.Claims.(jwt.MapClaims)
