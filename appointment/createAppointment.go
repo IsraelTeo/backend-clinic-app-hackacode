@@ -71,6 +71,7 @@ func (l *appointmentCreate) CreateAppointment(appointment *model.Appointment) (m
 		return nil, err
 	}
 
+	//obtener precios de paquete o servicio
 	priceDetails, err := l.getPriceDetails(appointment, patientFound)
 	if err != nil {
 		return nil, err
