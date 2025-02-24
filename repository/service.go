@@ -6,7 +6,7 @@ import (
 )
 
 type ServiceRepository interface {
-	GetAllServicesByID(ID []uint) ([]model.Service, error)
+	GetAll() ([]model.Appointment, error)
 	Delete(ID uint) error
 }
 
@@ -17,25 +17,34 @@ type serviceRepository struct {
 func NewServiceRepository(db *gorm.DB) ServiceRepository {
 	return &serviceRepository{db: db}
 }
-func (r *serviceRepository) GetServiceByID(ID uint) (*model.Service, error) {
-	service := model.Service{}
-	if err := r.db.First(service, ID).Error; err != nil {
+
+func (r *serviceRepository) GetAll() ([]model.Appointment, error) {
+	var appointments []model.Appointment
+
+	err := r.db.Find(&appointments).Error
+	if err != nil {
 		return nil, err
 	}
 
-	return &service, nil
+	return appointments, nil
 }
 
 func (r *serviceRepository) GetAllServicesByID(ID []uint) ([]model.Service, error) {
 	var services []model.Service
-	if err := r.db.Where("id IN ?", ID).Find(&services).Error; err != nil {
+
+	err := r.db.
+		Where("id IN ?", ID).
+		Find(&services).
+		Error
+	if err != nil {
 		return nil, err
 	}
 	return services, nil
 }
 
 func (r *serviceRepository) Delete(ID uint) error {
-	if err := r.db.Exec("DELETE FROM package_services WHERE service_id = ?", ID).Error; err != nil {
+	err := r.db.Exec("DELETE FROM package_services WHERE service_id = ?", ID).Error
+	if err != nil {
 		return err
 	}
 

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"strings"
-	"time"
 
 	"github.com/IsraelTeo/clinic-backend-hackacode-app/model"
 	"github.com/IsraelTeo/clinic-backend-hackacode-app/repository"
@@ -15,7 +14,7 @@ import (
 type DoctorLogic interface {
 	GetDoctorByID(ID uint) (*model.Doctor, error)
 	GetDoctorByDNI(DNI string) (*model.Doctor, error)
-	GetAllDoctors() ([]model.Doctor, error)
+	GetAllDoctors(limit, offset int) ([]model.Doctor, error)
 	CreateDoctor(doctor *model.Doctor) error
 	UpdateDoctor(ID uint, doctor *model.Doctor) error
 	DeleteDoctor(ID uint) error
@@ -50,8 +49,8 @@ func (l *doctorLogic) GetDoctorByDNI(DNI string) (*model.Doctor, error) {
 	return patient, nil
 }
 
-func (l *doctorLogic) GetAllDoctors() ([]model.Doctor, error) {
-	doctors, err := l.repositoryDoctor.GetAll()
+func (l *doctorLogic) GetAllDoctors(limit, offset int) ([]model.Doctor, error) {
+	doctors, err := l.repositoryDoctor.GetAll(limit, offset)
 	if err != nil {
 		log.Printf("doctor-logic: Error fetching doctors: %v", err)
 		return nil, response.ErrorDoctorsNotFound
@@ -73,19 +72,6 @@ func (l *doctorLogic) CreateDoctor(doctor *model.Doctor) error {
 
 	doctor.Days = normalizedDays
 
-	/*startTime, endTime, err := parseShiftDoctor(doctor)
-	if err != nil {
-		return err
-	}
-
-	/*
-		startTimeMain := combineDateAndTime(startTime, time.Now())
-		endTimeMain := combineDateAndTime(endTime, time.Now())
-
-		if !validate.IsStartBeforeEnd(startTime, endTimeMain) {
-			return response.ErrorInvalidEndTimeInPastDoctor
-		}*/
-
 	newDoctor := model.Doctor{
 		Person: model.Person{
 			Name:        doctor.Name,
@@ -103,7 +89,8 @@ func (l *doctorLogic) CreateDoctor(doctor *model.Doctor) error {
 		Salary:     doctor.Salary,
 	}
 
-	if err := l.repositoryDoctor.Create(&newDoctor); err != nil {
+	err = l.repositoryDoctor.Create(&newDoctor)
+	if err != nil {
 		log.Printf("doctor-logic: Error saving doctor: %v", err)
 		return response.ErrorToCreatedDoctor
 	}
@@ -130,18 +117,6 @@ func (l *doctorLogic) UpdateDoctor(ID uint, doctor *model.Doctor) error {
 
 	doctor.Days = normalizedDays
 
-	/*startTime, endTime, err := parseShiftDoctor(doctor)
-	if err != nil {
-		return err
-	}*/
-
-	/*startTimeMain := combineDateAndTime(startTime, time.Now())
-	endTimeMain := combineDateAndTime(endTime, time.Now())
-
-	if !validate.IsStartBeforeEnd(startTimeMain, endTimeMain) {
-		return response.ErrorInvalidEndTimeInPastDoctor
-	}*/
-
 	doctorUpdate.Name = doctor.Name
 	doctorUpdate.LastName = doctor.LastName
 	doctorUpdate.Especialty = doctor.Especialty
@@ -153,7 +128,8 @@ func (l *doctorLogic) UpdateDoctor(ID uint, doctor *model.Doctor) error {
 	doctorUpdate.Email = doctor.Email
 	doctorUpdate.Address = doctor.Address
 
-	if err = l.repositoryDoctor.Update(doctorUpdate); err != nil {
+	err = l.repositoryDoctor.Update(doctorUpdate)
+	if err != nil {
 		log.Printf("doctor-logic:: Error updating doctor with ID %d: %v", ID, err)
 		return response.ErrorToUpdatedDoctor
 	}
@@ -162,12 +138,14 @@ func (l *doctorLogic) UpdateDoctor(ID uint, doctor *model.Doctor) error {
 }
 
 func (l *doctorLogic) DeleteDoctor(ID uint) error {
-	if _, err := l.GetDoctorByID(ID); err != nil {
+	_, err := l.GetDoctorByID(ID)
+	if err != nil {
 		log.Printf("doctor-logic: Error fetching doctor with ID %d: %v to update", ID, err)
 		return response.ErrorDoctorNotFoundID
 	}
 
-	if err := l.repositoryDoctor.Delete(ID); err != nil {
+	err = l.repositoryDoctor.Delete(ID)
+	if err != nil {
 		log.Printf("doctor-logic: Error deleting doctor with ID %d: %v", ID, err)
 		return response.ErrorToDeletedDoctor
 	}
@@ -202,33 +180,6 @@ func normalizeDays(days string) (string, error) {
 	return strings.Join(normalizedDays, ","), nil
 }
 
-func parseShiftDoctor(doctor *model.Doctor) (start_, end_ time.Time, err error) {
-	start_, err = validate.ParseTime(doctor.StartTime)
-	if err != nil {
-		return time.Time{}, time.Time{}, response.ErrorInvalidStartTimeDoctor
-	}
-
-	end_, err = validate.ParseTime(doctor.EndTime)
-	if err != nil {
-		return time.Time{}, time.Time{}, response.ErrorInvalidEndTimeDoctor
-	}
-
-	return start_, end_, nil
-}
-
-func combineDateAndTime(timeObj time.Time, referenceDate time.Time) time.Time {
-	return time.Date(
-		referenceDate.Year(),
-		referenceDate.Month(),
-		referenceDate.Day(),
-		timeObj.Hour(),
-		timeObj.Minute(),
-		0,
-		0,
-		nil,
-	)
-}
-
 func (l *doctorLogic) validateDoctor(doctor *model.Doctor) (string, error) {
 	err := validate.DNIDoctor(doctor)
 	if err != nil {
@@ -255,19 +206,22 @@ func (l *doctorLogic) validateDoctor(doctor *model.Doctor) (string, error) {
 
 func (l *doctorLogic) validateUpdatedDoctorFields(doctor *model.Doctor, doctorUpdate *model.Doctor) (string, error) {
 	if doctor.DNI != doctorUpdate.DNI {
-		if err := validate.DNIDoctor(doctor); err != nil {
+		err := validate.DNIDoctor(doctor)
+		if err != nil {
 			return "", err
 		}
 	}
 
 	if doctor.PhoneNumber != doctorUpdate.PhoneNumber {
-		if err := validate.PhoneNumberDoctor(doctor); err != nil {
+		err := validate.PhoneNumberDoctor(doctor)
+		if err != nil {
 			return "", err
 		}
 	}
 
 	if doctor.Email != doctorUpdate.Email {
-		if err := validate.EmailDoctor(doctor); err != nil {
+		err := validate.EmailDoctor(doctor)
+		if err != nil {
 			return "", err
 		}
 	}

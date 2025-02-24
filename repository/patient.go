@@ -21,7 +21,11 @@ func NewPatientRepository(db *gorm.DB) PatientRepository {
 func (r *patientRepository) GetPatientByDNI(DNI string) (*model.Patient, error) {
 	var patient model.Patient
 
-	if err := r.db.Where("dni = ?", DNI).First(&patient).Error; err != nil {
+	err := r.db.
+		Where("dni = ?", DNI).
+		First(&patient).
+		Error
+	if err != nil {
 		if err.Error() == "record not found" {
 			return nil, response.ErrorPatientNotFoundDNI
 		}

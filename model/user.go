@@ -7,5 +7,3 @@ type User struct {
 	Email    string `gorm:"size:50;not null"`
 	Password string `gorm:"size:50;not null"`
 }
-
-

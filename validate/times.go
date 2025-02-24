@@ -30,12 +30,7 @@ func FormatDate(t time.Time) string {
 
 func IsDateInPast(date time.Time) bool {
 	now := time.Now()
-
-	if date.Before(now) {
-		return true
-	}
-
-	return false
+	return date.Before(now)
 }
 
 func IsStartBeforeEnd(start, end time.Time) bool {
@@ -49,5 +44,6 @@ func IsWithinTimeRange(start, end, rangeStart, rangeEnd time.Time, includeStart,
 
 	startOK := start.After(rangeStart) || (includeStart && start.Equal(rangeStart))
 	endOK := end.Before(rangeEnd) || (includeEnd && end.Equal(rangeEnd))
+
 	return startOK && endOK
 }

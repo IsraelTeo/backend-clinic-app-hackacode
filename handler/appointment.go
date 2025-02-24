@@ -3,6 +3,7 @@ package handler
 import (
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/IsraelTeo/clinic-backend-hackacode-app/appointment"
 	"github.com/IsraelTeo/clinic-backend-hackacode-app/model"
@@ -53,7 +54,17 @@ func (h *AppointmentHandler) GetAppointmentByID(c echo.Context) error {
 func (h *AppointmentHandler) GetAllAppointments(c echo.Context) error {
 	log.Println("appointment-handler: request received in GetAllAppointments")
 
-	appointments, err := h.logicAppointment.GetAllAppointments()
+	limit, err := strconv.Atoi(c.QueryParam("limit"))
+	if err != nil {
+		limit = 10
+	}
+
+	offset, err := strconv.Atoi(c.QueryParam("offset"))
+	if err != nil {
+		offset = 0
+	}
+
+	appointments, err := h.logicAppointment.GetAllAppointments(limit, offset)
 	if len(appointments) == 0 {
 		return response.WriteError(&response.WriteResponse{
 			C:       c,
@@ -84,8 +95,9 @@ func (h *AppointmentHandler) CreateAppointment(c echo.Context) error {
 	log.Println("appointment-handler: request received in CreateAppointment")
 
 	appointment := model.Appointment{}
-	if err := c.Bind(&appointment); err != nil {
-		log.Printf("handler: error binding request: %v", err)
+
+	err := c.Bind(&appointment)
+	if err != nil {
 		return response.WriteError(&response.WriteResponse{
 			C:       c,
 			Message: response.ErrorBadRequest.Error(),
@@ -125,7 +137,9 @@ func (h *AppointmentHandler) UpdateAppointment(c echo.Context) error {
 	log.Printf("appointment-handler: request received in UpdateAppointment with ID: %d", ID)
 
 	appointment := model.Appointment{}
-	if err := c.Bind(&appointment); err != nil {
+
+	err = c.Bind(&appointment)
+	if err != nil {
 		return response.WriteError(&response.WriteResponse{
 			C:       c,
 			Message: response.ErrorBadRequest.Error(),
@@ -165,7 +179,8 @@ func (h *AppointmentHandler) DeleteAppointment(c echo.Context) error {
 
 	log.Printf("appointment-handler: request received in DeleteAppointment with ID: %d", ID)
 
-	if err := h.logicAppointment.DeleteAppointment(ID); err != nil {
+	err = h.logicAppointment.DeleteAppointment(ID)
+	if err != nil {
 		return response.WriteError(&response.WriteResponse{
 			C:       c,
 			Message: response.ErrorToDeletedDoctor.Error(),

@@ -12,7 +12,7 @@ import (
 type PatientLogic interface {
 	GetPatientByID(ID uint) (*model.Patient, error)
 	GetPatientByDNI(DNI string) (*model.Patient, error)
-	GetAllPatients() ([]model.Patient, error)
+	GetAllPatients(limit, offset int) ([]model.Patient, error)
 	CreatePatient(patient *model.Patient) error
 	UpdatePatient(ID uint, patient *model.Patient) error
 	DeletePatient(ID uint) error
@@ -54,8 +54,8 @@ func (l *patientLogic) GetPatientByDNI(DNI string) (*model.Patient, error) {
 	return patient, nil
 }
 
-func (l *patientLogic) GetAllPatients() ([]model.Patient, error) {
-	patients, err := l.repositoryPatient.GetAll()
+func (l *patientLogic) GetAllPatients(limit, offset int) ([]model.Patient, error) {
+	patients, err := l.repositoryPatient.GetAll(limit, offset)
 	if err != nil {
 		log.Printf("patient-logic: Error fetching patients: %v", err)
 		return nil, response.ErrorPatientsNotFound
@@ -70,11 +70,13 @@ func (l *patientLogic) GetAllPatients() ([]model.Patient, error) {
 }
 
 func (l *patientLogic) CreatePatient(patient *model.Patient) error {
-	if err := validate.PatientToCreate(patient); err != nil {
+	err := validate.PatientToCreate(patient)
+	if err != nil {
 		return err
 	}
 
-	if err := l.repositoryPatient.Create(patient); err != nil {
+	err = l.repositoryPatient.Create(patient)
+	if err != nil {
 		log.Printf("patient-logic: Error saving patient: %v", err)
 		return response.ErrorToCreatedPatient
 	}
@@ -89,7 +91,8 @@ func (l *patientLogic) UpdatePatient(ID uint, patient *model.Patient) error {
 		return response.ErrorPatientNotFoundID
 	}
 
-	if err := validate.PatientToUpdate(patient, patientUpdate); err != nil {
+	err = validate.PatientToUpdate(patient, patientUpdate)
+	if err != nil {
 		return err
 	}
 
@@ -102,7 +105,8 @@ func (l *patientLogic) UpdatePatient(ID uint, patient *model.Patient) error {
 	patientUpdate.Address = patient.Address
 	patientUpdate.Insurance = patient.Insurance
 
-	if err = l.repositoryPatient.Update(patientUpdate); err != nil {
+	err = l.repositoryPatient.Update(patientUpdate)
+	if err != nil {
 		log.Printf("patient-logic: Error updating patient with ID %d: %v", ID, err)
 		return response.ErrorToUpdatedPatient
 	}
@@ -111,17 +115,20 @@ func (l *patientLogic) UpdatePatient(ID uint, patient *model.Patient) error {
 }
 
 func (l *patientLogic) DeletePatient(ID uint) error {
-	if _, err := l.repositoryPatient.GetByID(ID); err != nil {
+	_, err := l.repositoryPatient.GetByID(ID)
+	if err != nil {
 		log.Printf("patient-logic: Error fetching patient with ID %d: %v to deleting", ID, err)
 		return response.ErrorPatientNotFoundID
 	}
 
-	if err := l.repositoryAppointmentMain.UnlinkPatientAppointments(ID); err != nil {
+	err = l.repositoryAppointmentMain.UnlinkPatientAppointments(ID)
+	if err != nil {
 		log.Printf("patient-logic: Error unlinking appointments for patient with ID %d: %v", ID, err)
 		return response.ErrorUnlinkingAppointments
 	}
 
-	if err := l.repositoryPatient.Delete(ID); err != nil {
+	err = l.repositoryPatient.Delete(ID)
+	if err != nil {
 		log.Printf("patient-logic: Error deleting patient with ID %d: %v", ID, err)
 		return response.ErrorToDeletedPatient
 	}

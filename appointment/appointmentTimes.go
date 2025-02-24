@@ -1,7 +1,6 @@
 package appointment
 
 import (
-	"log"
 	"strings"
 	"time"
 
@@ -25,17 +24,13 @@ func NewAppointmentTime(repositoryAppointmentMain repository.AppointmentReposito
 }
 
 func (l *appointmentTime) parseStartAndEndTime(startTimeStr, endTimeStr string) (time.Time, time.Time, error) {
-	log.Printf("appointment-times-logic -> method: parseStartAndTime: received")
-
 	startTime, err := validate.ParseTime(startTimeStr)
 	if err != nil {
-		log.Printf("appointment-times-logic -> method: ParseStartAndTime: Invalid start time format: %v", err)
 		return time.Time{}, time.Time{}, err
 	}
 
 	endTime, err := validate.ParseTime(endTimeStr)
 	if err != nil {
-		log.Printf("appointment-times-logic -> method: parseStartAndTime: Invalid end time format: %v", err)
 		return time.Time{}, time.Time{}, err
 	}
 
@@ -43,17 +38,13 @@ func (l *appointmentTime) parseStartAndEndTime(startTimeStr, endTimeStr string) 
 }
 
 func (l *appointmentTime) parseTimesAndDate(appointment *model.Appointment) (time.Time, time.Time, time.Time, error) {
-	log.Printf("appointment-times-logic -> method: parseTimesAndDate: received")
-
 	startTime, endTime, err := l.parseStartAndEndTime(appointment.StartTime, appointment.EndTime)
 	if err != nil {
-		log.Printf("appointment-times-logic -> method: parseTimesAndDate: Invalid appointment date format: %v", err)
 		return time.Time{}, time.Time{}, time.Time{}, err
 	}
 
 	appointmentDate, err := validate.ParseDate(appointment.Date)
 	if err != nil {
-		log.Printf("appointment-times-logic v-> method: parseTimesAndDate : Invalid appointment date format: %v", err)
 		return time.Time{}, time.Time{}, time.Time{}, err
 	}
 
@@ -61,8 +52,6 @@ func (l *appointmentTime) parseTimesAndDate(appointment *model.Appointment) (tim
 }
 
 func (l *appointmentTime) hasTimeConflict(appointment *model.Appointment, startTimeAppointment, endTimeAppointment, appointmentDate time.Time) error {
-	log.Printf("appointment-times-logic -> method:  hasTimeConflict: received")
-
 	doctor, err := l.repositoryDoctor.GetByID(appointment.DoctorID)
 	if err != nil {
 		return response.ErrorDoctorNotFoundID
@@ -115,50 +104,22 @@ func (l *appointmentTime) hasTimeConflict(appointment *model.Appointment, startT
 	return nil
 }
 
-//para validar que la cita nueva no cruce horario con otra cita del médico
-/*for _, doctorAppointment := range doctorAppointments {
-	if doctorAppointment.Date != appointmentDate.Format("2006-01-02") {
-		continue
-	}
-
-	parsedDoctorStartTime, parsedDoctorEndTime, err := l.parseStartAndEndTime(doctorAppointment.StartTime, doctorAppointment.EndTime)
-	if err != nil {
-		log.Println("❌ Error al parsear los horarios de las citas existentes")
-		return err
-	}
-
-	appointmentStartHour := startTimeAppointment.Hour()
-	appointmentEndHour := endTimeAppointment.Hour()
-	doctorStartHour := parsedDoctorStartTime.Hour()
-	doctorEndHour := parsedDoctorEndTime.Hour()
-
-	if appointmentStartHour < doctorEndHour || appointmentEndHour > doctorStartHour {
-		return response.ErrorAppointmentTimeConflict
-	}
-}*/
-
 func (l *appointmentTime) ValidateAppointmentTime(appointment *model.Appointment) error {
-	log.Printf("appointment-times-logic -> method: ValidateAppointmentTime: received")
-
 	startTime, endTime, appointmentDate, err := l.parseTimesAndDate(appointment)
 	if err != nil {
 		return err
 	}
 
-	log.Printf("Nueva cita: Fecha: %v, Inicio: %v, Fin: %v", appointment.Date, startTime, endTime)
-
 	if validate.IsDateInPast(appointmentDate) {
-		log.Printf("appointment-times-logic -> method: ValidateAppointmentTime: Appointment date is in the past: %v", appointmentDate)
 		return response.ErrorAppointmentDateInPast
 	}
 
 	if !validate.IsStartBeforeEnd(startTime, endTime) {
-		log.Printf("appointment-times-logic -> method: ValidateAppointmentTime: Start time is not before end time: %v and %v", startTime, endTime)
 		return response.ErrorInvalidAppointmentTimeRange
 	}
 
-	if err := l.hasTimeConflict(appointment, startTime, endTime, appointmentDate); err != nil {
-		log.Printf("appointment-times-logic -> method: ValidateAppointmentTime: Appointment time conflicts with existing appointments")
+	err = l.hasTimeConflict(appointment, startTime, endTime, appointmentDate)
+	if err != nil {
 		return err
 	}
 

@@ -57,9 +57,9 @@ func setUpPackage(api *echo.Group) {
 	packageRepository := repository.NewRepository[model.Package](db.GDB)
 	packageRepositoryMain := repository.NewPackageRepository(db.GDB)
 	serviceRepository := repository.NewRepository[model.Service](db.GDB)
-
-	packageLogic := logic.NewPackageLogic(packageRepository, packageRepositoryMain, serviceRepository)
 	serviceRepositoryMain := repository.NewServiceRepository(db.GDB)
+
+	packageLogic := logic.NewPackageLogic(packageRepository, packageRepositoryMain, serviceRepository, serviceRepositoryMain)
 	serviceLogic := logic.NewServiceLogic(serviceRepository, serviceRepositoryMain)
 	packageHandler := handler.NewPackageHandler(packageLogic, serviceLogic)
 
@@ -110,47 +110,30 @@ func setUpAppointment(api *echo.Group) {
 	appointmentRepo := repository.NewRepository[model.Appointment](db.GDB)
 	appointmentRepoMain := repository.NewAppointmentRepository(db.GDB)
 	doctorRepo := repository.NewRepository[model.Doctor](db.GDB)
-	//doctorRepoMain := repository.NewDoctorRepository(db.GDB)
 	patientRepo := repository.NewRepository[model.Patient](db.GDB)
 	patientRepoMain := repository.NewPatientRepository(db.GDB)
 	serviceRepo := repository.NewRepository[model.Service](db.GDB)
 	packageRepo := repository.NewRepository[model.Package](db.GDB)
 	packageRepoMain := repository.NewPackageRepository(db.GDB)
-
-	// Lógica de negocio
-	appointmentPatientLogic := logic.NewPatientLogic(patientRepo, patientRepoMain, appointmentRepoMain)
 	appointmentDoctorLogic := appointment.NewAppointmentDoctorID(doctorRepo)
-
-	appointmentPatientBodyLogic := appointment.NewAppointmentPatientBody(appointmentPatientLogic)
-	appointmentPatientIDLogic := appointment.NewAppointmentPatientID(patientRepo)
 	appointmentServiceIDLogic := appointment.NewAppointmentServiceID(appointmentRepo, serviceRepo)
 	appointmentPackageIDLogic := appointment.NewAppointmentPackageID(packageRepoMain)
 	appointmentTimeLogic := appointment.NewAppointmentTime(appointmentRepoMain, doctorRepo)
-
-	// Corrección en la creación de la instancia para AppointmentDoctor
 	appointmentDoctor := appointment.NewAppointmentDoctorID(doctorRepo)
 
-	// Creación de la lógica para la creación de citas
 	logicAppointmentCreate := appointment.NewAppointmentCreate(
-		appointmentRepo, doctorRepo, serviceRepo, packageRepo, patientRepo, patientRepoMain,
-		appointmentPatientBodyLogic, appointmentDoctor, appointmentPackageIDLogic,
-		appointmentPatientIDLogic, appointmentServiceIDLogic, appointmentTimeLogic,
+		appointmentRepo,
+		doctorRepo,
+		serviceRepo,
+		packageRepo,
+		patientRepo,
+		patientRepoMain,
+		appointmentDoctor,
+		appointmentPackageIDLogic,
+		appointmentServiceIDLogic,
+		appointmentTimeLogic,
 	)
 
-	/*
-		repositoryAppointment repository.Repository[model.Appointment],
-		repositoryDoctor repository.Repository[model.Doctor],
-		repositoryService repository.Repository[model.Service],
-		repositoryPackage repository.Repository[model.Package],
-		repositoryPatient repository.Repository[model.Patient],
-		appointmentPatientBody AppointmentPatientBody,
-		appointmentDoctor AppointmentDoctorID,
-		appointmentPackageID AppointmentPackageID,
-		appointmentPatientID AppointmentPatientID,
-		appointmentServiceID AppointmentServiceID,
-		appointmentTime AppointmentTime,
-	*/
-	// Creación de la lógica para la actualización de citas
 	logicAppointmentUpdate := appointment.NewAppointmentUpdate(
 		appointmentRepo,
 		doctorRepo,
@@ -158,24 +141,26 @@ func setUpAppointment(api *echo.Group) {
 		packageRepo,
 		patientRepo,
 		patientRepoMain,
-		appointmentPatientBodyLogic,
 		appointmentDoctorLogic,
 		appointmentPackageIDLogic,
-		appointmentPatientIDLogic,
 		appointmentServiceIDLogic,
 		appointmentTimeLogic,
 	)
 
-	// Creación de la lógica general de citas
 	logicAppointment := appointment.NewAppointmentLogic(
-		appointmentRepo, appointmentRepoMain, doctorRepo, patientRepo, serviceRepo, packageRepoMain, packageRepo,
-		logicAppointmentCreate, logicAppointmentUpdate,
+		appointmentRepo,
+		appointmentRepoMain,
+		doctorRepo,
+		patientRepo,
+		serviceRepo,
+		packageRepoMain,
+		packageRepo,
+		logicAppointmentCreate,
+		logicAppointmentUpdate,
 	)
 
-	// Creación del handler de citas
 	appointmentHandler := handler.NewAppointmentHandler(logicAppointment)
 
-	// Rutas del API para citas
 	appointment := api.Group("/appointments")
 	appointment.GET(idPath, auth.ValidateJWT(appointmentHandler.GetAppointmentByID))
 	appointment.GET(voidPath, auth.ValidateJWT(appointmentHandler.GetAllAppointments))

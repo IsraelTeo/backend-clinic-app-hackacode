@@ -23,7 +23,8 @@ func (h *PaymentHandler) PaymentRegister(c echo.Context) error {
 
 	payment := model.Payment{}
 
-	if err := c.Bind(&payment); err != nil {
+	err := c.Bind(&payment)
+	if err != nil {
 		return response.WriteError(&response.WriteResponse{
 			C:       c,
 			Message: err.Error(),
@@ -36,7 +37,7 @@ func (h *PaymentHandler) PaymentRegister(c echo.Context) error {
 	if err != nil {
 		return response.WriteError(&response.WriteResponse{
 			C:       c,
-			Message: "Error processing payment",
+			Message: response.ErrorProcessingPayment.Error(),
 			Status:  http.StatusInternalServerError,
 			Data:    nil,
 		})

@@ -15,9 +15,7 @@ import (
 
 func main() {
 	// Cargar las variables de entorno
-	if err := godotenv.Load(); err != nil {
-		log.Fatal("Error loading .env file")
-	}
+	godotenv.Load()
 
 	// Inicializar la configuración cargando las variables de entorno
 	cfg := config.InitConfig()
@@ -30,7 +28,8 @@ func main() {
 	fmt.Println("Database connection established successfully!")
 
 	// Migración de entidades
-	if err := db.MigrateDB(); err != nil {
+	err = db.MigrateDB()
+	if err != nil {
 		log.Fatalf("Error migrating database: %v", err)
 	}
 	fmt.Println("Database migration successful")
@@ -55,7 +54,8 @@ func main() {
 	e.Use(middleware.CORSWithConfig(config.CorsConfig()))
 
 	//Inicia servidor en el puerto: 8080
-	if err := config.StartServer(e, ":8080"); err != nil {
+	err = config.StartServer(e, ":8080")
+	if err != nil {
 		log.Fatalf("err: %v", err)
 	}
 

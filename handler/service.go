@@ -3,6 +3,7 @@ package handler
 import (
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/IsraelTeo/clinic-backend-hackacode-app/logic"
 	"github.com/IsraelTeo/clinic-backend-hackacode-app/model"
@@ -53,7 +54,17 @@ func (h *ServiceHandler) GetServiceByID(c echo.Context) error {
 func (h *ServiceHandler) GetAllServices(c echo.Context) error {
 	log.Println("service-handler: request received in GetAllServices")
 
-	services, err := h.logic.GetAllServices()
+	limit, err := strconv.Atoi(c.QueryParam("limit"))
+	if err != nil {
+		limit = 10
+	}
+
+	offset, err := strconv.Atoi(c.QueryParam("offset"))
+	if err != nil {
+		offset = 0
+	}
+
+	services, err := h.logic.GetAllServices(limit, offset)
 	if len(services) == 0 {
 		return response.WriteSuccess(&response.WriteResponse{
 			C:       c,
@@ -84,7 +95,9 @@ func (h *ServiceHandler) CreateService(c echo.Context) error {
 	log.Println("service-handler: request received in CreateService")
 
 	service := model.Service{}
-	if err := c.Bind(&service); err != nil {
+
+	err := c.Bind(&service)
+	if err != nil {
 		return response.WriteError(&response.WriteResponse{
 			C:       c,
 			Message: err.Error(),
@@ -93,7 +106,8 @@ func (h *ServiceHandler) CreateService(c echo.Context) error {
 		})
 	}
 
-	if err := h.logic.CreateService(&service); err != nil {
+	err = h.logic.CreateService(&service)
+	if err != nil {
 		return response.WriteError(&response.WriteResponse{
 			C:       c,
 			Message: err.Error(),
@@ -124,7 +138,9 @@ func (h *ServiceHandler) UpdateService(c echo.Context) error {
 	log.Println("service-handler: request received in UpdateService")
 
 	service := model.Service{}
-	if err := c.Bind(&service); err != nil {
+
+	err = c.Bind(&service)
+	if err != nil {
 		return response.WriteError(&response.WriteResponse{
 			C:       c,
 			Message: err.Error(),
@@ -133,7 +149,8 @@ func (h *ServiceHandler) UpdateService(c echo.Context) error {
 		})
 	}
 
-	if err := h.logic.UpdateService(uint(ID), &service); err != nil {
+	err = h.logic.UpdateService(uint(ID), &service)
+	if err != nil {
 		return response.WriteError(&response.WriteResponse{
 			C:       c,
 			Message: err.Error(),
@@ -163,7 +180,8 @@ func (h *ServiceHandler) DeleteService(c echo.Context) error {
 
 	log.Println("service-handler: request received in DeleteService")
 
-	if err := h.logic.DeleteService(ID); err != nil {
+	err = h.logic.DeleteService(ID)
+	if err != nil {
 		return response.WriteError(&response.WriteResponse{
 			C:       c,
 			Message: err.Error(),

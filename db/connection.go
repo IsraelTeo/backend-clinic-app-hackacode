@@ -19,14 +19,15 @@ func Connection(cfg *config.Config) error {
 		cfg.DBPort,
 		cfg.DBName)
 
-	fmt.Printf("Connecting to DB with DSN: %s\n", DSN)
-
 	var err error
-	if GDB, err = gorm.Open(mysql.Open(DSN), &gorm.Config{}); err != nil {
+
+	GDB, err = gorm.Open(mysql.Open(DSN), &gorm.Config{})
+	if err != nil {
 		return err
 	}
 
 	GDB = GDB.Debug()
+
 	return nil
 }
 
@@ -39,6 +40,7 @@ func MigrateDB() error {
 		&model.Appointment{},
 		&model.Doctor{},
 	)
+
 	if err != nil {
 		return err
 	}

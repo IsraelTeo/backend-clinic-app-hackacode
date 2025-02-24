@@ -9,7 +9,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-// Se define una estructura llamada Config que agrupa varios de configuración
+// Parametros de configuración
 type Config struct {
 	PublicHost            string
 	Port                  string
@@ -47,7 +47,8 @@ func InitConfig() *Config {
 func StartServer(e *echo.Echo, port string) error {
 	fmt.Printf("Server starting on port: %s...\n", port)
 
-	if err := e.Start(port); err != nil {
+	err := e.Start(port)
+	if err != nil {
 		return fmt.Errorf("error starting server on port %s: %w", port, err)
 	}
 

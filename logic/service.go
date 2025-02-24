@@ -10,7 +10,7 @@ import (
 
 type ServiceLogic interface {
 	GetServiceByID(ID uint) (*model.Service, error)
-	GetAllServices() ([]model.Service, error)
+	GetAllServices(limit, offset int) ([]model.Service, error)
 	CreateService(service *model.Service) error
 	UpdateService(ID uint, service *model.Service) error
 	DeleteService(ID uint) error
@@ -35,8 +35,8 @@ func (l *serviceLogic) GetServiceByID(ID uint) (*model.Service, error) {
 	return service, nil
 }
 
-func (l *serviceLogic) GetAllServices() ([]model.Service, error) {
-	services, err := l.repository.GetAll()
+func (l *serviceLogic) GetAllServices(limit, offset int) ([]model.Service, error) {
+	services, err := l.repository.GetAll(limit, offset)
 	if err != nil {
 		log.Printf("service-logic: Error fetching services: %v", err)
 		return nil, response.ErrorServiceNotFound
@@ -46,7 +46,8 @@ func (l *serviceLogic) GetAllServices() ([]model.Service, error) {
 }
 
 func (l *serviceLogic) CreateService(service *model.Service) error {
-	if err := l.repository.Create(service); err != nil {
+	err := l.repository.Create(service)
+	if err != nil {
 		log.Printf("service-logic: Error saving medical service: %v", err)
 		return response.ErrorToCreatedService
 	}
@@ -65,7 +66,8 @@ func (l *serviceLogic) UpdateService(ID uint, service *model.Service) error {
 	serviceUpdate.Description = service.Description
 	serviceUpdate.Price = service.Price
 
-	if err = l.repository.Update(serviceUpdate); err != nil {
+	err = l.repository.Update(serviceUpdate)
+	if err != nil {
 		log.Printf("service-logic: Error updating medical service with ID %d: %v", ID, err)
 		return response.ErrorToUpdatedService
 	}
@@ -74,12 +76,14 @@ func (l *serviceLogic) UpdateService(ID uint, service *model.Service) error {
 }
 
 func (l *serviceLogic) DeleteService(ID uint) error {
-	if _, err := l.repository.GetByID(ID); err != nil {
+	_, err := l.repository.GetByID(ID)
+	if err != nil {
 		log.Printf("service-logic: Error fetching service with ID %d: %v", ID, err)
 		return response.ErrorServiceNotFound
 	}
 
-	if err := l.repositoryService.Delete(ID); err != nil {
+	err = l.repositoryService.Delete(ID)
+	if err != nil {
 		log.Printf("services-logic: Error deleting customer with ID %d: %v", ID, err)
 		return response.ErrorToDeletedService
 	}

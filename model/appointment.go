@@ -1,26 +1,12 @@
 package model
 
 //Cita médica
-/*type Appointment struct {
-	ID          uint     `gorm:"primaryKey;autoIncrement" json:"id"`
-	PatientID   uint     `json:"patient_id" gorm:"constraint:OnDelete:CASCADE"`
-	Patient     *Patient `json:"patient" gorm:"foreignKey:PatientID"`
-	DoctorID    uint     `json:"doctor_id" validate:"required"`
-	ServiceID   uint     `json:"service_id"`
-	PackageID   uint     `json:"package_id"`
-	Date        string   `json:"date" validate:"required"`
-	StartTime   string   `json:"start_time" validate:"required"`
-	EndTime     string   `json:"end_time" validate:"required"`
-	Paid        bool     `json:"paid"`
-	TotalAmount float64  `json:"total_amount"`
-}*/
-
 type Appointment struct {
 	ID          uint     `gorm:"primaryKey;autoIncrement" json:"id"`
 	DoctorID    uint     `json:"doctor_id" validate:"required"`
-	PatientID   uint     `json:"-"` // Se guarda en la BD pero no se expone en el JSON
+	PatientID   uint     `json:"-"`
 	Patient     *Patient `json:"patient,omitempty" gorm:"foreignKey:PatientID"`
-	PatientDNI  string   `json:"patient_dni" validate:"required,max=20" gorm:"-"` // Solo para la solicitud, no en BD
+	PatientDNI  string   `json:"patient_dni" validate:"required,max=20" gorm:"-"`
 	ServiceID   uint     `json:"service_id"`
 	PackageID   uint     `json:"package_id"`
 	Date        string   `json:"date" validate:"required"`

@@ -3,6 +3,7 @@ package handler
 import (
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/IsraelTeo/clinic-backend-hackacode-app/logic"
 	"github.com/IsraelTeo/clinic-backend-hackacode-app/model"
@@ -54,7 +55,17 @@ func (h *PackageHandler) GetPackageByID(c echo.Context) error {
 func (h *PackageHandler) GetAllPackages(c echo.Context) error {
 	log.Println("package-handler: request received in GetAllPackages")
 
-	packageServices, err := h.logicPkg.GetAllPackages()
+	limit, err := strconv.Atoi(c.QueryParam("limit"))
+	if err != nil {
+		limit = 10
+	}
+
+	offset, err := strconv.Atoi(c.QueryParam("offset"))
+	if err != nil {
+		offset = 0
+	}
+
+	packageServices, err := h.logicPkg.GetAllPackages(limit, offset)
 	if len(packageServices) == 0 {
 		return response.WriteError(&response.WriteResponse{
 			C:       c,
@@ -85,7 +96,9 @@ func (h *PackageHandler) CreatePackage(c echo.Context) error {
 	log.Println("package-handler: request received in CreatePackage")
 
 	var pkgRequest model.CreatePackageRequest
-	if err := c.Bind(&pkgRequest); err != nil {
+
+	err := c.Bind(&pkgRequest)
+	if err != nil {
 		return response.WriteError(&response.WriteResponse{
 			C:       c,
 			Message: err.Error(),
@@ -103,7 +116,8 @@ func (h *PackageHandler) CreatePackage(c echo.Context) error {
 		})
 	}
 
-	if err := h.logicPkg.CreatePackage(&pkgRequest); err != nil {
+	err = h.logicPkg.CreatePackage(&pkgRequest)
+	if err != nil {
 		return response.WriteError(&response.WriteResponse{
 			C:       c,
 			Message: err.Error(),
@@ -134,7 +148,9 @@ func (h *PackageHandler) UpdatePackage(c echo.Context) error {
 	log.Printf("package-handler: request received in UpdatePackage with ID: %d", ID)
 
 	packageServices := model.CreatePackageRequest{}
-	if err := c.Bind(&packageServices); err != nil {
+
+	err = c.Bind(&packageServices)
+	if err != nil {
 		return response.WriteError(&response.WriteResponse{
 			C:       c,
 			Message: err.Error(),
@@ -143,7 +159,8 @@ func (h *PackageHandler) UpdatePackage(c echo.Context) error {
 		})
 	}
 
-	if err := h.logicPkg.UpdatePackage(uint(ID), &packageServices); err != nil {
+	err = h.logicPkg.UpdatePackage(uint(ID), &packageServices)
+	if err != nil {
 		return response.WriteError(&response.WriteResponse{
 			C:       c,
 			Message: err.Error(),
@@ -173,7 +190,8 @@ func (h *PackageHandler) DeletePackage(c echo.Context) error {
 
 	log.Printf("package-handler: request received in DeletePackage with ID: %d", ID)
 
-	if err := h.logicPkg.DeletePackage(uint(ID)); err != nil {
+	err = h.logicPkg.DeletePackage(uint(ID))
+	if err != nil {
 		return response.WriteError(&response.WriteResponse{
 			C:       c,
 			Message: err.Error(),

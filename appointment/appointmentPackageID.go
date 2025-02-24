@@ -1,8 +1,6 @@
 package appointment
 
 import (
-	"log"
-
 	"github.com/IsraelTeo/clinic-backend-hackacode-app/calculation"
 	"github.com/IsraelTeo/clinic-backend-hackacode-app/model"
 	"github.com/IsraelTeo/clinic-backend-hackacode-app/repository"
@@ -22,11 +20,8 @@ func NewAppointmentPackageID(repositoryPackageMain repository.PackageRepository)
 }
 
 func (l *appointmentPackageID) IsPackageIDExists(ID uint, hasInsurance bool) (*model.FinalPackagePriceWithInsegurance, error) {
-	log.Println("appointment-package-id-logic -> method:  IsPackageIDExists: received")
-
 	pkg, err := l.repositoryPackageMain.GetByID(ID)
 	if err != nil || pkg == nil {
-		log.Printf("appointment-package-id-logic -> method:  IsPackageIDExists: The package with ID %d not exists: %v", ID, err)
 		return nil, response.ErrorPackageNotFound
 	}
 

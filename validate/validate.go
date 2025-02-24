@@ -2,7 +2,6 @@ package validate
 
 import (
 	"fmt"
-	"log"
 	"strconv"
 	"strings"
 	"time"
@@ -130,10 +129,8 @@ func TranslateDay(day string) string {
 }
 
 func IsDayAvailable(appointmentDay string, validDays []string) bool {
-	log.Printf("appointment date \n: %s", appointmentDay)
 	appointmentDayNormalized := normalizeDay(appointmentDay)
 
-	log.Printf("appointment date \n: %v ", validDays)
 	for _, validDay := range validDays {
 		if normalizeDay(validDay) == appointmentDayNormalized {
 			return true
@@ -164,7 +161,10 @@ func removeAccents(input string) string {
 }
 
 func CheckEmailExists[T any](email string, entity *T) bool {
-	err := db.GDB.Where("email = ?", email).First(&entity).Error
+	err := db.GDB.
+		Where("email = ?", email).
+		First(&entity).
+		Error
 	if err != nil {
 		return false
 	}
@@ -173,7 +173,10 @@ func CheckEmailExists[T any](email string, entity *T) bool {
 }
 
 func CheckDNIExists[T any](DNI string, entity *T) bool {
-	err := db.GDB.Where("DNI = ?", DNI).First(&entity).Error
+	err := db.GDB.
+		Where("DNI = ?", DNI).
+		First(&entity).
+		Error
 	if err != nil {
 		return false
 	}
@@ -182,7 +185,10 @@ func CheckDNIExists[T any](DNI string, entity *T) bool {
 }
 
 func CheckPhoneNumberExists[T any](phoneNumber string, entity *T) bool {
-	err := db.GDB.Where("phone_number = ?", phoneNumber).First(&entity).Error
+	err := db.GDB.
+		Where("phone_number = ?", phoneNumber).
+		First(&entity).
+		Error
 	if err != nil {
 		return false
 	}

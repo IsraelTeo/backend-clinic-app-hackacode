@@ -3,6 +3,7 @@ package handler
 import (
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/IsraelTeo/clinic-backend-hackacode-app/logic"
 	"github.com/IsraelTeo/clinic-backend-hackacode-app/model"
@@ -84,7 +85,17 @@ func (h *PatientHandler) GetPatientByDNI(c echo.Context) error {
 func (h *PatientHandler) GetAllPatients(c echo.Context) error {
 	log.Println("patient-handler: request received in GetAllPatients")
 
-	patients, err := h.logic.GetAllPatients()
+	limit, err := strconv.Atoi(c.QueryParam("limit"))
+	if err != nil {
+		limit = 10
+	}
+
+	offset, err := strconv.Atoi(c.QueryParam("offset"))
+	if err != nil {
+		offset = 0
+	}
+
+	patients, err := h.logic.GetAllPatients(limit, offset)
 	if len(patients) == 0 {
 		return response.WriteError(&response.WriteResponse{
 			C:       c,
@@ -116,7 +127,9 @@ func (h *PatientHandler) CreatePatient(c echo.Context) error {
 	log.Println("patient-handler: request received in CreatePatient")
 
 	patient := model.Patient{}
-	if err := c.Bind(&patient); err != nil {
+
+	err := c.Bind(&patient)
+	if err != nil {
 		return response.WriteError(&response.WriteResponse{
 			C:       c,
 			Message: err.Error(),
@@ -125,7 +138,8 @@ func (h *PatientHandler) CreatePatient(c echo.Context) error {
 		})
 	}
 
-	if err := c.Validate(&patient); err != nil {
+	err = c.Validate(&patient)
+	if err != nil {
 		return response.WriteError(&response.WriteResponse{
 			C:       c,
 			Message: err.Error(),
@@ -134,7 +148,8 @@ func (h *PatientHandler) CreatePatient(c echo.Context) error {
 		})
 	}
 
-	if err := h.logic.CreatePatient(&patient); err != nil {
+	err = h.logic.CreatePatient(&patient)
+	if err != nil {
 		return response.WriteError(&response.WriteResponse{
 			C:       c,
 			Message: err.Error(),
@@ -165,7 +180,9 @@ func (h *PatientHandler) UpdatePatient(c echo.Context) error {
 	log.Printf("patient-handler: request received in UpdatePatient with ID: %d", ID)
 
 	patient := model.Patient{}
-	if err := c.Bind(&patient); err != nil {
+
+	err = c.Bind(&patient)
+	if err != nil {
 		return response.WriteError(&response.WriteResponse{
 			C:       c,
 			Message: err.Error(),
@@ -174,7 +191,8 @@ func (h *PatientHandler) UpdatePatient(c echo.Context) error {
 		})
 	}
 
-	if err := c.Validate(&patient); err != nil {
+	err = c.Validate(&patient)
+	if err != nil {
 		return response.WriteError(&response.WriteResponse{
 			C:       c,
 			Message: err.Error(),
@@ -183,7 +201,8 @@ func (h *PatientHandler) UpdatePatient(c echo.Context) error {
 		})
 	}
 
-	if err := h.logic.UpdatePatient(uint(ID), &patient); err != nil {
+	err = h.logic.UpdatePatient(uint(ID), &patient)
+	if err != nil {
 		return response.WriteError(&response.WriteResponse{
 			C:       c,
 			Message: err.Error(),
@@ -213,7 +232,8 @@ func (h *PatientHandler) DeletePatient(c echo.Context) error {
 
 	log.Printf("patient-handler: request received in DeletePatient with ID: %d", ID)
 
-	if err := h.logic.DeletePatient(uint(ID)); err != nil {
+	err = h.logic.DeletePatient(uint(ID))
+	if err != nil {
 		return response.WriteError(&response.WriteResponse{
 			C:       c,
 			Message: err.Error(),

@@ -3,7 +3,6 @@ package calculation
 import "github.com/IsraelTeo/clinic-backend-hackacode-app/model"
 
 func TotalServiceAmount(servicePrice float64, hasInsurance bool) *model.FinalServicePrice {
-
 	var discount float64 = 0.0
 
 	if hasInsurance {
@@ -20,13 +19,8 @@ func TotalServiceAmount(servicePrice float64, hasInsurance bool) *model.FinalSer
 }
 
 func TotalServicePackageAmount(services []model.Service) *model.FinalPackagePrice {
-	//verifica que la lista de servicios no esté vacía
 	if len(services) == 0 {
-		return &model.FinalPackagePrice{
-			TotalAmount:     0,
-			DiscountPackage: 0,
-			FinalPrice:      0,
-		}
+		return &model.FinalPackagePrice{}
 	}
 
 	var totalAmount float64
@@ -46,12 +40,12 @@ func TotalServicePackageAmount(services []model.Service) *model.FinalPackagePric
 }
 
 func TotalServicePackageAmountToAppointment(services []model.Service, hasInsurance bool) *model.FinalPackagePriceWithInsegurance {
-	//verifica que la lista de servicios no esté vacía
 	if len(services) == 0 {
 		return &model.FinalPackagePriceWithInsegurance{}
 	}
 
 	var totalAmount float64
+
 	//calcula el precio total
 	for _, service := range services {
 		totalAmount += service.Price
@@ -75,21 +69,4 @@ func TotalServicePackageAmountToAppointment(services []model.Service, hasInsuran
 			FinalPrice:      finalPrice,
 		},
 	}
-}
-
-func CalculateTotalAmount(services []model.Service, isPackage bool, hasInsurance bool) float64 {
-	var totalAmount float64
-	for _, service := range services {
-		totalAmount += service.Price
-	}
-
-	if isPackage {
-		totalAmount *= 0.85
-	}
-
-	if hasInsurance {
-		totalAmount *= 0.80
-	}
-
-	return totalAmount
 }

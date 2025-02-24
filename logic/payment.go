@@ -28,15 +28,12 @@ func NewPaymentLogic(repositoryAppointmentMain repository.AppointmentRepository,
 }
 
 func (l paymentLogic) PaymentRegister(payment *model.Payment) (*model.PaymentResponse, error) {
-	//recibo la solicitud de pago
-	//con los datos: ID de la cita, debe buscar la cita a la ques e pagará, si no existe no se realiza ningun pago
 	appointment, err := l.repositoryAppointmentMain.GetByID(payment.AppoimentID)
 	if err != nil {
 		log.Printf("appointment: Error fetching appointment with ID %d: %v", payment.AppoimentID, err)
 		return nil, response.ErrorAppointmentNotFound
 	}
 
-	// validar que Paid en true
 	if !payment.Paid {
 		return nil, response.ErrorPaidNotTrue
 	}
@@ -45,20 +42,18 @@ func (l paymentLogic) PaymentRegister(payment *model.Payment) (*model.PaymentRes
 		return nil, response.ErrorTotalAmountEmpty
 	}
 
-	// validar totalAmount no debe ser un valor que ya se tiene del total amount de la cita, si no no se hace el pago
-	//
 	if payment.TotalAmount < appointment.TotalAmount {
 		return nil, response.ErrorTotalAmountBadRequest
 	}
 
-	// Mapa de tipos de pago válidos
+	//métodos de pago
 	validPaymentTypes := map[model.PaymentType]bool{
 		"tarjeta":     true,
 		"applicativo": true,
 		"efectivo":    true,
 	}
 
-	// Variable para almacenar si el tipo de pago es válido
+	// Variable para almacenar si el método de pago de pago existe
 	isValid := false
 
 	// Recorrer el mapa para verificar si el tipo de pago existe
@@ -69,27 +64,23 @@ func (l paymentLogic) PaymentRegister(payment *model.Payment) (*model.PaymentRes
 		}
 	}
 
-	// Si no es válido, devuelve el error
 	if !isValid {
 		log.Println("payment: Error invalid payment type")
 		return nil, response.ErrorInvalidPaymentType
 	}
 
-	//si sale bien, se le asigna el paid TRUE a la cita de la base de datos
-	if err := l.repositoryAppointmentMain.UpdatePaid(payment.AppoimentID); err != nil {
+	err = l.repositoryAppointmentMain.UpdatePaid(payment.AppoimentID)
+	if err != nil {
 		log.Printf("payment: Error updating paid status for appointment ID %d: %v", payment.AppoimentID, err)
 		return nil, response.ErrorToUpdatePaid
 	}
 
-	//Generar QR en png para que pueda descargar el paciente, y generar un PDF del recibo de la cita
-	// Generar el código QR
 	qrCodePath, err := GenerateQRCode(appointment, payment)
 	if err != nil {
 		log.Printf("payment: Error generating QR code for appointment ID %d: %v", payment.AppoimentID, err)
 		return nil, response.ErrorGeneratingQRCode
 	}
 
-	// Generar el recibo en PDF
 	pdfReceiptPath, err := GeneratePDFReceipt(appointment, payment, qrCodePath)
 	if err != nil {
 		log.Printf("payment: Error generating PDF receipt for appointment ID %d: %v", payment.AppoimentID, err)
@@ -104,7 +95,6 @@ func (l paymentLogic) PaymentRegister(payment *model.Payment) (*model.PaymentRes
 	return &paymentResponse, nil
 }
 
-// Generar QR
 func GenerateQRCode(appointment *model.Appointment, payment *model.Payment) (string, error) {
 	qrData := fmt.Sprintf(
 		"Appointment ID: %d\nPatient: %s %s\nDate: %s\nStart Time: %s\nEnd Time: %s\nPaid: %v",
@@ -113,6 +103,7 @@ func GenerateQRCode(appointment *model.Appointment, payment *model.Payment) (str
 	)
 
 	qrCodePath := fmt.Sprintf("qrcodes/appointment_%d.png", payment.AppoimentID)
+
 	err := qrcode.WriteFile(qrData, qrcode.Medium, 256, qrCodePath)
 	if err != nil {
 		log.Printf("Error generating QR code: %v", err)
@@ -122,7 +113,6 @@ func GenerateQRCode(appointment *model.Appointment, payment *model.Payment) (str
 	return qrCodePath, nil
 }
 
-// Generar PDF de recibo
 func GeneratePDFReceipt(appointment *model.Appointment, payment *model.Payment, qrCodePath string) (string, error) {
 	pdf := gofpdf.New("P", "mm", "A4", "")
 	pdf.AddPage()

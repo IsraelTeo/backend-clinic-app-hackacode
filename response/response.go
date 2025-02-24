@@ -202,6 +202,7 @@ var (
 	ErrorGeneratingQRCode      = errors.New("error al generar el código QR")
 	ErrorGeneratingPDF         = errors.New("error al generar la boleta en formato pdf")
 	ErrorInvalidPaymentType    = errors.New("el tipo de pago es inválido, ingrese: efectivo, pago por aplicación o pago con tarjeta")
+	ErrorProcessingPayment     = errors.New("error al procesar el pago")
 )
 
 type WriteResponse struct {

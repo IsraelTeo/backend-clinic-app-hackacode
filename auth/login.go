@@ -30,7 +30,9 @@ func (s *loginService) Login(c echo.Context) error {
 	log.Println("login-service: Request received in Login")
 
 	user := userLogin{}
-	if err := c.Bind(&user); err != nil {
+
+	err := c.Bind(&user)
+	if err != nil {
 		log.Printf("login-service: Error binding user input: %v", err)
 		return response.WriteError(&response.WriteResponse{
 			C:       c,

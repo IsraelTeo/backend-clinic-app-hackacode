@@ -11,27 +11,30 @@ import (
 
 type PackageLogic interface {
 	GetPackageByID(ID uint) (*model.Package, error)
-	GetAllPackages() ([]model.Package, error)
+	GetAllPackages(limit, offset int) ([]model.Package, error)
 	CreatePackage(packageServices *model.CreatePackageRequest) error
 	UpdatePackage(ID uint, packageServices *model.CreatePackageRequest) error
 	DeletePackage(ID uint) error
 }
 
 type packageLogic struct {
-	repositoryPkg     repository.Repository[model.Package]
-	repositoryPkgMain repository.PackageRepository
-	repositoryServ    repository.Repository[model.Service]
+	repositoryPkg      repository.Repository[model.Package]
+	repositoryPkgMain  repository.PackageRepository
+	repositoryServ     repository.Repository[model.Service]
+	repositoryServMain repository.ServiceRepository
 }
 
 func NewPackageLogic(
 	repositoryPkg repository.Repository[model.Package],
 	repositoryPkgMain repository.PackageRepository,
 	repositoryServ repository.Repository[model.Service],
+	repositoryServMain repository.ServiceRepository,
 ) PackageLogic {
 	return &packageLogic{
-		repositoryPkg:     repositoryPkg,
-		repositoryPkgMain: repositoryPkgMain,
-		repositoryServ:    repositoryServ,
+		repositoryPkg:      repositoryPkg,
+		repositoryPkgMain:  repositoryPkgMain,
+		repositoryServ:     repositoryServ,
+		repositoryServMain: repositoryServMain,
 	}
 }
 
@@ -45,8 +48,8 @@ func (l *packageLogic) GetPackageByID(ID uint) (*model.Package, error) {
 	return packageService, nil
 }
 
-func (l *packageLogic) GetAllPackages() ([]model.Package, error) {
-	packageServices, err := l.repositoryPkgMain.GetAll()
+func (l *packageLogic) GetAllPackages(limit, offset int) ([]model.Package, error) {
+	packageServices, err := l.repositoryPkgMain.GetAll(limit, offset)
 	if err != nil {
 		log.Printf("package-logic: Error fetching packages: %v", err)
 		return nil, response.ErrorPackageNotFound
@@ -56,7 +59,7 @@ func (l *packageLogic) GetAllPackages() ([]model.Package, error) {
 }
 
 func (l *packageLogic) CreatePackage(pkg *model.CreatePackageRequest) error {
-	services, err := l.repositoryServ.GetAll()
+	services, err := l.repositoryServMain.GetAll()
 	if err != nil {
 		log.Printf("package-logic: Error fetching services: %v", err)
 		return response.ErrorFetchingServices
@@ -87,7 +90,8 @@ func (l *packageLogic) CreatePackage(pkg *model.CreatePackageRequest) error {
 		Price:    finalPkgPrice.FinalPrice,
 	}
 
-	if err := l.repositoryPkg.Create(&pkgCreated); err != nil {
+	err = l.repositoryPkg.Create(&pkgCreated)
+	if err != nil {
 		log.Printf("package: Error saving package: %v", err)
 		return response.ErrorToCreatedPackage
 	}
@@ -102,7 +106,8 @@ func (l *packageLogic) UpdatePackage(ID uint, packageServices *model.CreatePacka
 		return response.ErrorPackageNotFound
 	}
 
-	if err := l.repositoryPkgMain.ClearServices(ID); err != nil {
+	err = l.repositoryPkgMain.ClearServices(ID)
+	if err != nil {
 		log.Printf("package: Error clearing services for package ID %d: %v", ID, err)
 		return response.ErrorClearingServices
 	}
@@ -115,6 +120,7 @@ func (l *packageLogic) UpdatePackage(ID uint, packageServices *model.CreatePacka
 			log.Printf("package: Error fetching service with ID %d: %v", serviceID, err)
 			return response.ErrorServiceNotFound
 		}
+
 		selectedServices = append(selectedServices, *serviceFound)
 	}
 
@@ -124,7 +130,8 @@ func (l *packageLogic) UpdatePackage(ID uint, packageServices *model.CreatePacka
 	existingPackage.Services = selectedServices
 	existingPackage.Price = finalPkgPrice.FinalPrice
 
-	if err = l.repositoryPkg.Update(existingPackage); err != nil {
+	err = l.repositoryPkg.Update(existingPackage)
+	if err != nil {
 		log.Printf("package: Error updating package with ID %d: %v", ID, err)
 		return response.ErrorToUpdatedPackage
 	}
@@ -133,12 +140,14 @@ func (l *packageLogic) UpdatePackage(ID uint, packageServices *model.CreatePacka
 }
 
 func (l *packageLogic) DeletePackage(ID uint) error {
-	if _, err := l.repositoryPkg.GetByID(ID); err != nil {
+	_, err := l.repositoryPkg.GetByID(ID)
+	if err != nil {
 		log.Printf("package-logic: Error fetching package with ID %d: %v", ID, err)
 		return response.ErrorPackageNotFound
 	}
 
-	if err := l.repositoryPkgMain.Delete(ID); err != nil {
+	err = l.repositoryPkgMain.Delete(ID)
+	if err != nil {
 		log.Printf("package: Error deleting package with ID %d: %v", ID, err)
 		return response.ErrorToDeletedPackage
 	}

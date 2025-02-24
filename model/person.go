@@ -11,6 +11,7 @@ type Person struct {
 	Address     string `json:"address" validate:"required,max=200"`
 }
 
+// Médico
 type Doctor struct {
 	Person
 	Especialty string  `json:"especialty" validate:"required,max=50"`
@@ -20,11 +21,13 @@ type Doctor struct {
 	Salary     float64 `json:"salary" validate:"required,numeric"`
 }
 
+// Paciente
 type Patient struct {
 	Person
 	Insurance bool `json:"health_insurance"`
 }
 
+// Días válidos para que trabaje el doctor
 type Day string
 
 const (
@@ -36,33 +39,3 @@ const (
 	Saturday  Day = "Sabado"
 	Sunday    Day = "Domingo"
 )
-
-type PersonInterface interface {
-	GetDNI() string
-	GetPhoneNumber() string
-	GetEmail() string
-}
-
-func (p *Patient) GetDNI() string {
-	return p.DNI
-}
-
-func (p *Patient) GetPhoneNumber() string {
-	return p.PhoneNumber
-}
-
-func (p *Patient) GetEmail() string {
-	return p.Email
-}
-
-func (d *Doctor) GetDNI() string {
-	return d.DNI
-}
-
-func (d *Doctor) GetPhoneNumber() string {
-	return d.PhoneNumber
-}
-
-func (d *Doctor) GetEmail() string {
-	return d.Email
-}
