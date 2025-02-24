@@ -18,8 +18,8 @@ type Appointment struct {
 
 //Pago
 type Payment struct {
-	AppoimentID uint `json:"appoiment_id" validate:"required"`
-	Paid        bool
+	AppoimentID uint        `json:"appoiment_id" validate:"required"`
+	Paid        bool        `json:"paid" validate:"required"`
 	TotalAmount float64     `json:"total_amount"`
 	PaymentType PaymentType `json:"payment_type" validate:"required"`
 }
