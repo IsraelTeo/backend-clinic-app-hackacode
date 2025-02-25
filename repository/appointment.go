@@ -18,6 +18,7 @@ type AppointmentRepository interface {
 	UpdatePaid(appointmentID uint) error
 	UnlinkPatientAppointments(patientID uint) error
 }
+
 type appointmentRepository struct {
 	db *gorm.DB
 }

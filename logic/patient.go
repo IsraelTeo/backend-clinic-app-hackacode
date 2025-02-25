@@ -84,28 +84,27 @@ func (l *patientLogic) CreatePatient(patient *model.Patient) error {
 	return nil
 }
 
-func (l *patientLogic) UpdatePatient(ID uint, patient *model.Patient) error {
-	patientUpdate, err := l.repositoryPatient.GetByID(ID)
+func (l *patientLogic) UpdatePatient(ID uint, updatePatient *model.Patient) error {
+	existingPatient, err := l.repositoryPatient.GetByID(ID)
 	if err != nil {
 		log.Printf("patient-logic: Error fetching patient with ID %d: %v", ID, err)
 		return response.ErrorPatientNotFoundID
 	}
 
-	err = validate.PatientToUpdate(patient, patientUpdate)
-	if err != nil {
+	if err := validate.PatientToUpdate(existingPatient, updatePatient); err != nil {
 		return err
 	}
 
-	patientUpdate.Name = patient.Name
-	patientUpdate.LastName = patient.LastName
-	patientUpdate.DNI = patient.DNI
-	patientUpdate.BirthDate = patient.BirthDate
-	patientUpdate.Email = patient.Email
-	patientUpdate.PhoneNumber = patient.PhoneNumber
-	patientUpdate.Address = patient.Address
-	patientUpdate.Insurance = patient.Insurance
+	existingPatient.Name = updatePatient.Name
+	existingPatient.LastName = updatePatient.LastName
+	existingPatient.DNI = updatePatient.DNI
+	existingPatient.BirthDate = updatePatient.BirthDate
+	existingPatient.Email = updatePatient.Email
+	existingPatient.PhoneNumber = updatePatient.PhoneNumber
+	existingPatient.Address = updatePatient.Address
+	existingPatient.Insurance = updatePatient.Insurance
 
-	err = l.repositoryPatient.Update(patientUpdate)
+	err = l.repositoryPatient.Update(existingPatient)
 	if err != nil {
 		log.Printf("patient-logic: Error updating patient with ID %d: %v", ID, err)
 		return response.ErrorToUpdatedPatient
