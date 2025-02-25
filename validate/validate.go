@@ -106,20 +106,6 @@ var DayToGolang = map[time.Weekday]string{
 	time.Sunday:    "Domingo",
 }
 
-func TranslateDayToSpanish(englishDay string) string {
-	daysTranslation := map[string]string{
-		"Sunday":    "domingo",
-		"Monday":    "lunes",
-		"Tuesday":   "martes",
-		"Wednesday": "miércoles",
-		"Thursday":  "jueves",
-		"Friday":    "viernes",
-		"Saturday":  "sábado",
-	}
-
-	return daysTranslation[englishDay]
-}
-
 func TranslateDay(day string) string {
 	if translated, exists := dayTranslations[day]; exists {
 		return translated
