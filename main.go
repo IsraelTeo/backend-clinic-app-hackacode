@@ -25,6 +25,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error connecting to database: %v", err)
 	}
+
 	fmt.Println("Database connection established successfully!")
 
 	// Migración de entidades
@@ -32,6 +33,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error migrating database: %v", err)
 	}
+	
 	fmt.Println("Database migration successful")
 
 	// Inicializar servidor Echo
