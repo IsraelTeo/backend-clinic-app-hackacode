@@ -51,7 +51,7 @@ Librerías:
     Inyección de dependencias a través de constructores utilizando Lombok (@RequiredArgsConstructor) 
     para evitar acoplamiento directo con el framework y facilitar las futuras pruebas unitarias.
 
-    Manejo centralizado de excepciones.
+    Manejo explícito de errores.
 
     Documentación automática y actualizada de los endpoints REST con Swagger / OpenAPI.
 
