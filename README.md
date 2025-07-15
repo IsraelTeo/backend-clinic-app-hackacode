@@ -57,7 +57,7 @@ Librerías:
     Implementación de paginación en endpoints que devuelven listas límitadas de datos para 
     mejorar rendimiento y escalabilidad.
 
-    Arquitectura de capas bien definida: controller, service, repository, model.
+    Arquitectura de capas bien definida: handler, logic(service), repository, model.
 
     Uso de nombres descriptivos para variables, constantes, métodos, structs, paquetes 
     e interfaces.
