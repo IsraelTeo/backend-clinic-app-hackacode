@@ -48,34 +48,23 @@ Librerías:
 
  **Buenas prácticas**
 
-    Inyección de dependencias a través de constructores utilizando Lombok (@RequiredArgsConstructor) 
-    para evitar acoplamiento directo con el framework y facilitar las futuras pruebas unitarias.
+    Inyección de dependencias a través de constructores.
 
     Manejo explícito de errores.
 
-    Documentación automática y actualizada de los endpoints REST con Swagger / OpenAPI.
-
-    Uso de DTOs para transferir datos entre cliente y servidor.
-
-    Validación de datos de entrada en los DTOs utilizando anotaciones como @NotBlank, @Size, 
-    @Valid, entre otras.
+    Validación de datos de entrada utilizando la librería: github.com/go-playground/validator
 
     Implementación de paginación en endpoints que devuelven listas límitadas de datos para 
     mejorar rendimiento y escalabilidad.
 
-    Arquitectura de capas bien definida: controller, service, repository, dto, mapper, 
-    exception, domain, mapper, criteria.
+    Arquitectura de capas bien definida: controller, service, repository, model.
 
-    Uso de nombres descriptivos para variables, constantes, métodos, clases, paquetes 
+    Uso de nombres descriptivos para variables, constantes, métodos, structs, paquetes 
     e interfaces.
 
     Aplicación del principio de responsabilidad única (SRP) del conjunto SOLID para mantener 
-    clases y métodos mantenibles.
-
-    Mapeos limpios y desacoplados entre entidades y DTOs utilizando MapStruct.
-
-    Logging estructurado con SLF4J y Logback para monitorear el flujo y los errores.
-
+    paquetes y métodos mantenibles.
+    
   **Certificado de Participación:**
 ![hackaton-1](https://github.com/user-attachments/assets/5e8854ab-4302-4763-a4c2-816a2575d85b)
 
