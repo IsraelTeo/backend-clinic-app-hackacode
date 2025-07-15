@@ -48,8 +48,6 @@ Librerías:
 
  **Buenas prácticas**
 
-    Uso de archivos .yml para centralizar configuraciones como puertos, credenciales de base de datos, etc.
-
     Inyección de dependencias a través de constructores utilizando Lombok (@RequiredArgsConstructor) 
     para evitar acoplamiento directo con el framework y facilitar las futuras pruebas unitarias.
 
