@@ -48,7 +48,7 @@ func (f *FinalPackagePrice) GetFinalPrice() float64 {
 	return f.FinalPrice
 }
 
-//Precio final de paquete médico con descuento por paquete y con descuento de seguro médico del paciente
+// Precio final de paquete médico con descuento por paquete y con descuento de seguro médico del paciente
 type FinalPackagePriceWithInsegurance struct {
 	InsuranceDiscount float64
 	FinalPackagePrice

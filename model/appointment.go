@@ -1,6 +1,6 @@
 package model
 
-//Cita médica
+// Cita médica
 type Appointment struct {
 	ID          uint     `gorm:"primaryKey;autoIncrement" json:"id"`
 	DoctorID    uint     `json:"doctor_id" validate:"required"`
@@ -16,7 +16,7 @@ type Appointment struct {
 	TotalAmount float64  `json:"total_amount"`
 }
 
-//Pago
+// Pago
 type Payment struct {
 	AppoimentID uint        `json:"appoiment_id" validate:"required"`
 	Paid        bool        `json:"paid" validate:"required"`
@@ -24,7 +24,7 @@ type Payment struct {
 	PaymentType PaymentType `json:"payment_type" validate:"required"`
 }
 
-//Método de pago
+// Método de pago
 type PaymentType string
 
 const (
@@ -33,7 +33,7 @@ const (
 	Application PaymentType = "applicativo"
 )
 
-//Respuesta al realizar el pago
+// Respuesta al realizar el pago
 type PaymentResponse struct {
 	QRCode     string `json:"qr_code"`
 	PDFReceipt string `json:"pdf_receipt"`
