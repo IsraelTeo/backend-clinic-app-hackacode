@@ -64,12 +64,6 @@ Librerías:
 
     Aplicación del principio de responsabilidad única (SRP) del conjunto SOLID para mantener 
     paquetes y métodos mantenibles.
-
-    Uso de DTOs (Data Transfer Objects) para separar claramente los datos de entrada/salida y 
-    transportarlos de manera segura.
-    
-    Implementación de mappers manuales para convertir entre entidades y DTOs, manteniendo 
-    control y claridad en la transformación de datos.
     
   **Certificado de Participación:**
 ![hackaton-1](https://github.com/user-attachments/assets/5e8854ab-4302-4763-a4c2-816a2575d85b)
