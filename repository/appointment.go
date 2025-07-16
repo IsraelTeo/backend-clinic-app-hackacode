@@ -1,51 +1,82 @@
 package repository
 
 import (
-	"errors"
-	"time"
-
 	"github.com/IsraelTeo/clinic-backend-hackacode-app/model"
-	"github.com/IsraelTeo/clinic-backend-hackacode-app/response"
-	"github.com/IsraelTeo/clinic-backend-hackacode-app/validate"
 	"gorm.io/gorm"
 )
 
+// AppointmentRepository defines the interface for appointment operations
 type AppointmentRepository interface {
 	GetByID(ID uint) (*model.Appointment, error)
-	GetAll(limit, offset int) ([]model.Appointment, error)
-	GetAppointmentsByDoctor(doctorID uint) ([]model.Appointment, error)
-	GetAppointmentsByDoctorAndDate(doctorID uint, date time.Time) ([]model.Appointment, error)
-	UpdatePaid(appointmentID uint) error
-	UnlinkPatientAppointments(patientID uint) error
+	Get() ([]model.Appointment, error)
+	Create(appointment *model.Appointment) error
+	Update(appointment *model.Appointment) error
+	Delete(ID uint) error
+	//GetAppointmentsByDoctor(doctorID uint) ([]model.Appointment, error)
+	//GetAppointmentsByDoctorAndDate(doctorID uint, date time.Time) ([]model.Appointment, error)
+	//UnlinkPatientAppointments(patientID uint) error
 }
 
+// appointmentRepository implements the AppointmentRepository interface
 type appointmentRepository struct {
 	db *gorm.DB
 }
 
+// Dependency injection for the appointment repository
 func NewAppointmentRepository(db *gorm.DB) AppointmentRepository {
 	return &appointmentRepository{db: db}
 }
 
+// GetByID retrieves an appointment by its ID
 func (r *appointmentRepository) GetByID(ID uint) (*model.Appointment, error) {
 	var appointment model.Appointment
-	err := r.db.
-		Preload("Patient").
-		Where("id = ?", ID).
-		First(&appointment).
-		Error
 
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, response.ErrorAppointmentNotFound
-		}
-
+	if err := r.db.First(&appointment, ID).Error; err != nil {
 		return nil, err
 	}
 
 	return &appointment, nil
 }
 
+// Get retrieves appointments
+func (r *appointmentRepository) Get() ([]model.Appointment, error) {
+	var appointments []model.Appointment
+
+	if err := r.db.Preload("Patient").Find(&appointments).Error; err != nil {
+		return nil, err
+	}
+
+	return appointments, nil
+}
+
+// Create adds a new appointment to the database
+func (r *appointmentRepository) Create(appointment *model.Appointment) error {
+	if err := r.db.Create(appointment).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Update modifies an existing appointment
+func (r *appointmentRepository) Update(appointment *model.Appointment) error {
+	if err := r.db.Save(appointment).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Delete removes an appointment by its ID
+func (r *appointmentRepository) Delete(ID uint) error {
+	if err := r.db.Delete(&model.Appointment{}, ID).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
+/*
 func (r *appointmentRepository) GetAll(limit, offset int) ([]model.Appointment, error) {
 	var appointments []model.Appointment
 	query := r.db.Preload("Patient")
@@ -64,8 +95,9 @@ func (r *appointmentRepository) GetAll(limit, offset int) ([]model.Appointment, 
 	}
 
 	return appointments, nil
-}
+}*/
 
+/*
 func (r *appointmentRepository) GetAppointmentsByDoctor(doctorID uint) ([]model.Appointment, error) {
 	var appointments []model.Appointment
 
@@ -126,3 +158,4 @@ func (r *appointmentRepository) UnlinkPatientAppointments(patientID uint) error 
 
 	return nil
 }
+*/

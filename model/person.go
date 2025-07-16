@@ -11,22 +11,7 @@ type Person struct {
 	Address     string `json:"address" validate:"required,max=200"`
 }
 
-// Médico
-type Doctor struct {
-	Person
-	Especialty string  `json:"especialty" validate:"required,max=50"`
-	Days       string  `json:"days" validate:"required"`
-	StartTime  string  `json:"start_time" validate:"required"`
-	EndTime    string  `json:"end_time" validate:"required"`
-	Salary     float64 `json:"salary" validate:"required,numeric"`
-}
-
-// Paciente
-type Patient struct {
-	Person
-	Insurance bool `json:"health_insurance"`
-}
-
+/*
 // Días válidos para que trabaje el doctor
 type Day string
 
@@ -39,3 +24,4 @@ const (
 	Saturday  Day = "Sabado"
 	Sunday    Day = "Domingo"
 )
+*/

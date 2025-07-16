@@ -1,22 +1,27 @@
 package model
 
-// Cita médica
+import "time"
+
+// Appointment represents a medical appointment in the system.
 type Appointment struct {
-	ID          uint     `gorm:"primaryKey;autoIncrement" json:"id"`
-	DoctorID    uint     `json:"doctor_id" validate:"required"`
-	PatientID   uint     `json:"-"`
-	Patient     *Patient `json:"patient,omitempty" gorm:"foreignKey:PatientID"`
-	PatientDNI  string   `json:"patient_dni" validate:"required,max=20" gorm:"-"`
-	ServiceID   uint     `json:"service_id"`
-	PackageID   uint     `json:"package_id"`
-	Date        string   `json:"date" validate:"required"`
-	StartTime   string   `json:"start_time" validate:"required"`
-	EndTime     string   `json:"end_time" validate:"required"`
-	Paid        bool     `json:"paid"`
-	TotalAmount float64  `json:"total_amount"`
+	ID               uint            `gorm:"primaryKey;autoIncrement"`
+	DoctorID         uint            `gorm:"not null"`
+	Doctor           *Doctor         `gorm:"foreignKey:DoctorID"`
+	PatientID        uint            `gorm:"not null"`
+	Patient          *Patient        `gorm:"foreignKey:PatientID"`
+	MedicalServiceID *uint           `gorm:"default:null"`
+	MedicalService   *MedicalService `gorm:"foreignKey:MedicalServiceID"`
+	PackageID        *uint           `gorm:"default:null"`
+	MedicalPackage   *MedicalPackage `gorm:"foreignKey:PackageID"`
+	Date             time.Time       `gorm:"not null"`
+	StartTime        time.Time       `gorm:"not null"`
+	EndTime          time.Time       `gorm:"not null"`
+	TotalAmount      float64         `gorm:"not null"`
+	CreatedAt        time.Time       `gorm:"not null"`
 }
 
-// Pago
+/*
+// Payment represents a payment for an appointment.
 type Payment struct {
 	AppoimentID uint        `json:"appoiment_id" validate:"required"`
 	Paid        bool        `json:"paid" validate:"required"`
@@ -37,4 +42,4 @@ const (
 type PaymentResponse struct {
 	QRCode     string `json:"qr_code"`
 	PDFReceipt string `json:"pdf_receipt"`
-}
+}*/

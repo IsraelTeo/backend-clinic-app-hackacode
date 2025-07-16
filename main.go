@@ -20,21 +20,15 @@ func main() {
 	// Inicializar la configuración cargando las variables de entorno
 	cfg := config.InitConfig()
 
-	// Conectar a la base de datos utilizando la configuración cargada
-	err := db.Connection(cfg)
-	if err != nil {
-		log.Fatalf("Error connecting to database: %v", err)
-	}
+	// Paso 1: obtener instancia (conecta y guarda singleton)
+	dbInstance := db.GetInstance(cfg)
 
-	fmt.Println("Database connection established successfully!")
-
-	// Migración de entidades
-	err = db.MigrateDB()
-	if err != nil {
+	// Paso 2: migrar
+	if err := db.Migrate(dbInstance); err != nil {
 		log.Fatalf("Error migrating database: %v", err)
 	}
-	
-	fmt.Println("Database migration successful")
+
+	fmt.Println("🚀 App started successfully")
 
 	// Inicializar servidor Echo
 	e := echo.New()

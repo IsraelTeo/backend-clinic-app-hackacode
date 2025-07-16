@@ -123,6 +123,8 @@ var (
 	ErrorDoctorExistsEmail            = errors.New("el email ingresado ya existe")
 	ErrorDoctorInvalidDateFormat      = errors.New("ingrese el formato adecuado para la fecha de nacimiento del médico")
 	ErrorDoctorBirthDateIsFuture      = errors.New("la fecha de cumpleaños debe ser en tiempo pasado")
+	ErrorToDoctorResponseConversion   = errors.New("error al convertir el médico a DTO")
+	ErrorToDoctorsResponseConversion  = errors.New("error al convertir los médicos a DTOs")
 )
 
 // Mensajes de exito de pacientes

@@ -1,9 +1,16 @@
 package validate
 
 import (
+	"github.com/IsraelTeo/clinic-backend-hackacode-app/dto"
 	"github.com/IsraelTeo/clinic-backend-hackacode-app/model"
 	"github.com/IsraelTeo/clinic-backend-hackacode-app/response"
 )
+
+type DoctorValidator interface {
+	ValidateDoctor(doctorRequest dto.DoctorRequest) (*model.Doctor, error)
+}
+
+type doctorValidator struct{}
 
 func DNIDoctor(doctor *model.Doctor) error {
 	if CheckDNIExists[model.Doctor](doctor.DNI, doctor) {

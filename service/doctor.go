@@ -4,30 +4,181 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
+	"github.com/IsraelTeo/clinic-backend-hackacode-app/dto"
+	"github.com/IsraelTeo/clinic-backend-hackacode-app/mapper"
 	"github.com/IsraelTeo/clinic-backend-hackacode-app/model"
 	"github.com/IsraelTeo/clinic-backend-hackacode-app/repository"
 	"github.com/IsraelTeo/clinic-backend-hackacode-app/response"
 	"github.com/IsraelTeo/clinic-backend-hackacode-app/validate"
 )
 
-type DoctorLogic interface {
-	GetDoctorByID(ID uint) (*model.Doctor, error)
-	GetDoctorByDNI(DNI string) (*model.Doctor, error)
-	GetAllDoctors(limit, offset int) ([]model.Doctor, error)
-	CreateDoctor(doctor *model.Doctor) error
-	UpdateDoctor(ID uint, doctor *model.Doctor) error
+// DoctorService defines the interface for doctor service operations
+type DoctorService interface {
+	GetDoctorByID(ID uint) (*dto.DoctorResponse, error)
+	GetDoctors() ([]dto.DoctorResponse, error)
+	CreateDoctor(request *dto.DoctorRequest) (*dto.DoctorResponse, error)
+	UpdateDoctor(ID uint, doctorRequest *dto.DoctorRequest) (*dto.DoctorResponse, error)
 	DeleteDoctor(ID uint) error
+	GetDoctorByDNI(DNI string) (*dto.DoctorResponse, error)
 }
 
-type doctorLogic struct {
-	repositoryDoctor     repository.Repository[model.Doctor]
-	repositoryDoctorMain repository.DoctorRepository
+// doctorLogic implements the DoctorService interface
+type doctorService struct {
+	repositoryDoctor repository.DoctorRepository
+	mapper           mapper.DoctorMapper
 }
 
-func NewDoctorLogic(repositoryDoctor repository.Repository[model.Doctor], repositoryDoctorMain repository.DoctorRepository) DoctorLogic {
-	return &doctorLogic{repositoryDoctor: repositoryDoctor, repositoryDoctorMain: repositoryDoctorMain}
+// Dependency injection for the doctor service
+func NewDoctorService(repositoryDoctor repository.DoctorRepository, mapper mapper.DoctorMapper) DoctorService {
+	return &doctorService{
+		repositoryDoctor: repositoryDoctor,
+		mapper:           mapper,
+	}
 }
+
+// GetDoctorByID retrieves a doctor by its ID
+func (s *doctorService) GetDoctorByID(ID uint) (*dto.DoctorResponse, error) {
+	doctor, err := s.repositoryDoctor.GetByID(ID)
+	if err != nil {
+		log.Printf("doctor-service: Error fetching doctor with ID %d: %v", ID, err)
+		return nil, response.ErrorDoctorNotFoundID
+	}
+
+	doctorDTO, err := s.mapper.ModelToResponse(doctor)
+	if err != nil {
+		log.Printf("doctor-service: Error mapping doctor to DTO: %v", err)
+		return nil, response.ErrorToDoctorResponseConversion
+	}
+
+	return doctorDTO, nil
+}
+
+// GetDoctors retrieves a list of doctors
+func (s *doctorService) GetDoctors() ([]dto.DoctorResponse, error) {
+	doctors, err := s.repositoryDoctor.Get()
+	if err != nil {
+		log.Printf("doctor-service: Error fetching doctors: %v", err)
+		return nil, response.ErrorDoctorsNotFound
+	}
+
+	doctorsDTOS, err := s.mapper.ModelListToResponseList(doctors)
+	if err != nil {
+		log.Printf("doctor-service: Error mapping doctors to DTOs: %v", err)
+		return nil, response.ErrorToDoctorResponseConversion
+	}
+
+	return doctorsDTOS, nil
+}
+
+// CreateDoctor creates a new doctor
+func (s *doctorService) CreateDoctor( doctorRequest *dto.DoctorRequest) (*dto.DoctorResponse, error) {
+	doctor, err := s.mapper.RequestToModel( doctorRequest)
+	if err != nil {
+		log.Printf("doctor-service: Error mapping DTO to doctor model: %v", err)
+		return nil, response.ErrorToDoctorResponseConversion
+	}
+
+	/*
+		birthDate, err := s.validateDoctor(doctor)
+		if err != nil {
+			log.Printf("doctor-service: Validation error: %v", err)
+			return nil, err
+		}
+
+		normalizedDays, err := normalizeDays(doctor.Days)
+		if err != nil {
+			return err
+		}
+
+		doctor.Days = normalizedDays*/
+
+	newDoctor := model.Doctor{
+		Person: model.Person{
+			Name:        doctor.Name,
+			LastName:    doctor.LastName,
+			DNI:         doctor.DNI,
+			BirthDate:   doctorDTO.BirthDate,
+			Email:       doctor.Email,
+			PhoneNumber: doctor.PhoneNumber,
+			Address:     doctor.Address,
+		},
+		Especialty: doctor.Especialty,
+		//Days:       normalizedDays,
+		//StartTime: doctor.StartTime,
+		//EndTime:   doctor.EndTime,
+		Salary:    doctor.Salary,
+		CreatedAt: time.Now(),
+	}
+
+	err = s.repositoryDoctor.Create(&newDoctor)
+	if err != nil {
+		log.Printf("doctor-service: Error saving doctor: %v", err)
+		return nil, response.ErrorToCreatedDoctor
+	}
+
+	doctorResponse, err := s.mapper.ModelToResponse(&newDoctor)
+	if err != nil {
+		log.Printf("doctor-service: Error mapping created doctor to DTO: %v", err)
+		return nil, response.ErrorToDoctorResponseConversion
+	}
+
+	return doctorResponse, nil
+}
+
+// UpdateDoctor updates an existing doctor
+func (s *doctorService) UpdateDoctor(ID uint, request *dto.DoctorRequest) (*dto.DoctorResponse, error) {
+	doctorFind, err := s.repositoryDoctor.GetByID(ID)
+	if err != nil {
+		log.Printf("doctor-service: Error fetching doctor with ID %d: %v", ID, err)
+		return nil, response.ErrorDoctorNotFoundID
+	}
+	/*
+		birthDate, err := s.validateDoctor(doctor)
+		if err != nil {
+			log.Printf("doctor-service: Validation error: %v", err)
+			return nil, err
+		}
+
+		normalizedDays, err := normalizeDays(doctor.Days)
+		if err != nil {
+			return err
+		}
+
+		doctor.Days = normalizedDays*/
+
+		doctorFind.Name = doctorDTO.Name
+		doctorFind.LastName = doctorDTO.LastName
+		doctorFind.DNI = doctorDTO.DNI
+		doctorFind.BirthDate = doctorDTO.BirthDate
+		doctorFind.Email = doctorDTO.Email
+		doctorFind.PhoneNumber = doctorDTO.PhoneNumber
+		doctorFind.Address = doctorDTO.PhoneNumber
+		doctorFind.Especialty = doctorDTO.Especialty
+		//doctorFind.StartTime = doctorDTO.StartTime
+		//doctorFind.EndTime = doctorDTO.EndTime
+		doctorFind.Salary = doctorDTO.Salary
+
+
+	}
+
+	err = s.repositoryDoctor.Create(&newDoctor)
+	if err != nil {
+		log.Printf("doctor-service: Error saving doctor: %v", err)
+		return nil, response.ErrorToCreatedDoctor
+	}
+
+	doctorResponse, err := s.mapper.ModelToResponse(&newDoctor)
+	if err != nil {
+		log.Printf("doctor-service: Error mapping created doctor to DTO: %v", err)
+		return nil, response.ErrorToDoctorResponseConversion
+	}
+
+	return doctorResponse, nil
+
+}
+		
 
 func (l *doctorLogic) GetDoctorByID(ID uint) (*model.Doctor, error) {
 	doctor, err := l.repositoryDoctor.GetByID(ID)
